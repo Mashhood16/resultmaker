@@ -10,6 +10,7 @@ export default async function HomePage() {
   const session = await auth()
   
   const classes = await prisma.class.findMany({
+    where: session?.user?.role === 'school' ? { schoolId: session.user.id } : undefined,
     include: {
       _count: {
         select: { students: true }
