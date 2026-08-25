@@ -22,7 +22,7 @@ export default function LoginPage() {
       if (typeof res === 'string') {
         setError(res)
       } else if (res && typeof res === 'object' && 'redirectUrl' in res) {
-        router.push(res.redirectUrl)
+        window.location.href = res.redirectUrl
       }
     } catch (err) {
       console.error(err)
