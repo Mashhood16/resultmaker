@@ -269,19 +269,19 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
     <div className="space-y-4 animate-in fade-in duration-700">
       {/* Podium Display */}
       {top3.length > 0 && (
-        <div className="flex flex-col md:flex-row justify-center items-end gap-6 md:gap-10 pt-8 pb-4">
+        <div className="flex flex-row justify-center items-end gap-2 sm:gap-4 md:gap-10 pt-8 pb-4 px-2">
           {/* Rank 2 - Silver */}
           {second && (
             <div className="order-2 md:order-1 flex flex-col items-center animate-in slide-in-from-bottom-16 duration-700 delay-300">
               <div className="relative group w-full flex justify-center">
                 <div className="absolute -inset-1 bg-gradient-to-r from-zinc-300 to-zinc-500 rounded-2xl blur-md opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                <Card className="relative bg-zinc-900 border-zinc-500 w-40 md:w-48 text-center py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
-                  <Medal className="w-10 h-10 text-zinc-300 mx-auto mb-3 drop-shadow-[0_0_10px_rgba(212,212,216,0.4)]" />
-                  <div className="font-bold text-zinc-100 text-lg md:text-xl truncate px-4">{second.name}</div>
-                  <div className="text-zinc-400 font-bold mt-2">{second.percentage}%</div>
+                <Card className="relative bg-zinc-900 border-zinc-500 w-28 md:w-48 text-center py-4 md:py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
+                  <Medal className="w-8 h-8 md:w-10 md:h-10 text-zinc-300 mx-auto mb-2 md:mb-3 drop-shadow-[0_0_10px_rgba(212,212,216,0.4)]" />
+                  <div className="font-bold text-zinc-100 text-sm md:text-xl truncate px-2 md:px-4">{second.name}</div>
+                  <div className="text-zinc-400 font-bold mt-1 md:mt-2 text-xs md:text-base">{second.percentage}%</div>
                 </Card>
               </div>
-              <div className="h-20 md:h-32 w-40 md:w-48 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-zinc-400 mt-3 rounded-t-xl flex items-center justify-center text-4xl font-black text-zinc-600 shadow-inner">
+              <div className="h-16 md:h-32 w-28 md:w-48 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-zinc-400 mt-2 md:mt-3 rounded-t-xl flex items-center justify-center text-2xl md:text-4xl font-black text-zinc-600 shadow-inner">
                 2
               </div>
             </div>
@@ -292,13 +292,13 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
             <div className="order-1 md:order-2 flex flex-col items-center animate-in slide-in-from-bottom-24 duration-700 delay-500 z-10">
               <div className="relative group w-full flex justify-center">
                 <div className="absolute -inset-1 bg-gradient-to-r from-amber-200 to-yellow-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                <Card className="relative bg-zinc-900 border-yellow-500 w-48 md:w-64 text-center py-10 backdrop-blur-xl rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.2)]">
-                  <Trophy className="w-14 h-14 text-yellow-400 mx-auto mb-4 drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]" />
-                  <div className="font-black text-zinc-100 text-2xl md:text-3xl truncate px-4">{first.name}</div>
-                  <div className="text-yellow-400 font-black text-xl mt-2 drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]">{first.percentage}%</div>
+                <Card className="relative bg-zinc-900 border-yellow-500 w-32 md:w-64 text-center py-6 md:py-10 backdrop-blur-xl rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+                  <Trophy className="w-10 h-10 md:w-14 md:h-14 text-yellow-400 mx-auto mb-2 md:mb-4 drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]" />
+                  <div className="font-black text-zinc-100 text-base md:text-3xl truncate px-2 md:px-4">{first.name}</div>
+                  <div className="text-yellow-400 font-black text-sm md:text-xl mt-1 md:mt-2 drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]">{first.percentage}%</div>
                 </Card>
               </div>
-              <div className="h-32 md:h-48 w-48 md:w-64 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-yellow-400 mt-3 rounded-t-xl flex items-center justify-center text-6xl font-black text-yellow-600/80 shadow-inner">
+              <div className="h-24 md:h-48 w-32 md:w-64 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-yellow-400 mt-2 md:mt-3 rounded-t-xl flex items-center justify-center text-4xl md:text-6xl font-black text-yellow-600/80 shadow-inner">
                 1
               </div>
             </div>
@@ -309,13 +309,13 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
             <div className="order-3 md:order-3 flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100">
               <div className="relative group w-full flex justify-center">
                 <div className="absolute -inset-1 bg-gradient-to-r from-amber-700 to-orange-900 rounded-2xl blur-md opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                <Card className="relative bg-zinc-900 border-amber-700 w-36 md:w-44 text-center py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
-                  <Star className="w-10 h-10 text-amber-600 mx-auto mb-3 drop-shadow-[0_0_10px_rgba(217,119,6,0.4)]" />
-                  <div className="font-bold text-zinc-100 text-lg truncate px-4">{third.name}</div>
-                  <div className="text-zinc-500 font-bold mt-2">{third.percentage}%</div>
+                <Card className="relative bg-zinc-900 border-amber-700 w-24 md:w-44 text-center py-4 md:py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
+                  <Star className="w-6 h-6 md:w-10 md:h-10 text-amber-600 mx-auto mb-2 md:mb-3 drop-shadow-[0_0_10px_rgba(217,119,6,0.4)]" />
+                  <div className="font-bold text-zinc-100 text-xs md:text-lg truncate px-2 md:px-4">{third.name}</div>
+                  <div className="text-zinc-500 font-bold mt-1 md:mt-2 text-[10px] md:text-base">{third.percentage}%</div>
                 </Card>
               </div>
-              <div className="h-16 md:h-24 w-36 md:w-44 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-amber-700 mt-3 rounded-t-xl flex items-center justify-center text-3xl font-black text-zinc-600 shadow-inner">
+              <div className="h-12 md:h-24 w-24 md:w-44 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-amber-700 mt-2 md:mt-3 rounded-t-xl flex items-center justify-center text-xl md:text-3xl font-black text-zinc-600 shadow-inner">
                 3
               </div>
             </div>
