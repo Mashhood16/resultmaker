@@ -106,33 +106,45 @@ export async function uploadStudentRosterAction(formData: FormData) {
           classCache.set(data.className, classRecord)
         }
 
-        // We upsert by Name, Class, and Section as the unique identifier
-        await tx.student.upsert({
-          where: {
-            name_classId_section: {
+        let existingStudent = null
+        if (data.rollNumber) {
+          existingStudent = await tx.student.findFirst({
+            where: { classId: classRecord.id, rollNumber: data.rollNumber }
+          })
+        }
+        
+        if (!existingStudent) {
+          existingStudent = await tx.student.findFirst({
+            where: { classId: classRecord.id, name: data.name, section: data.section || '' }
+          })
+        }
+
+        if (existingStudent) {
+          await tx.student.update({
+            where: { id: existingStudent.id },
+            data: {
+              name: data.name.length > existingStudent.name.length ? data.name : existingStudent.name,
+              registrationNumber: data.registrationNumber || existingStudent.registrationNumber,
+              rollNumber: data.rollNumber || existingStudent.rollNumber,
+              fatherName: data.fatherName || existingStudent.fatherName,
+              fatherPhone: data.fatherPhone || existingStudent.fatherPhone,
+              fatherCnic: data.fatherCnic || existingStudent.fatherCnic,
+            }
+          })
+        } else {
+          await tx.student.create({
+            data: {
               name: data.name,
               classId: classRecord.id,
-              section: data.section || ''
+              section: data.section || '',
+              registrationNumber: data.registrationNumber,
+              rollNumber: data.rollNumber,
+              fatherName: data.fatherName,
+              fatherPhone: data.fatherPhone,
+              fatherCnic: data.fatherCnic,
             }
-          },
-          update: {
-            registrationNumber: data.registrationNumber,
-            rollNumber: data.rollNumber,
-            fatherName: data.fatherName,
-            fatherPhone: data.fatherPhone,
-            fatherCnic: data.fatherCnic,
-          },
-          create: {
-            name: data.name,
-            classId: classRecord.id,
-            section: data.section || '',
-            registrationNumber: data.registrationNumber,
-            rollNumber: data.rollNumber,
-            fatherName: data.fatherName,
-            fatherPhone: data.fatherPhone,
-            fatherCnic: data.fatherCnic,
-          }
-        })
+          })
+        }
       }
     })
 

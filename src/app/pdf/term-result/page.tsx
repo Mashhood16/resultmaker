@@ -27,8 +27,7 @@ export default async function TermResultPDFPage({
   const testNamesArray = rawTestNames.split(',').map(t => t.trim()).filter(Boolean)
   const isLandscape = testNamesArray.length > 1
 
-  // Fetch all students for this class and school, along with their scores for the requested terms
-  const students = await prisma.student.findMany({
+  const rawStudents = await prisma.student.findMany({
     where: {
       class: {
         name: className,
@@ -42,6 +41,29 @@ export default async function TermResultPDFPage({
       }
     }
   })
+
+  // Merge students that share the same rollNumber
+  const mergedStudentsMap = new Map<string, typeof rawStudents[0]>()
+  rawStudents.forEach(student => {
+    // Group by rollNumber if it exists, otherwise use their unique ID
+    const key = student.rollNumber ? student.rollNumber.trim() : student.id
+    
+    if (mergedStudentsMap.has(key)) {
+      const existing = mergedStudentsMap.get(key)!
+      // Merge scores from both records
+      existing.scores = [...existing.scores, ...student.scores]
+      // Use the longer name (e.g. "Muhammad Wasif" over "Wasif")
+      if (student.name.length > existing.name.length) {
+        existing.name = student.name
+      }
+      if (!existing.section && student.section) existing.section = student.section
+    } else {
+      // Clone the student so we can safely modify their scores array above
+      mergedStudentsMap.set(key, { ...student, scores: [...student.scores] })
+    }
+  })
+
+  const students = Array.from(mergedStudentsMap.values())
 
   // Pre-calculate cumulative totals to determine ranks
   const studentTotals = students.map(s => {
