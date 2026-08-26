@@ -34,7 +34,7 @@ export function TermResultWizard() {
   // State for selections
   const [term, setTerm] = useState('')
   const [selectedClass, setSelectedClass] = useState('')
-  const [totalMarks, setTotalMarks] = useState('100')
+  const [subjectTotalMarks, setSubjectTotalMarks] = useState<Record<string, string>>({})
   
   // State for uploads
   const [uploadMode, setUploadMode] = useState<'individual' | 'master'>('individual')
@@ -61,7 +61,7 @@ export function TermResultWizard() {
       formData.append('className', `Class ${selectedClass}`)
       formData.append('subjectName', subject)
       formData.append('testName', term)
-      formData.append('totalMarks', totalMarks)
+      formData.append('totalMarks', subjectTotalMarks[subject] || '100')
 
       const result = await uploadMarksAction(formData)
       if (result.success) {
@@ -86,7 +86,7 @@ export function TermResultWizard() {
       formData.append('file', file)
       formData.append('className', `Class ${selectedClass}`)
       formData.append('testName', term)
-      formData.append('totalMarks', totalMarks)
+      formData.append('subjectTotalMarks', JSON.stringify(subjectTotalMarks))
       formData.append('subjects', JSON.stringify(subjectsRequired))
 
       const result = await uploadMasterMarksAction(formData)
@@ -103,13 +103,13 @@ export function TermResultWizard() {
     }
   }
 
-  function downloadSingleTemplate() {
+  function downloadSingleTemplate(subject: string) {
     const ws = xlsx.utils.json_to_sheet([
-      { 'Roll Number': '', 'Name': '', 'Obtained Marks': '', 'Total Marks': totalMarks }
+      { 'Roll Number': '', 'Name': '', 'Obtained Marks': '', 'Total Marks': subjectTotalMarks[subject] || '100' }
     ])
     const wb = xlsx.utils.book_new()
     xlsx.utils.book_append_sheet(wb, ws, 'Marks')
-    xlsx.writeFile(wb, `Single_Subject_Template.xlsx`)
+    xlsx.writeFile(wb, `${subject}_Template.xlsx`)
   }
 
   function downloadMasterTemplate() {
@@ -126,8 +126,6 @@ export function TermResultWizard() {
   async function handleGeneratePDF() {
     setIsGenerating(true)
     try {
-      // Open the unified PDF generation route
-      // We encode the Class Name and Test Name to fetch the correct data
       const className = encodeURIComponent(`Class ${selectedClass}`)
       const termName = encodeURIComponent(term)
       window.open(`/pdf/term-result?className=${className}&testName=${termName}`, '_blank')
@@ -142,7 +140,7 @@ export function TermResultWizard() {
     setStep(1)
     setTerm('')
     setSelectedClass('')
-    setTotalMarks('100')
+    setSubjectTotalMarks({})
     setUploadedSubjects([])
     setIsMasterUploaded(false)
     setUploadMode('individual')
@@ -206,15 +204,24 @@ export function TermResultWizard() {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Default Total Marks per Subject</Label>
-                <Input 
-                  type="number" 
-                  value={totalMarks} 
-                  onChange={(e) => setTotalMarks(e.target.value)}
-                  className="bg-black/40 border-white/10 text-white h-12 max-w-[200px]"
-                />
-              </div>
+              {subjectsRequired.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Total Marks Per Subject</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {subjectsRequired.map(subject => (
+                      <div key={subject} className="space-y-2">
+                        <Label className="text-[10px] text-zinc-500 uppercase tracking-widest">{subject}</Label>
+                        <Input 
+                          type="number" 
+                          value={subjectTotalMarks[subject] || '100'} 
+                          onChange={(e) => setSubjectTotalMarks(prev => ({ ...prev, [subject]: e.target.value }))}
+                          className="bg-black/40 border-white/10 text-white h-10"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -297,10 +304,6 @@ export function TermResultWizard() {
                       <span className="text-sm opacity-80">{uploadedSubjects.length} of {subjectsRequired.length} subjects uploaded</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Button onClick={downloadSingleTemplate} variant="outline" className="bg-transparent border-emerald-500/50 hover:bg-emerald-500/20 text-emerald-400 h-10">
-                        <Download className="w-4 h-4 mr-2" />
-                        Template
-                      </Button>
                       {isFinished && (
                         <div className="flex items-center gap-2 font-bold bg-emerald-500 text-black px-4 h-10 rounded-lg">
                           <CheckCircle2 className="w-5 h-5" /> All Uploaded!
@@ -320,6 +323,7 @@ export function TermResultWizard() {
                             <div className="flex items-center gap-2 font-semibold text-zinc-200">
                               <BookOpen className="w-4 h-4 text-emerald-400" />
                               {subject}
+                              <span className="text-xs text-zinc-500 font-normal">({subjectTotalMarks[subject] || '100'} marks)</span>
                             </div>
                             {isUploaded && (
                               <div className="flex items-center gap-2">
@@ -346,29 +350,39 @@ export function TermResultWizard() {
                           </div>
 
                           {!isUploaded && (
-                            <div className="relative group">
-                              <input
-                                type="file"
-                                accept=".xlsx, .xls, .csv"
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) handleFileUpload(subject, file)
-                                }}
-                                disabled={isUploading}
-                              />
+                            <div className="flex gap-2">
                               <Button 
-                                variant="secondary" 
-                                className="w-full bg-white/10 hover:bg-white/20 text-white border-none h-10"
+                                variant="outline" 
+                                className="w-1/3 bg-transparent border-white/10 hover:bg-white/10 text-white h-10"
+                                onClick={() => downloadSingleTemplate(subject)}
                                 disabled={isUploading}
                               >
-                                {isUploading ? (
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                ) : (
-                                  <UploadCloud className="w-4 h-4 mr-2" />
-                                )}
-                                {isUploading ? 'Uploading...' : 'Upload Excel'}
+                                <Download className="w-4 h-4" />
                               </Button>
+                              <div className="relative group w-2/3">
+                                <input
+                                  type="file"
+                                  accept=".xlsx, .xls, .csv"
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) handleFileUpload(subject, file)
+                                  }}
+                                  disabled={isUploading}
+                                />
+                                <Button 
+                                  variant="secondary" 
+                                  className="w-full bg-white/10 hover:bg-white/20 text-white border-none h-10"
+                                  disabled={isUploading}
+                                >
+                                  {isUploading ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <UploadCloud className="w-4 h-4 mr-2" />
+                                  )}
+                                  {isUploading ? 'Uploading...' : 'Upload'}
+                                </Button>
+                              </div>
                             </div>
                           )}
                         </div>

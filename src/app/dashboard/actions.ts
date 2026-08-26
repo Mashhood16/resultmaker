@@ -30,6 +30,7 @@ export async function uploadMarksAction(formData: FormData) {
   const className = formData.get('className') as string | null
   const subjectName = formData.get('subjectName') as string | null
   const testName = formData.get('testName') as string | null
+  const defaultTotalMarks = Number(formData.get('totalMarks')) || 100
 
   if (!file || !className || !subjectName || !testName) {
     return { success: false, error: 'Missing required fields' }
@@ -63,7 +64,7 @@ export async function uploadMarksAction(formData: FormData) {
         Section: sectionKey ? String(row[sectionKey]) : '',
         RollNumber: rollNoKey ? String(row[rollNoKey]) : '',
         Obtained: obtainedKey ? row[obtainedKey] : undefined,
-        Total: totalKey ? row[totalKey] : undefined,
+        Total: totalKey && row[totalKey] ? row[totalKey] : defaultTotalMarks,
       })
 
       if (parsedRow.success) {
@@ -232,14 +233,15 @@ export async function uploadMasterMarksAction(formData: FormData) {
   const file = formData.get('file') as File | null
   const className = formData.get('className') as string | null
   const testName = formData.get('testName') as string | null
-  const totalMarks = Number(formData.get('totalMarks')) || 100
+  const subjectTotalMarksStr = formData.get('subjectTotalMarks') as string | null
   const subjectsStr = formData.get('subjects') as string | null
 
-  if (!file || !className || !testName || !subjectsStr) {
+  if (!file || !className || !testName || !subjectsStr || !subjectTotalMarksStr) {
     return { success: false, error: 'Missing required fields' }
   }
 
   const expectedSubjects = JSON.parse(subjectsStr) as string[]
+  const subjectTotalMarks = JSON.parse(subjectTotalMarksStr) as Record<string, string>
   const lowerExpectedSubjects = expectedSubjects.map(s => s.toLowerCase().trim())
 
   try {
@@ -295,12 +297,13 @@ export async function uploadMasterMarksAction(formData: FormData) {
 
           if (isNaN(obtained)) continue
           
-          const percentage = (obtained / totalMarks) * 100
+          const totalMks = Number(subjectTotalMarks[expected]) || 100
+          const percentage = (obtained / totalMks) * 100
 
           studentSubjects.push({
             subjectName: expected,
             marksObtained: obtained,
-            totalMarks: totalMarks,
+            totalMarks: totalMks,
             percentage: Number(percentage.toFixed(2)),
             isAbsent
           })
