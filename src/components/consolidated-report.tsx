@@ -1,8 +1,8 @@
 import React from 'react'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import { ReportCardStudent } from './report-card'
 
-export function ConsolidatedReport({ students: initialStudents, uniqueTests }: { students: ReportCardStudent[], uniqueTests: string[] }) {
+export function ConsolidatedReport({ students: initialStudents, uniqueTests, reportType = 'tests' }: { students: ReportCardStudent[], uniqueTests: string[], reportType?: 'tests' | 'subjects' }) {
   // Ensure students are strictly sorted by overall percentage (highest to lowest) 
   // so the Legend and color mappings match the exact rank order.
   const students = [...initialStudents].sort((a, b) => b.percentage - a.percentage)
@@ -98,7 +98,7 @@ export function ConsolidatedReport({ students: initialStudents, uniqueTests }: {
           <div id="report-bar-chart" className="relative z-10 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-xl p-6 shadow-2xl">
             <h3 className="text-xl font-black text-zinc-300 uppercase tracking-widest mb-6 text-center flex items-center justify-center gap-4">
               <span className="w-12 h-1 bg-gradient-to-r from-transparent to-blue-500/50 rounded-full"></span>
-              Individual Test Breakdown
+              {reportType === 'subjects' ? 'Subject Breakdown' : 'Individual Test Breakdown'}
               <span className="w-12 h-1 bg-gradient-to-l from-transparent to-emerald-500/50 rounded-full"></span>
             </h3>
             <div className="w-full h-[400px]">
@@ -115,7 +115,7 @@ export function ConsolidatedReport({ students: initialStudents, uniqueTests }: {
                   />
                   {students.map((student, idx) => {
                     const color = getStudentColor(idx, students.length)
-                    const barWidth = Math.max(12, 40 - students.length * 2)
+                    const barWidth = Math.max(8, 40 - students.length * 2)
                     return (
                       <Bar 
                         key={student.id}
@@ -132,17 +132,19 @@ export function ConsolidatedReport({ students: initialStudents, uniqueTests }: {
                               {/* The Bar */}
                               <path d={`M${x},${y + height} L${x},${y + 4} Q${x},${y} ${x + 4},${y} L${x + width - 4},${y} Q${x + width},${y} ${x + width},${y + 4} L${x + width},${y + height} Z`} fill={fill} />
                               
-                              {/* The Name Label */}
-                              <text 
-                                x={x + width / 2} 
-                                y={isTall ? y + height - 10 : y - 10} 
-                                fill={isTall ? "#09090b" : fill} 
-                                textAnchor="start" 
-                                transform={`rotate(-90, ${x + width / 2}, ${isTall ? y + height - 10 : y - 10})`}
-                                style={{ fontSize: `${Math.max(10, Math.min(14, width - 2))}px`, fontWeight: 'black', pointerEvents: 'none', filter: !isTall ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.8))' : 'none' }}
-                              >
-                                {student.name}
-                              </text>
+                              {/* The Name Label (only if wide enough!) */}
+                              {width > 16 && (
+                                <text 
+                                  x={x + width / 2} 
+                                  y={isTall ? y + height - 10 : y - 10} 
+                                  fill={isTall ? "#09090b" : fill} 
+                                  textAnchor="start" 
+                                  transform={`rotate(-90, ${x + width / 2}, ${isTall ? y + height - 10 : y - 10})`}
+                                  style={{ fontSize: `${Math.max(10, Math.min(14, width - 2))}px`, fontWeight: 'black', pointerEvents: 'none', filter: !isTall ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.8))' : 'none' }}
+                                >
+                                  {student.name}
+                                </text>
+                              )}
                             </g>
                           )
                         }}
@@ -163,41 +165,67 @@ export function ConsolidatedReport({ students: initialStudents, uniqueTests }: {
             </div>
           </div>
 
-          {/* Line Chart (Overall Trajectory) */}
+          {/* Secondary Chart (Line for Time Series, Radar for Cross-Subject) */}
           <div id="report-line-chart" className="relative z-10 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-xl p-6 shadow-2xl mt-4">
             <h3 className="text-xl font-black text-zinc-300 uppercase tracking-widest mb-6 text-center flex items-center justify-center gap-4">
               <span className="w-12 h-1 bg-gradient-to-r from-transparent to-amber-500/50 rounded-full"></span>
-              Performance Trajectory
+              {reportType === 'subjects' ? 'Skill Profile Comparison' : 'Performance Trajectory'}
               <span className="w-12 h-1 bg-gradient-to-l from-transparent to-rose-500/50 rounded-full"></span>
             </h3>
             <div className="w-full h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 20, right: 40, bottom: 20, left: 0 }}>
-                  <CartesianGrid stroke="#ffffff10" strokeDasharray="5 5" vertical={false} />
-                  <XAxis dataKey="name" stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '20px' }}
-                    itemStyle={{ fontWeight: 'black', fontSize: '18px', padding: '6px 0' }}
-                    formatter={(val: number) => [`${val}%`, 'Score']}
-                  />
-                  {students.map((student, idx) => {
-                    const color = getStudentColor(idx, students.length)
-                    return (
-                      <Line 
-                        key={student.id}
-                        type="monotone" 
-                        dataKey={student.id} 
-                        name={student.name}
-                        stroke={color} 
-                        strokeWidth={5} 
-                        dot={{ fill: '#09090b', r: 8, strokeWidth: 4, stroke: color }} 
-                        activeDot={{ r: 12, fill: color, stroke: '#fff', strokeWidth: 4 }} 
-                        connectNulls
-                      />
-                    )
-                  })}
-                </LineChart>
+                {reportType === 'subjects' ? (
+                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
+                    <PolarGrid stroke="#ffffff20" />
+                    <PolarAngleAxis dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 14, fontWeight: 'bold' }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#71717a' }} stroke="#71717a" />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '20px' }}
+                      itemStyle={{ fontWeight: 'black', fontSize: '18px', padding: '6px 0' }}
+                      formatter={(val: number) => [`${val}%`, 'Score']}
+                    />
+                    {students.map((student, idx) => {
+                      const color = getStudentColor(idx, students.length)
+                      return (
+                        <Radar 
+                          key={student.id}
+                          name={student.name} 
+                          dataKey={student.id} 
+                          stroke={color} 
+                          fill={color} 
+                          fillOpacity={0.3} 
+                        />
+                      )
+                    })}
+                  </RadarChart>
+                ) : (
+                  <LineChart data={chartData} margin={{ top: 20, right: 40, bottom: 20, left: 0 }}>
+                    <CartesianGrid stroke="#ffffff10" strokeDasharray="5 5" vertical={false} />
+                    <XAxis dataKey="name" stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '20px' }}
+                      itemStyle={{ fontWeight: 'black', fontSize: '18px', padding: '6px 0' }}
+                      formatter={(val: number) => [`${val}%`, 'Score']}
+                    />
+                    {students.map((student, idx) => {
+                      const color = getStudentColor(idx, students.length)
+                      return (
+                        <Line 
+                          key={student.id}
+                          type="monotone" 
+                          dataKey={student.id} 
+                          name={student.name}
+                          stroke={color} 
+                          strokeWidth={5} 
+                          dot={{ fill: '#09090b', r: 8, strokeWidth: 4, stroke: color }} 
+                          activeDot={{ r: 12, fill: color, stroke: '#fff', strokeWidth: 4 }} 
+                          connectNulls
+                        />
+                      )
+                    })}
+                  </LineChart>
+                )}
               </ResponsiveContainer>
             </div>
             {/* Custom HTML Legend to Guarantee Order */}

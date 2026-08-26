@@ -482,6 +482,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
           <ConsolidatedReport 
             students={crossSubjectReportData}
             uniqueTests={Array.from(reportSelectedSubjects)}
+            reportType="subjects"
           />
         )}
       </div>
