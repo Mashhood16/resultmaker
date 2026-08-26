@@ -11,6 +11,7 @@ import { UploadCloud, Trash2, Search, Loader2, Users, Pencil, Layers, X, Eye, Ey
 import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction, toggleStudentVisibilityAction, bulkToggleVisibilityAction } from './student-actions'
 import { toast } from 'sonner'
 import { Student, Class } from '@prisma/client'
+import * as xlsx from 'xlsx'
 
 type StudentWithClass = Student & { class: Class }
 
@@ -93,6 +94,15 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  function downloadTemplate() {
+    const ws = xlsx.utils.json_to_sheet([
+      { 'Name': '', 'Registration Number': '', 'Roll Number': '', 'Section': '', 'Father Name': '', 'Father Phone': '', 'Father CNIC': '' }
+    ])
+    const wb = xlsx.utils.book_new()
+    xlsx.utils.book_append_sheet(wb, ws, 'Students')
+    xlsx.writeFile(wb, `Student_Roster_Template.xlsx`)
   }
 
   async function handleDelete(studentId: string) {
@@ -256,9 +266,17 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
             disabled={isUploading}
           />
           <Button 
+            variant="outline"
+            onClick={downloadTemplate}
+            className="bg-transparent border-emerald-500/50 hover:bg-emerald-500/20 text-emerald-400 whitespace-nowrap h-10"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Template
+          </Button>
+          <Button 
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold whitespace-nowrap"
+            className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold whitespace-nowrap h-10"
           >
             {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
             Upload Master Roster
