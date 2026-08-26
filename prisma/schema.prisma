@@ -50,6 +50,7 @@ model Student {
   fatherName         String?
   fatherPhone        String?
   fatherCnic         String?
+  showInLeaderboard  Boolean      @default(false)
   section            String?      // e.g., "A", "B"
   classId            String
   class              Class        @relation(fields: [classId], references: [id])

@@ -7,7 +7,7 @@ export async function LeaderboardContent({ classId, subjectId }: { classId: stri
   const scores = await prisma.score.findMany({
     where: {
       subjectId,
-      student: { classId }
+      student: { classId, showInLeaderboard: true }
     },
     include: {
       student: true

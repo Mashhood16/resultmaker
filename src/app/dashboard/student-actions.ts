@@ -235,3 +235,45 @@ export async function bulkMoveStudentsAction(studentIds: string[], targetClassNa
     return { success: false, error: e.message }
   }
 }
+
+export async function toggleStudentVisibilityAction(studentId: string, isVisible: boolean) {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: 'Unauthorized' }
+
+  try {
+    await prisma.student.update({
+      where: { id: studentId },
+      data: {
+        showInLeaderboard: isVisible
+      }
+    })
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}
+
+export async function bulkToggleVisibilityAction(studentIds: string[], isVisible: boolean) {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: 'Unauthorized' }
+
+  if (studentIds.length === 0) {
+    return { success: false, error: 'No students selected.' }
+  }
+
+  try {
+    await prisma.student.updateMany({
+      where: {
+        id: { in: studentIds }
+      },
+      data: {
+        showInLeaderboard: isVisible
+      }
+    })
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}

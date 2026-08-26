@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { UploadCloud, Trash2, Search, Loader2, Users, Pencil, Layers, X } from 'lucide-react'
-import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction } from './student-actions'
+import { UploadCloud, Trash2, Search, Loader2, Users, Pencil, Layers, X, Eye, EyeOff } from 'lucide-react'
+import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction, toggleStudentVisibilityAction, bulkToggleVisibilityAction } from './student-actions'
 import { toast } from 'sonner'
 import { Student, Class } from '@prisma/client'
 
@@ -112,6 +112,44 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
     }
   }
 
+  async function handleToggleVisibility(studentId: string, currentVis: boolean) {
+    try {
+      // Optimistic UI update
+      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, showInLeaderboard: !currentVis } : s))
+      const result = await toggleStudentVisibilityAction(studentId, !currentVis)
+      if (result.success) {
+        toast.success(currentVis ? 'Hidden from leaderboard' : 'Published to leaderboard')
+      } else {
+        // Revert on failure
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, showInLeaderboard: currentVis } : s))
+        toast.error(result.error)
+      }
+    } catch (e) {
+      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, showInLeaderboard: currentVis } : s))
+      toast.error('Failed to update visibility')
+    }
+  }
+
+  async function handleBulkVisibility(isVisible: boolean) {
+    if (selectedIds.size === 0) return
+    const idsArray = Array.from(selectedIds)
+    try {
+      // Optimistic UI update
+      setStudents(prev => prev.map(s => selectedIds.has(s.id) ? { ...s, showInLeaderboard: isVisible } : s))
+      const result = await bulkToggleVisibilityAction(idsArray, isVisible)
+      if (result.success) {
+        toast.success(`Successfully ${isVisible ? 'published' : 'hidden'} ${selectedIds.size} students.`)
+      } else {
+        // Ideally we would revert carefully, but reloading is safer for bulk failure
+        toast.error(result.error)
+        window.location.reload()
+      }
+    } catch (e) {
+      toast.error('Failed to update visibility')
+      window.location.reload()
+    }
+  }
+
   function openEditModal(student: StudentWithClass) {
     setEditingStudent(student)
     setEditForm({
@@ -159,7 +197,6 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
       const res = await bulkMoveStudentsAction(idsArray, promoteTargetClass)
       if (res.success) {
         toast.success(`Successfully moved ${selectedIds.size} students to ${promoteTargetClass}`)
-        // Refresh page to get updated class associations easily
         window.location.reload()
       } else {
         toast.error(res.error)
@@ -230,18 +267,36 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
       </div>
 
       {selectedIds.size > 0 && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex justify-between items-center animate-in slide-in-from-top-2">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex flex-wrap gap-4 justify-between items-center animate-in slide-in-from-top-2">
           <div className="text-emerald-400 font-medium px-2">
             {selectedIds.size} student{selectedIds.size > 1 ? 's' : ''} selected
           </div>
-          <Button 
-            variant="outline" 
-            className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300"
-            onClick={() => setIsPromoteModalOpen(true)}
-          >
-            <Layers className="w-4 h-4 mr-2" />
-            Bulk Move / Promote
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300"
+              onClick={() => handleBulkVisibility(true)}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Publish
+            </Button>
+            <Button 
+              variant="outline" 
+              className="bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-white"
+              onClick={() => handleBulkVisibility(false)}
+            >
+              <EyeOff className="w-4 h-4 mr-2" />
+              Hide
+            </Button>
+            <Button 
+              variant="outline" 
+              className="bg-indigo-500/20 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/30 hover:text-indigo-300"
+              onClick={() => setIsPromoteModalOpen(true)}
+            >
+              <Layers className="w-4 h-4 mr-2" />
+              Promote
+            </Button>
+          </div>
         </div>
       )}
 
@@ -272,16 +327,15 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
                   <TableHead className="text-zinc-400">Roll No.</TableHead>
                   <TableHead className="text-zinc-400 font-bold">Name</TableHead>
                   <TableHead className="text-zinc-400">Class</TableHead>
-                  <TableHead className="text-zinc-400">Section</TableHead>
+                  <TableHead className="text-zinc-400 text-center">Leaderboard</TableHead>
                   <TableHead className="text-zinc-400">Father's Name</TableHead>
-                  <TableHead className="text-zinc-400">Phone</TableHead>
                   <TableHead className="text-right text-zinc-400">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-zinc-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-zinc-500">
                       No students found.
                     </TableCell>
                   </TableRow>
@@ -302,9 +356,18 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
                       <TableCell className="text-zinc-300">
                         <span className="bg-white/10 px-2 py-1 rounded text-xs">{student.class.name}</span>
                       </TableCell>
-                      <TableCell className="text-zinc-300">{student.section || '-'}</TableCell>
+                      <TableCell className="text-center">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleToggleVisibility(student.id, student.showInLeaderboard)}
+                          className={`h-8 w-8 ${student.showInLeaderboard ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800'}`}
+                          title={student.showInLeaderboard ? "Visible on Leaderboard" : "Hidden from Leaderboard"}
+                        >
+                          {student.showInLeaderboard ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </Button>
+                      </TableCell>
                       <TableCell className="text-zinc-300">{student.fatherName || '-'}</TableCell>
-                      <TableCell className="text-zinc-300 font-mono text-xs">{student.fatherPhone || '-'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button 
