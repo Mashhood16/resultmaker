@@ -167,3 +167,71 @@ export async function getStudentsBySchool(schoolId: string) {
     ]
   })
 }
+
+export async function editStudentAction(studentId: string, data: {
+  name: string
+  registrationNumber: string
+  rollNumber: string
+  section: string
+  fatherName: string
+  fatherPhone: string
+  fatherCnic: string
+}) {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: 'Unauthorized' }
+
+  try {
+    await prisma.student.update({
+      where: { id: studentId },
+      data: {
+        name: data.name.trim(),
+        registrationNumber: data.registrationNumber.trim() || null,
+        rollNumber: data.rollNumber.trim() || null,
+        section: data.section.trim() || null,
+        fatherName: data.fatherName.trim() || null,
+        fatherPhone: data.fatherPhone.trim() || null,
+        fatherCnic: data.fatherCnic.trim() || null,
+      }
+    })
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}
+
+export async function bulkMoveStudentsAction(studentIds: string[], targetClassName: string) {
+  const session = await auth()
+  const schoolId = session?.user?.id
+  if (!schoolId) return { success: false, error: 'Unauthorized' }
+
+  if (!targetClassName || studentIds.length === 0) {
+    return { success: false, error: 'Missing target class or selected students.' }
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Find or create the target class
+      const targetClass = await tx.class.upsert({
+        where: { name_schoolId: { name: targetClassName.trim(), schoolId } },
+        update: {},
+        create: { name: targetClassName.trim(), schoolId }
+      })
+
+      // Move all selected students to the new class
+      await tx.student.updateMany({
+        where: {
+          id: { in: studentIds }
+        },
+        data: {
+          classId: targetClass.id
+        }
+      })
+    })
+
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}
