@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { UploadCloud, Trash2, Search, Loader2, Users, Pencil, Layers, X, Eye, EyeOff } from 'lucide-react'
+import { UploadCloud, Trash2, Search, Loader2, Users, Pencil, Layers, X, Eye, EyeOff, Download } from 'lucide-react'
 import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction, toggleStudentVisibilityAction, bulkToggleVisibilityAction } from './student-actions'
 import { toast } from 'sonner'
 import { Student, Class } from '@prisma/client'
