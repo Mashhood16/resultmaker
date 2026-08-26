@@ -174,7 +174,7 @@ export async function deleteStudentAction(studentId: string) {
 }
 
 export async function getStudentsBySchool(schoolId: string) {
-  return await prisma.student.findMany({
+  const students = await prisma.student.findMany({
     where: {
       class: {
         schoolId: schoolId
@@ -188,6 +188,28 @@ export async function getStudentsBySchool(schoolId: string) {
       { name: 'asc' }
     ]
   })
+
+  // Deduplicate by classId and rollNumber
+  const map = new Map<string, typeof students[0]>()
+  for (const s of students) {
+    const key = s.rollNumber ? `${s.classId}-${s.rollNumber.trim()}` : s.id
+    if (map.has(key)) {
+      const existing = map.get(key)!
+      // Keep the longer name
+      if (s.name.length > existing.name.length) {
+        existing.name = s.name
+      }
+      if (!existing.registrationNumber && s.registrationNumber) existing.registrationNumber = s.registrationNumber
+      if (!existing.fatherName && s.fatherName) existing.fatherName = s.fatherName
+      if (!existing.fatherPhone && s.fatherPhone) existing.fatherPhone = s.fatherPhone
+      if (!existing.fatherCnic && s.fatherCnic) existing.fatherCnic = s.fatherCnic
+      if (!existing.section && s.section) existing.section = s.section
+    } else {
+      map.set(key, { ...s })
+    }
+  }
+
+  return Array.from(map.values())
 }
 
 export async function editStudentAction(studentId: string, data: {
