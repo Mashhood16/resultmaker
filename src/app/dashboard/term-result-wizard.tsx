@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
 import { FileText, UploadCloud, CheckCircle2, Loader2, ArrowRight, BookOpen, Calculator, X, Download } from 'lucide-react'
-import { uploadMarksAction, deleteUploadedMarksAction, uploadMasterMarksAction } from './actions'
+import { Checkbox } from '@/components/ui/checkbox'
+import { uploadMarksAction, deleteUploadedMarksAction, uploadMasterMarksAction, getTestNamesForClassAction } from './actions'
 import { toast } from 'sonner'
 import * as xlsx from 'xlsx'
 
@@ -52,6 +53,12 @@ export function TermResultWizard() {
   // Master upload state
   const [isMasterUploaded, setIsMasterUploaded] = useState(false)
   const [isMasterUploading, setIsMasterUploading] = useState(false)
+
+  // Report card terms selection
+  const [isSelectTermsOpen, setIsSelectTermsOpen] = useState(false)
+  const [availableTerms, setAvailableTerms] = useState<string[]>([])
+  const [selectedTerms, setSelectedTerms] = useState<string[]>([])
+  const [isLoadingTerms, setIsLoadingTerms] = useState(false)
 
   const isFinished = uploadMode === 'individual' 
     ? (subjectsRequired.length > 0 && uploadedSubjects.length === subjectsRequired.length)
@@ -141,12 +148,34 @@ export function TermResultWizard() {
     xlsx.writeFile(wb, `Master_Class_${selectedClass}_Template.xlsx`)
   }
 
-  async function handleGeneratePDF() {
+  async function openGenerateDialog() {
+    setIsLoadingTerms(true)
+    setIsSelectTermsOpen(true)
+    const res = await getTestNamesForClassAction(`Class ${selectedClass}`)
+    if (res.success && res.testNames) {
+      setAvailableTerms(res.testNames)
+      // By default, select the current term
+      if (!selectedTerms.includes(term)) {
+        setSelectedTerms([term])
+      }
+    } else {
+      toast.error('Failed to load available terms')
+    }
+    setIsLoadingTerms(false)
+  }
+
+  function handleProceedToPDF() {
+    if (selectedTerms.length === 0) {
+      toast.error('Please select at least one term')
+      return
+    }
+    
     setIsGenerating(true)
     try {
       const className = encodeURIComponent(`Class ${selectedClass}`)
-      const termName = encodeURIComponent(term)
-      window.open(`/pdf/term-result?className=${className}&testName=${termName}`, '_blank')
+      const termsJoined = encodeURIComponent(selectedTerms.join(','))
+      window.open(`/pdf/term-result?className=${className}&testNames=${termsJoined}`, '_blank')
+      setIsSelectTermsOpen(false)
     } catch (error) {
       toast.error('Failed to generate PDF')
     } finally {
@@ -196,7 +225,7 @@ export function TermResultWizard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Select Term</Label>
-                  <Select value={term} onValueChange={setTerm}>
+                  <Select value={term} onValueChange={(val) => setTerm(val || '')}>
                     <SelectTrigger className="bg-black/40 border-white/10 text-white h-12">
                       <SelectValue placeholder="E.g., First Term, Final Term" />
                     </SelectTrigger>
@@ -211,8 +240,9 @@ export function TermResultWizard() {
                 <div className="space-y-3">
                   <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Select Class</Label>
                   <Select value={selectedClass} onValueChange={(val) => {
-                    setSelectedClass(val)
-                    setSubjectsRequired(CLASS_SUBJECTS[val] ? [...CLASS_SUBJECTS[val]] : [])
+                    const safeVal = val || ''
+                    setSelectedClass(safeVal)
+                    setSubjectsRequired(CLASS_SUBJECTS[safeVal] ? [...CLASS_SUBJECTS[safeVal]] : [])
                   }}>
                     <SelectTrigger className="bg-black/40 border-white/10 text-white h-12">
                       <SelectValue placeholder="Choose Class (1-12)" />
@@ -231,10 +261,8 @@ export function TermResultWizard() {
                   <div className="flex justify-between items-center">
                     <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Total Marks Per Subject</Label>
                     <Dialog open={isAddSubjectOpen} onOpenChange={setIsAddSubjectOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="bg-transparent border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 h-8">
+                      <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 h-8 px-3">
                           + Add Subject
-                        </Button>
                       </DialogTrigger>
                       <DialogContent className="bg-zinc-900 border-zinc-800 text-white">
                         <DialogHeader>
@@ -465,13 +493,57 @@ export function TermResultWizard() {
                 </p>
               </div>
               <Button 
-                onClick={handleGeneratePDF}
+                onClick={openGenerateDialog}
                 disabled={isGenerating}
                 className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold h-14 px-8 text-lg mt-4 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all"
               >
                 {isGenerating ? <Loader2 className="w-6 h-6 mr-3 animate-spin" /> : <Calculator className="w-6 h-6 mr-3" />}
                 {isGenerating ? 'Generating...' : 'Generate Term PDF'}
               </Button>
+
+              <Dialog open={isSelectTermsOpen} onOpenChange={setIsSelectTermsOpen}>
+                <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl">Select Terms for Report Card</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4 space-y-4">
+                    <p className="text-sm text-zinc-400">
+                      Select which terms you want to include on the Result Sheet. Selecting multiple terms will generate a Landscape side-by-side report card.
+                    </p>
+                    {isLoadingTerms ? (
+                      <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>
+                    ) : availableTerms.length === 0 ? (
+                      <div className="text-center text-zinc-500 italic">No terms found for this class.</div>
+                    ) : (
+                      <div className="space-y-3 mt-4 border border-white/10 rounded-xl p-4 bg-black/20">
+                        {availableTerms.map(t => (
+                          <div key={t} className="flex items-center space-x-3">
+                            <Checkbox 
+                              id={`term-${t}`}
+                              checked={selectedTerms.includes(t)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedTerms(prev => [...prev, t])
+                                } else {
+                                  setSelectedTerms(prev => prev.filter(x => x !== t))
+                                }
+                              }}
+                              className="border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-black"
+                            />
+                            <Label htmlFor={`term-${t}`} className="text-zinc-200 cursor-pointer font-medium">{t}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <DialogFooter>
+                    <Button variant="ghost" onClick={() => setIsSelectTermsOpen(false)} className="text-zinc-400">Cancel</Button>
+                    <Button onClick={handleProceedToPDF} disabled={selectedTerms.length === 0} className="bg-emerald-500 text-black hover:bg-emerald-600 font-bold">
+                      Proceed
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </CardContent>

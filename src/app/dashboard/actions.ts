@@ -405,3 +405,32 @@ export async function uploadMasterMarksAction(formData: FormData) {
     return { success: false, error: error.message || 'An error occurred during master upload' }
   }
 }
+
+export async function getTestNamesForClassAction(className: string) {
+  const session = await auth()
+  const schoolId = session?.user?.id
+  if (!schoolId) return { success: false, error: 'Unauthorized' }
+
+  try {
+    const scores = await prisma.score.findMany({
+      where: {
+        student: {
+          class: {
+            name: className,
+            schoolId: schoolId
+          }
+        }
+      },
+      select: {
+        testName: true
+      },
+      distinct: ['testName']
+    })
+
+    const testNames = scores.map(s => s.testName).sort()
+    return { success: true, testNames }
+  } catch (error) {
+    console.error(error)
+    return { success: false, error: 'Failed to fetch test names' }
+  }
+}
