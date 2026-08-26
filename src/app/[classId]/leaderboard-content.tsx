@@ -37,10 +37,12 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
   const testStatsMap = new Map<string, { totalPercentage: number, count: number }>()
 
   scores.forEach(score => {
-    const sId = score.student.id
-    if (!studentMap.has(sId)) {
-      studentMap.set(sId, {
-        id: sId,
+    // Group by rollNumber if available, fallback to ID
+    const key = score.student.rollNumber ? score.student.rollNumber.trim() : score.student.id
+    
+    if (!studentMap.has(key)) {
+      studentMap.set(key, {
+        id: score.student.id,
         name: score.student.name,
         rollNumber: score.student.rollNumber,
         section: score.student.section,
@@ -50,35 +52,45 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
         isAbsent: true, // Will be false if they attended at least one test
         breakdown: []
       })
-    }
-
-    const sData = studentMap.get(sId)!
-    
-    // Add to breakdown
-    sData.breakdown.push({
-      testName: score.testName,
-      obtained: score.marksObtained,
-      total: score.totalMarks,
-      percentage: score.percentage,
-      isAbsent: score.isAbsent
-    })
-
-    // Aggregate Student totals
-    if (!score.isAbsent) {
-      sData.obtained += score.marksObtained
-      sData.isAbsent = false
-      
-      // Test Stats for Class Average
-      if (!testStatsMap.has(score.testName)) {
-        testStatsMap.set(score.testName, { totalPercentage: 0, count: 0 })
+    } else {
+      // If we merge students, keep the longer name (e.g. "Muhammad Wasif" vs "Wasif")
+      const existing = studentMap.get(key)!
+      if (score.student.name.length > existing.name.length) {
+        existing.name = score.student.name
       }
-      const tStats = testStatsMap.get(score.testName)!
-      tStats.totalPercentage += score.percentage
-      tStats.count += 1
     }
+
+    const sData = studentMap.get(key)!
     
-    // We add the total marks even if absent to accurately calculate percentage penalty
-    sData.total += score.totalMarks
+    // Prevent duplicate scores for the same testName if students were merged
+    const existingTest = sData.breakdown.find(b => b.testName === score.testName)
+    if (!existingTest) {
+      // Add to breakdown
+      sData.breakdown.push({
+        testName: score.testName,
+        obtained: score.marksObtained,
+        total: score.totalMarks,
+        percentage: score.percentage,
+        isAbsent: score.isAbsent
+      })
+
+      // Aggregate Student totals
+      if (!score.isAbsent) {
+        sData.obtained += score.marksObtained
+        sData.isAbsent = false
+        
+        // Test Stats for Class Average
+        if (!testStatsMap.has(score.testName)) {
+          testStatsMap.set(score.testName, { totalPercentage: 0, count: 0 })
+        }
+        const tStats = testStatsMap.get(score.testName)!
+        tStats.totalPercentage += score.percentage
+        tStats.count += 1
+      }
+      
+      // We add the total marks even if absent to accurately calculate percentage penalty
+      sData.total += score.totalMarks
+    }
   })
 
   // Calculate test averages
