@@ -3,11 +3,16 @@ import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Users, Trophy, ArrowRight, Building2 } from 'lucide-react'
 import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const session = await auth()
+  
+  if (!session?.user) {
+    redirect('/login')
+  }
   
   const classes = await prisma.class.findMany({
     where: session?.user?.role === 'school' ? { schoolId: session.user.id } : undefined,

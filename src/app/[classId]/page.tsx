@@ -1,10 +1,11 @@
 import prisma from '@/lib/prisma'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LeaderboardContent } from './leaderboard-content'
 import { Suspense } from 'react'
+import { auth } from '@/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,11 +16,22 @@ export default async function ClassLeaderboardPage({
   params: { classId: string }
   searchParams: { subject?: string }
 }) {
+  const session = await auth()
+  
+  if (!session?.user) {
+    redirect('/login')
+  }
+
   const classData = await prisma.class.findUnique({
     where: { id: params.classId }
   })
 
   if (!classData) return notFound()
+
+  // Prevent schools from viewing classes that don't belong to them
+  if (session.user.role === 'school' && classData.schoolId !== session.user.id) {
+    redirect('/')
+  }
 
   // Get all subjects that have scores for this class
   const subjects = await prisma.subject.findMany({
