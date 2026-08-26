@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
 import { FileText, UploadCloud, CheckCircle2, Loader2, ArrowRight, BookOpen, Calculator, X, Download } from 'lucide-react'
 import { uploadMarksAction, deleteUploadedMarksAction, uploadMasterMarksAction } from './actions'
 import { toast } from 'sonner'
@@ -35,6 +36,12 @@ export function TermResultWizard() {
   const [term, setTerm] = useState('')
   const [selectedClass, setSelectedClass] = useState('')
   const [subjectTotalMarks, setSubjectTotalMarks] = useState<Record<string, string>>({})
+  const [subjectsRequired, setSubjectsRequired] = useState<string[]>([])
+  
+  // Custom subject states
+  const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false)
+  const [newSubjectName, setNewSubjectName] = useState('')
+  const [newSubjectTotalMarks, setNewSubjectTotalMarks] = useState('100')
   
   // State for uploads
   const [uploadMode, setUploadMode] = useState<'individual' | 'master'>('individual')
@@ -46,10 +53,21 @@ export function TermResultWizard() {
   const [isMasterUploaded, setIsMasterUploaded] = useState(false)
   const [isMasterUploading, setIsMasterUploading] = useState(false)
 
-  const subjectsRequired = selectedClass ? CLASS_SUBJECTS[selectedClass] || [] : []
   const isFinished = uploadMode === 'individual' 
     ? (subjectsRequired.length > 0 && uploadedSubjects.length === subjectsRequired.length)
     : isMasterUploaded
+
+  function handleAddSubject() {
+    if (!newSubjectName.trim()) return
+    const name = newSubjectName.trim()
+    if (!subjectsRequired.includes(name)) {
+      setSubjectsRequired(prev => [...prev, name])
+      setSubjectTotalMarks(prev => ({ ...prev, [name]: newSubjectTotalMarks }))
+    }
+    setNewSubjectName('')
+    setNewSubjectTotalMarks('100')
+    setIsAddSubjectOpen(false)
+  }
 
   async function handleFileUpload(subject: string, file: File) {
     if (!file) return
@@ -141,6 +159,7 @@ export function TermResultWizard() {
     setTerm('')
     setSelectedClass('')
     setSubjectTotalMarks({})
+    setSubjectsRequired([])
     setUploadedSubjects([])
     setIsMasterUploaded(false)
     setUploadMode('individual')
@@ -191,7 +210,10 @@ export function TermResultWizard() {
                 
                 <div className="space-y-3">
                   <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Select Class</Label>
-                  <Select value={selectedClass} onValueChange={setSelectedClass}>
+                  <Select value={selectedClass} onValueChange={(val) => {
+                    setSelectedClass(val)
+                    setSubjectsRequired(CLASS_SUBJECTS[val] ? [...CLASS_SUBJECTS[val]] : [])
+                  }}>
                     <SelectTrigger className="bg-black/40 border-white/10 text-white h-12">
                       <SelectValue placeholder="Choose Class (1-12)" />
                     </SelectTrigger>
@@ -206,16 +228,53 @@ export function TermResultWizard() {
 
               {subjectsRequired.length > 0 && (
                 <div className="space-y-4 pt-4 border-t border-white/10">
-                  <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Total Marks Per Subject</Label>
+                  <div className="flex justify-between items-center">
+                    <Label className="text-zinc-300 font-semibold uppercase tracking-wider text-xs">Total Marks Per Subject</Label>
+                    <Dialog open={isAddSubjectOpen} onOpenChange={setIsAddSubjectOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="bg-transparent border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 h-8">
+                          + Add Subject
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <DialogHeader>
+                          <DialogTitle>Add Custom Subject</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label>Subject Name</Label>
+                            <Input value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} className="bg-black/40 border-white/10" placeholder="e.g. Art" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Total Marks</Label>
+                            <Input type="number" value={newSubjectTotalMarks} onChange={(e) => setNewSubjectTotalMarks(e.target.value)} className="bg-black/40 border-white/10" />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="ghost" onClick={() => setIsAddSubjectOpen(false)} className="text-zinc-400">Cancel</Button>
+                          <Button onClick={handleAddSubject} className="bg-emerald-500 text-black hover:bg-emerald-600">Add Subject</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {subjectsRequired.map(subject => (
-                      <div key={subject} className="space-y-2">
-                        <Label className="text-[10px] text-zinc-500 uppercase tracking-widest">{subject}</Label>
+                      <div key={subject} className="space-y-2 relative group">
+                        <Label className="text-[10px] text-zinc-500 uppercase tracking-widest flex items-center justify-between">
+                          {subject}
+                          <button 
+                            onClick={() => setSubjectsRequired(prev => prev.filter(s => s !== subject))} 
+                            className="text-red-400/50 hover:text-red-400 transition-colors"
+                            title="Remove Subject"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Label>
                         <Input 
                           type="number" 
                           value={subjectTotalMarks[subject] || '100'} 
                           onChange={(e) => setSubjectTotalMarks(prev => ({ ...prev, [subject]: e.target.value }))}
-                          className="bg-black/40 border-white/10 text-white h-10"
+                          className="bg-black/40 border-white/10 text-white h-10 pr-8"
                         />
                       </div>
                     ))}
