@@ -250,12 +250,12 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
           </div>
         </div>
 
-        <div className="flex gap-4 w-full md:w-auto items-center">
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-stretch sm:items-center">
           <Input 
             placeholder="Class (e.g., Class 6)" 
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="bg-white/5 border-white/10 text-white w-40"
+            className="bg-white/5 border-white/10 text-white w-full sm:w-40"
           />
           <input
             type="file"
