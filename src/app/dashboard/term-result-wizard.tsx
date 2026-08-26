@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { FileText, UploadCloud, CheckCircle2, Loader2, ArrowRight, BookOpen, Calculator, X } from 'lucide-react'
-import { uploadMarksAction, deleteUploadedMarksAction } from './actions'
+import { FileText, UploadCloud, CheckCircle2, Loader2, ArrowRight, BookOpen, Calculator, X, Download } from 'lucide-react'
+import { uploadMarksAction, deleteUploadedMarksAction, uploadMasterMarksAction } from './actions'
 import { toast } from 'sonner'
+import * as xlsx from 'xlsx'
 
 const CLASS_SUBJECTS: Record<string, string[]> = {
   '1': ['Math', 'English', 'Urdu', 'General Knowledge'],
@@ -36,12 +37,19 @@ export function TermResultWizard() {
   const [totalMarks, setTotalMarks] = useState('100')
   
   // State for uploads
+  const [uploadMode, setUploadMode] = useState<'individual' | 'master'>('individual')
   const [uploadedSubjects, setUploadedSubjects] = useState<string[]>([])
   const [uploadingSubject, setUploadingSubject] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  
+  // Master upload state
+  const [isMasterUploaded, setIsMasterUploaded] = useState(false)
+  const [isMasterUploading, setIsMasterUploading] = useState(false)
 
   const subjectsRequired = selectedClass ? CLASS_SUBJECTS[selectedClass] || [] : []
-  const isFinished = subjectsRequired.length > 0 && uploadedSubjects.length === subjectsRequired.length
+  const isFinished = uploadMode === 'individual' 
+    ? (subjectsRequired.length > 0 && uploadedSubjects.length === subjectsRequired.length)
+    : isMasterUploaded
 
   async function handleFileUpload(subject: string, file: File) {
     if (!file) return
@@ -69,6 +77,52 @@ export function TermResultWizard() {
     }
   }
 
+  async function handleMasterFileUpload(file: File) {
+    if (!file) return
+
+    setIsMasterUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('className', `Class ${selectedClass}`)
+      formData.append('testName', term)
+      formData.append('totalMarks', totalMarks)
+      formData.append('subjects', JSON.stringify(subjectsRequired))
+
+      const result = await uploadMasterMarksAction(formData)
+      if (result.success) {
+        toast.success(result.message || 'Master sheet uploaded successfully!')
+        setIsMasterUploaded(true)
+      } else {
+        toast.error(result.error || 'Failed to upload master sheet')
+      }
+    } catch (e) {
+      toast.error('An unexpected error occurred.')
+    } finally {
+      setIsMasterUploading(false)
+    }
+  }
+
+  function downloadSingleTemplate() {
+    const ws = xlsx.utils.json_to_sheet([
+      { 'Roll Number': '', 'Name': '', 'Obtained Marks': '', 'Total Marks': totalMarks }
+    ])
+    const wb = xlsx.utils.book_new()
+    xlsx.utils.book_append_sheet(wb, ws, 'Marks')
+    xlsx.writeFile(wb, `Single_Subject_Template.xlsx`)
+  }
+
+  function downloadMasterTemplate() {
+    const header: any = { 'Roll Number': '', 'Name': '' }
+    subjectsRequired.forEach(sub => {
+      header[sub] = ''
+    })
+    const ws = xlsx.utils.json_to_sheet([header])
+    const wb = xlsx.utils.book_new()
+    xlsx.utils.book_append_sheet(wb, ws, 'Master Marks')
+    xlsx.writeFile(wb, `Master_Class_${selectedClass}_Template.xlsx`)
+  }
+
   async function handleGeneratePDF() {
     setIsGenerating(true)
     try {
@@ -90,6 +144,8 @@ export function TermResultWizard() {
     setSelectedClass('')
     setTotalMarks('100')
     setUploadedSubjects([])
+    setIsMasterUploaded(false)
+    setUploadMode('individual')
   }
 
   return (
@@ -164,84 +220,163 @@ export function TermResultWizard() {
 
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-8">
-              <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl text-emerald-400">
-                <div>
-                  <span className="font-bold text-lg block">Class {selectedClass} - {term}</span>
-                  <span className="text-sm opacity-80">{uploadedSubjects.length} of {subjectsRequired.length} subjects uploaded</span>
-                </div>
-                {isFinished && (
-                  <div className="flex items-center gap-2 font-bold bg-emerald-500 text-black px-4 py-2 rounded-lg">
-                    <CheckCircle2 className="w-5 h-5" /> All Uploaded!
-                  </div>
-                )}
+              
+              <div className="flex gap-4 p-1 bg-white/5 rounded-xl mb-6">
+                <button 
+                  onClick={() => setUploadMode('individual')}
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all ${uploadMode === 'individual' ? 'bg-emerald-500 text-black shadow-lg' : 'text-zinc-400 hover:text-white'}`}
+                >
+                  Upload by Subject
+                </button>
+                <button 
+                  onClick={() => setUploadMode('master')}
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all ${uploadMode === 'master' ? 'bg-emerald-500 text-black shadow-lg' : 'text-zinc-400 hover:text-white'}`}
+                >
+                  Master Sheet (All Subjects)
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {subjectsRequired.map(subject => {
-                  const isUploaded = uploadedSubjects.includes(subject)
-                  const isUploading = uploadingSubject === subject
-
-                  return (
-                    <div key={subject} className={`p-4 rounded-xl border transition-all ${isUploaded ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/10'}`}>
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2 font-semibold text-zinc-200">
-                          <BookOpen className="w-4 h-4 text-emerald-400" />
-                          {subject}
-                        </div>
-                        {isUploaded && (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 ml-2"
-                              onClick={async () => {
-                                if (!confirm(`Are you sure you want to remove the uploaded marks for ${subject}?`)) return
-                                const res = await deleteUploadedMarksAction(`Class ${selectedClass}`, subject, term)
-                                if (res.success) {
-                                  toast.success(`Removed ${subject} marks.`)
-                                  setUploadedSubjects(prev => prev.filter(s => s !== subject))
-                                } else {
-                                  toast.error(res.error)
-                                }
-                              }}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
+              {uploadMode === 'master' ? (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl text-emerald-400 gap-4">
+                    <div>
+                      <span className="font-bold text-lg block">Class {selectedClass} - {term}</span>
+                      <span className="text-sm opacity-80">Master Upload for {subjectsRequired.length} subjects</span>
+                    </div>
+                    <Button onClick={downloadMasterTemplate} variant="outline" className="bg-transparent border-emerald-500/50 hover:bg-emerald-500/20 text-emerald-400 h-10">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Master Template
+                    </Button>
+                  </div>
+                  
+                  <div className="p-8 border-2 border-dashed border-white/10 rounded-2xl bg-white/5 flex flex-col items-center justify-center text-center relative overflow-hidden group hover:border-emerald-500/50 transition-colors">
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls, .csv"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleMasterFileUpload(file)
+                      }}
+                      disabled={isMasterUploading || isMasterUploaded}
+                    />
+                    
+                    {isMasterUploading ? (
+                      <div className="flex flex-col items-center gap-4 text-emerald-400">
+                        <Loader2 className="w-12 h-12 animate-spin" />
+                        <span className="font-bold tracking-widest uppercase">Uploading Master Sheet...</span>
                       </div>
-
-                      {!isUploaded && (
-                        <div className="relative group">
-                          <input
-                            type="file"
-                            accept=".xlsx, .xls, .csv"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) handleFileUpload(subject, file)
-                            }}
-                            disabled={isUploading}
-                          />
-                          <Button 
-                            variant="secondary" 
-                            className="w-full bg-white/10 hover:bg-white/20 text-white border-none h-10"
-                            disabled={isUploading}
-                          >
-                            {isUploading ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <UploadCloud className="w-4 h-4 mr-2" />
-                            )}
-                            {isUploading ? 'Uploading...' : 'Upload Excel'}
-                          </Button>
+                    ) : isMasterUploaded ? (
+                      <div className="flex flex-col items-center gap-4 text-emerald-400">
+                        <CheckCircle2 className="w-16 h-16" />
+                        <div className="font-bold text-xl">Upload Complete!</div>
+                        <Button 
+                          variant="ghost" 
+                          className="mt-2 text-zinc-400 hover:text-white relative z-20"
+                          onClick={() => setIsMasterUploaded(false)}
+                        >
+                          Upload a different file
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-4 text-zinc-400 group-hover:text-emerald-400 transition-colors">
+                        <UploadCloud className="w-16 h-16" />
+                        <div>
+                          <p className="font-bold text-lg text-white mb-1">Click or drag Master Sheet here</p>
+                          <p className="text-sm">Supports .xlsx, .xls, .csv</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl text-emerald-400 gap-4">
+                    <div>
+                      <span className="font-bold text-lg block">Class {selectedClass} - {term}</span>
+                      <span className="text-sm opacity-80">{uploadedSubjects.length} of {subjectsRequired.length} subjects uploaded</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button onClick={downloadSingleTemplate} variant="outline" className="bg-transparent border-emerald-500/50 hover:bg-emerald-500/20 text-emerald-400 h-10">
+                        <Download className="w-4 h-4 mr-2" />
+                        Template
+                      </Button>
+                      {isFinished && (
+                        <div className="flex items-center gap-2 font-bold bg-emerald-500 text-black px-4 h-10 rounded-lg">
+                          <CheckCircle2 className="w-5 h-5" /> All Uploaded!
                         </div>
                       )}
                     </div>
-                  )
-                })}
-              </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {subjectsRequired.map(subject => {
+                      const isUploaded = uploadedSubjects.includes(subject)
+                      const isUploading = uploadingSubject === subject
+
+                      return (
+                        <div key={subject} className={`p-4 rounded-xl border transition-all ${isUploaded ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/10'}`}>
+                          <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center gap-2 font-semibold text-zinc-200">
+                              <BookOpen className="w-4 h-4 text-emerald-400" />
+                              {subject}
+                            </div>
+                            {isUploaded && (
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 ml-2"
+                                  onClick={async () => {
+                                    if (!confirm(`Are you sure you want to remove the uploaded marks for ${subject}?`)) return
+                                    const res = await deleteUploadedMarksAction(`Class ${selectedClass}`, subject, term)
+                                    if (res.success) {
+                                      toast.success(`Removed ${subject} marks.`)
+                                      setUploadedSubjects(prev => prev.filter(s => s !== subject))
+                                    } else {
+                                      toast.error(res.error)
+                                    }
+                                  }}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {!isUploaded && (
+                            <div className="relative group">
+                              <input
+                                type="file"
+                                accept=".xlsx, .xls, .csv"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) handleFileUpload(subject, file)
+                                }}
+                                disabled={isUploading}
+                              />
+                              <Button 
+                                variant="secondary" 
+                                className="w-full bg-white/10 hover:bg-white/20 text-white border-none h-10"
+                                disabled={isUploading}
+                              >
+                                {isUploading ? (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                  <UploadCloud className="w-4 h-4 mr-2" />
+                                )}
+                                {isUploading ? 'Uploading...' : 'Upload Excel'}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           

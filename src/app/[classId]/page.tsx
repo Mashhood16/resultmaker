@@ -85,7 +85,7 @@ export default async function ClassLeaderboardPage({
             </div>
 
             <Suspense fallback={<div className="h-64 flex items-center justify-center text-zinc-500 animate-pulse">Loading rankings...</div>}>
-              <LeaderboardContent classId={classData.id} subjectId={selectedSubjectId} />
+              <LeaderboardContent classId={classData.id} subjectId={selectedSubjectId} availableSubjects={subjects} />
             </Suspense>
           </div>
         ) : (

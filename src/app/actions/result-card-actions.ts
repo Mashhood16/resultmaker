@@ -24,13 +24,14 @@ export type ComprehensiveStudentScore = {
 export async function fetchComprehensiveScores(
   classId: string,
   studentIds: string[],
-  selectedTests: string[]
+  selectedTests: string[],
+  selectedSubjects?: string[]
 ): Promise<ComprehensiveStudentScore[]> {
   const session = await auth()
   const schoolId = session?.user?.id
   if (!schoolId) throw new Error('Unauthorized')
 
-  // Fetch the students with their scores for the selected tests
+  // Fetch the students with their scores for the selected tests and subjects
   const students = await prisma.student.findMany({
     where: {
       id: { in: studentIds },
@@ -41,7 +42,8 @@ export async function fetchComprehensiveScores(
       class: true,
       scores: {
         where: {
-          testName: { in: selectedTests }
+          testName: { in: selectedTests },
+          ...(selectedSubjects && selectedSubjects.length > 0 ? { subject: { name: { in: selectedSubjects } } } : {})
         },
         include: {
           subject: true

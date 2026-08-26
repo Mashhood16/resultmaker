@@ -16,6 +16,7 @@ import { ConsolidatedReport } from '@/components/consolidated-report'
 import { toPng, toJpeg } from 'html-to-image'
 import jsPDF from 'jspdf'
 import { toast } from 'sonner'
+import { fetchComprehensiveScores } from '@/app/actions/result-card-actions'
 
 type StudentScore = {
   id: string
@@ -40,9 +41,10 @@ type StudentScore = {
 interface LeaderboardViewProps {
   initialData: StudentScore[]
   classId: string
+  availableSubjects: { id: string, name: string }[]
 }
 
-export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) {
+export function LeaderboardView({ initialData, classId, availableSubjects }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
@@ -51,6 +53,8 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
   // Report Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [reportSelectedTests, setReportSelectedTests] = useState<Set<string>>(new Set())
+  const [reportSelectedSubjects, setReportSelectedSubjects] = useState<Set<string>>(new Set())
+  const [crossSubjectReportData, setCrossSubjectReportData] = useState<any[] | null>(null)
 
   const uniqueTests = useMemo(() => {
     const tests = new Set<string>()
@@ -62,17 +66,51 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
 
   const openReportModal = () => {
     setReportSelectedTests(new Set(uniqueTests))
+    setReportSelectedSubjects(new Set(availableSubjects.map(s => s.name)))
     setIsReportModalOpen(true)
   }
 
   const handleExport = async () => {
     setIsReportModalOpen(false)
     setIsExporting(true)
-    const toastId = toast.loading('Preparing consolidated report...')
+    const toastId = toast.loading('Fetching multi-subject performance data...')
     try {
       if (selectedStudents.size === 0) throw new Error('No students selected')
+      if (reportSelectedSubjects.size === 0) throw new Error('No subjects selected')
       
-      // Give the DOM a tiny bit of time to render the ConsolidatedReport with only the selected tests
+      const data = await fetchComprehensiveScores(
+        classId,
+        Array.from(selectedStudents),
+        Array.from(reportSelectedTests),
+        Array.from(reportSelectedSubjects)
+      )
+
+      // Map the multi-subject data to the structure ConsolidatedReport expects,
+      // where "testName" becomes the Subject Name so columns are subjects instead of tests!
+      const mappedStudents = data.map(s => {
+        const totalObtained = s.subjects.reduce((sum, subj) => sum + subj.rawObtained, 0)
+        const totalTotal = s.subjects.reduce((sum, subj) => sum + subj.rawTotal, 0)
+        const percentage = totalTotal > 0 ? (totalObtained / totalTotal) * 100 : 0
+        
+        return {
+          id: s.studentId,
+          name: s.name,
+          rank: 0,
+          percentage: Number(percentage.toFixed(2)),
+          breakdown: s.subjects.map(subj => ({
+            testName: subj.subjectName,
+            percentage: subj.rawTotal > 0 ? Number(((subj.rawObtained / subj.rawTotal) * 100).toFixed(2)) : 0,
+            isAbsent: subj.isAbsent
+          }))
+        }
+      })
+
+      mappedStudents.sort((a, b) => b.percentage - a.percentage)
+      mappedStudents.forEach((s, idx) => s.rank = idx + 1)
+
+      setCrossSubjectReportData(mappedStudents)
+      
+      // Give the DOM a tiny bit of time to render the updated ConsolidatedReport 
       await new Promise(resolve => setTimeout(resolve, 500))
 
       const JsPDFConstructor = typeof jsPDF === 'function' ? jsPDF : (window as any).jspdf?.jsPDF || (jsPDF as any).jsPDF
@@ -139,6 +177,7 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
       toast.error(`Export failed: ${e.message}`, { id: toastId, duration: 5000 })
     } finally {
       setIsExporting(false)
+      setCrossSubjectReportData(null)
     }
   }
 
@@ -147,6 +186,13 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
     if (next.has(test)) next.delete(test)
     else next.add(test)
     setReportSelectedTests(next)
+  }
+
+  const toggleSubjectForReport = (subject: string) => {
+    const next = new Set(reportSelectedSubjects)
+    if (next.has(subject)) next.delete(subject)
+    else next.add(subject)
+    setReportSelectedSubjects(next)
   }
 
   const toggleStudent = (id: string, e: React.MouseEvent) => {
@@ -432,10 +478,12 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
 
       {/* Hidden Consolidated Report for PDF Export */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', zIndex: -1 }}>
-        <ConsolidatedReport 
-          students={filteredData.filter(s => selectedStudents.has(s.id))}
-          uniqueTests={isExporting ? Array.from(reportSelectedTests) : uniqueTests}
-        />
+        {crossSubjectReportData && (
+          <ConsolidatedReport 
+            students={crossSubjectReportData}
+            uniqueTests={Array.from(reportSelectedSubjects)}
+          />
+        )}
       </div>
 
       <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
@@ -446,23 +494,42 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
               Configure Report
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
-              Select which tests to include in the exported report for the {selectedStudents.size} selected students.
+              Select which tests and subjects to aggregate for the {selectedStudents.size} selected students.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-            {uniqueTests.length === 0 ? (
-              <p className="text-zinc-500 text-sm">No tests available.</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {uniqueTests.map(test => (
-                  <div key={test} className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleTestForReport(test)}>
-                    <Checkbox id={`rep-test-${test}`} checked={reportSelectedTests.has(test)} onCheckedChange={() => toggleTestForReport(test)} />
-                    <Label htmlFor={`rep-test-${test}`} className="flex-1 cursor-pointer font-medium text-zinc-300 text-sm">{test}</Label>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="space-y-3">
+              <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">Include Tests</h4>
+              {uniqueTests.length === 0 ? (
+                <p className="text-zinc-500 text-sm">No tests available.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {uniqueTests.map(test => (
+                    <div key={test} className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleTestForReport(test)}>
+                      <Checkbox id={`rep-test-${test}`} checked={reportSelectedTests.has(test)} onCheckedChange={() => toggleTestForReport(test)} />
+                      <Label htmlFor={`rep-test-${test}`} className="flex-1 cursor-pointer font-medium text-zinc-300 text-sm">{test}</Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">Include Subjects</h4>
+              {availableSubjects.length === 0 ? (
+                <p className="text-zinc-500 text-sm">No subjects available.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {availableSubjects.map(sub => (
+                    <div key={sub.id} className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleSubjectForReport(sub.name)}>
+                      <Checkbox id={`rep-sub-${sub.id}`} checked={reportSelectedSubjects.has(sub.name)} onCheckedChange={() => toggleSubjectForReport(sub.name)} />
+                      <Label htmlFor={`rep-sub-${sub.id}`} className="flex-1 cursor-pointer font-medium text-zinc-300 text-sm">{sub.name}</Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <DialogFooter>
@@ -471,7 +538,7 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
             </Button>
             <Button 
               onClick={handleExport} 
-              disabled={isExporting || reportSelectedTests.size === 0} 
+              disabled={isExporting || reportSelectedTests.size === 0 || reportSelectedSubjects.size === 0} 
               className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
             >
               <Printer className="w-4 h-4 mr-2" />

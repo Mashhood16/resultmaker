@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma'
 import { LeaderboardView } from './leaderboard-view'
 
-export async function LeaderboardContent({ classId, subjectId }: { classId: string, subjectId: string }) {
+export async function LeaderboardContent({ classId, subjectId, availableSubjects }: { classId: string, subjectId: string, availableSubjects: {id: string, name: string}[] }) {
   if (!subjectId) return null;
 
   const scores = await prisma.score.findMany({
@@ -113,6 +113,6 @@ export async function LeaderboardContent({ classId, subjectId }: { classId: stri
   })
 
   return (
-    <LeaderboardView initialData={rankedData} classId={classId} />
+    <LeaderboardView initialData={rankedData} classId={classId} availableSubjects={availableSubjects} />
   )
 }
