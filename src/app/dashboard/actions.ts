@@ -123,24 +123,32 @@ export async function uploadMarksAction(formData: FormData) {
       })
 
       for (const data of validatedData) {
-        const student = await tx.student.upsert({
-          where: {
-            name_classId_section: {
+        // Attempt to intelligently map to an existing student from the master roster
+        let student = null;
+        
+        if (data.rollNumber) {
+          student = await tx.student.findFirst({
+            where: { classId: classRecord.id, rollNumber: data.rollNumber }
+          })
+        }
+
+        if (!student) {
+          student = await tx.student.findFirst({
+            where: { classId: classRecord.id, name: data.name }
+          })
+        }
+
+        // If still not found, create a placeholder student to not block the upload
+        if (!student) {
+          student = await tx.student.create({
+            data: {
               name: data.name,
               classId: classRecord.id,
-              section: data.section
+              section: data.section,
+              rollNumber: data.rollNumber
             }
-          },
-          update: {
-            rollNumber: data.rollNumber !== null ? data.rollNumber : undefined
-          },
-          create: {
-            name: data.name,
-            classId: classRecord.id,
-            section: data.section,
-            rollNumber: data.rollNumber
-          }
-        })
+          })
+        }
 
         await tx.score.upsert({
           where: {
@@ -170,10 +178,48 @@ export async function uploadMarksAction(formData: FormData) {
     })
 
     revalidatePath('/')
-    revalidatePath(`/${className}`) // Just to be safe, though we might use classId
+    revalidatePath('/dashboard')
     return { success: true, message: `Successfully processed ${validatedData.length} records.` }
   } catch (error: any) {
     console.error('Upload Error:', error)
     return { success: false, error: error.message || 'An error occurred during upload' }
+  }
+}
+
+export async function deleteUploadedMarksAction(className: string, subjectName: string, testName: string) {
+  const session = await auth()
+  const schoolId = session?.user?.id
+  if (!schoolId) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  try {
+    // Find the class and subject to get their IDs
+    const classRecord = await prisma.class.findUnique({
+      where: { name_schoolId: { name: className, schoolId } }
+    });
+    const subjectRecord = await prisma.subject.findUnique({
+      where: { name_schoolId: { name: subjectName, schoolId } }
+    });
+
+    if (!classRecord || !subjectRecord) {
+      return { success: true } // Already doesn't exist
+    }
+
+    // Delete all scores for this subject and test in this class
+    await prisma.score.deleteMany({
+      where: {
+        subjectId: subjectRecord.id,
+        testName: testName,
+        student: {
+          classId: classRecord.id
+        }
+      }
+    })
+
+    revalidatePath('/dashboard')
+    return { success: true, message: `Deleted all scores for ${subjectName}.` }
+  } catch (error: any) {
+    return { success: false, error: error.message || 'An error occurred while deleting' }
   }
 }

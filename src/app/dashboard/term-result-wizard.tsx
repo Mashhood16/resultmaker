@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { FileText, UploadCloud, CheckCircle2, Loader2, ArrowRight, BookOpen, Calculator } from 'lucide-react'
-import { uploadMarksAction } from './actions'
+import { FileText, UploadCloud, CheckCircle2, Loader2, ArrowRight, BookOpen, Calculator, X } from 'lucide-react'
+import { uploadMarksAction, deleteUploadedMarksAction } from './actions'
 import { toast } from 'sonner'
 
 const CLASS_SUBJECTS: Record<string, string[]> = {
@@ -188,7 +188,28 @@ export function TermResultWizard() {
                           <BookOpen className="w-4 h-4 text-emerald-400" />
                           {subject}
                         </div>
-                        {isUploaded && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+                        {isUploaded && (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 ml-2"
+                              onClick={async () => {
+                                if (!confirm(`Are you sure you want to remove the uploaded marks for ${subject}?`)) return
+                                const res = await deleteUploadedMarksAction(`Class ${selectedClass}`, subject, term)
+                                if (res.success) {
+                                  toast.success(`Removed ${subject} marks.`)
+                                  setUploadedSubjects(prev => prev.filter(s => s !== subject))
+                                } else {
+                                  toast.error(res.error)
+                                }
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       {!isUploaded && (

@@ -2,10 +2,12 @@ import { UploadForm } from './upload-form'
 import { ManageDataView } from './manage-data-view'
 import { TestManagementView } from './test-management-view'
 import { TermResultWizard } from './term-result-wizard'
+import { StudentRosterView } from './student-roster-view'
+import { getStudentsBySchool } from './student-actions'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LogOut, Home, UploadCloud, Database, Calendar, FileText, Layers } from 'lucide-react'
+import { LogOut, Home, UploadCloud, Database, Calendar, FileText, Layers, Users } from 'lucide-react'
 import { signOut } from '@/auth'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -15,6 +17,8 @@ export default async function SchoolDashboard() {
   if (!session?.user || session.user.role !== 'school') {
     redirect('/login')
   }
+
+  const students = await getStudentsBySchool(session.user.id)
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
@@ -43,14 +47,18 @@ export default async function SchoolDashboard() {
       
       <main className="flex justify-center flex-col items-center max-w-6xl mx-auto">
         <Tabs defaultValue="term" className="w-full flex-col">
-          <TabsList className="flex w-full justify-center bg-zinc-900/50 border border-zinc-800 rounded-xl p-1 mb-12 h-auto">
-            <TabsTrigger value="term" className="rounded-lg data-active:bg-emerald-500/20 data-active:text-emerald-400 hover:text-zinc-200 transition-all font-semibold h-12 px-12 flex items-center justify-center text-base bg-transparent shadow-none">
-              <FileText className="w-5 h-5 mr-3" />
-              Term Result (Wizard)
+          <TabsList className="flex w-full justify-center flex-wrap bg-zinc-900/50 border border-zinc-800 rounded-xl p-1 mb-12 h-auto">
+            <TabsTrigger value="term" className="rounded-lg data-active:bg-emerald-500/20 data-active:text-emerald-400 hover:text-zinc-200 transition-all font-semibold h-12 px-8 flex items-center justify-center text-base bg-transparent shadow-none">
+              <FileText className="w-5 h-5 mr-2" />
+              Term Wizard
             </TabsTrigger>
-            <TabsTrigger value="yearly" className="rounded-lg data-active:bg-blue-500/20 data-active:text-blue-400 hover:text-zinc-200 transition-all font-semibold h-12 px-12 flex items-center justify-center text-base bg-transparent shadow-none">
-              <Layers className="w-5 h-5 mr-3" />
-              Yearly Result (Class Exams)
+            <TabsTrigger value="yearly" className="rounded-lg data-active:bg-blue-500/20 data-active:text-blue-400 hover:text-zinc-200 transition-all font-semibold h-12 px-8 flex items-center justify-center text-base bg-transparent shadow-none">
+              <Layers className="w-5 h-5 mr-2" />
+              Yearly Uploads
+            </TabsTrigger>
+            <TabsTrigger value="students" className="rounded-lg data-active:bg-purple-500/20 data-active:text-purple-400 hover:text-zinc-200 transition-all font-semibold h-12 px-8 flex items-center justify-center text-base bg-transparent shadow-none">
+              <Users className="w-5 h-5 mr-2" />
+              Student Roster
             </TabsTrigger>
           </TabsList>
           
@@ -87,6 +95,10 @@ export default async function SchoolDashboard() {
                 <TestManagementView />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          <TabsContent value="students" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
+            <StudentRosterView initialStudents={students} />
           </TabsContent>
         </Tabs>
       </main>

@@ -43,17 +43,21 @@ model Subject {
 }
 
 model Student {
-  id         String       @id @default(cuid())
-  rollNumber String?
-  name       String
-  section   String?      // e.g., "A", "B"
-  classId   String
-  class     Class        @relation(fields: [classId], references: [id])
-  scores    Score[]
+  id                 String       @id @default(cuid())
+  registrationNumber String?
+  rollNumber         String?
+  name               String
+  fatherName         String?
+  fatherPhone        String?
+  fatherCnic         String?
+  section            String?      // e.g., "A", "B"
+  classId            String
+  class              Class        @relation(fields: [classId], references: [id])
+  scores             Score[]
   
   @@unique([name, classId, section]) // Prevent duplicate students in the same section/class
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 }
 
 model Score {
