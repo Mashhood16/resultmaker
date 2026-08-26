@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/button'
 import { Search, Medal, Trophy, Star, ChevronDown, ChevronRight, Printer, ScrollText } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { ConsolidatedReport } from '@/components/consolidated-report'
 import { toPng, toJpeg } from 'html-to-image'
 import jsPDF from 'jspdf'
 import { toast } from 'sonner'
-import { ResultCardModal } from '@/components/result-card-modal'
-import { FederalResultCard } from '@/components/federal-result-card'
-import { fetchComprehensiveScores, ComprehensiveStudentScore } from '@/app/actions/result-card-actions'
 
 type StudentScore = {
   id: string
@@ -47,9 +47,10 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
   const [isExporting, setIsExporting] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [federalStudents, setFederalStudents] = useState<ComprehensiveStudentScore[]>([])
-  const [isExportingFederal, setIsExportingFederal] = useState(false)
+  
+  // Report Modal State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [reportSelectedTests, setReportSelectedTests] = useState<Set<string>>(new Set())
 
   const uniqueTests = useMemo(() => {
     const tests = new Set<string>()
@@ -59,12 +60,21 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
     return Array.from(tests)
   }, [initialData])
 
+  const openReportModal = () => {
+    setReportSelectedTests(new Set(uniqueTests))
+    setIsReportModalOpen(true)
+  }
+
   const handleExport = async () => {
+    setIsReportModalOpen(false)
     setIsExporting(true)
     const toastId = toast.loading('Preparing consolidated report...')
     try {
       if (selectedStudents.size === 0) throw new Error('No students selected')
       
+      // Give the DOM a tiny bit of time to render the ConsolidatedReport with only the selected tests
+      await new Promise(resolve => setTimeout(resolve, 500))
+
       const JsPDFConstructor = typeof jsPDF === 'function' ? jsPDF : (window as any).jspdf?.jsPDF || (jsPDF as any).jsPDF
       if (!JsPDFConstructor) throw new Error('jsPDF is not loaded correctly')
       
@@ -132,69 +142,11 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
     }
   }
 
-  const handleGenerateFederalResult = async (selectedTests: string[]) => {
-    setIsModalOpen(false)
-    setIsExportingFederal(true)
-    const toastId = toast.loading('Fetching comprehensive scores across all subjects...')
-    
-    try {
-      // 1. Fetch cross-subject data
-      const data = await fetchComprehensiveScores(
-        classId,
-        Array.from(selectedStudents),
-        selectedTests
-      )
-      
-      setFederalStudents(data)
-      
-      // Wait for React to render the hidden federal-result-card components in the DOM
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      toast.loading('Generating Official Result Cards...', { id: toastId })
-      
-      const JsPDFConstructor = typeof jsPDF === 'function' ? jsPDF : (window as any).jspdf?.jsPDF || (jsPDF as any).jsPDF
-      const pdf = new JsPDFConstructor('p', 'pt', 'a4')
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = pdf.internal.pageSize.getHeight()
-      
-      let isFirstPage = true
-      
-      // 2. Iterate and capture each student's result card
-      for (const student of data) {
-        const el = document.getElementById(`federal-result-card-${student.studentId}`)
-        if (!el) continue;
-        
-        // Use JPEG with lower pixelRatio to prevent "Invalid string length" from massive base64 strings
-        const imgData = await toJpeg(el, { pixelRatio: 1.5, backgroundColor: '#ffffff', quality: 0.92 })
-        const elRect = el.getBoundingClientRect()
-        const canvasWidth = elRect.width || 900
-        const canvasHeight = elRect.height || 1272
-        
-        const imgWidth = pdfWidth
-        const imgHeight = (canvasHeight * pdfWidth) / canvasWidth
-        
-        if (!isFirstPage) {
-          pdf.addPage()
-        }
-        isFirstPage = false
-        
-        // Fill white background just in case
-        pdf.setFillColor('#ffffff')
-        pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
-        
-        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'FAST')
-      }
-      
-      pdf.save('Federal_Result_Cards.pdf')
-      toast.success(`Exported ${data.length} Result Cards successfully!`, { id: toastId })
-    } catch (e: any) {
-      console.error(e)
-      toast.error(`Result Card Export failed: ${e.message}`, { id: toastId, duration: 5000 })
-    } finally {
-      setIsExportingFederal(false)
-      // Clear data to remove it from DOM
-      setFederalStudents([])
-    }
+  const toggleTestForReport = (test: string) => {
+    const next = new Set(reportSelectedTests)
+    if (next.has(test)) next.delete(test)
+    else next.add(test)
+    setReportSelectedTests(next)
   }
 
   const toggleStudent = (id: string, e: React.MouseEvent) => {
@@ -340,11 +292,7 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
             </div>
             {selectedStudents.size > 0 && (
               <div className="flex gap-2">
-                <Button onClick={() => setIsModalOpen(true)} disabled={isExportingFederal || isExporting} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 disabled:opacity-50">
-                  <ScrollText className="w-4 h-4 mr-2" />
-                  {isExportingFederal ? 'Preparing...' : 'Generate Result Card'}
-                </Button>
-                <Button onClick={handleExport} disabled={isExporting || isExportingFederal} className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50">
+                <Button onClick={openReportModal} disabled={isExporting} className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50">
                   <Printer className="w-4 h-4 mr-2" />
                   {isExporting ? 'Generating...' : `Export Report`}
                 </Button>
@@ -486,26 +434,52 @@ export function LeaderboardView({ initialData, classId }: LeaderboardViewProps) 
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', zIndex: -1 }}>
         <ConsolidatedReport 
           students={filteredData.filter(s => selectedStudents.has(s.id))}
-          uniqueTests={uniqueTests}
+          uniqueTests={isExporting ? Array.from(reportSelectedTests) : uniqueTests}
         />
       </div>
-      
-      {/* Federal Result Card Logic */}
-      <ResultCardModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        classId={classId}
-        uniqueTests={uniqueTests}
-        selectedStudentCount={selectedStudents.size}
-        onGenerate={handleGenerateFederalResult}
-      />
-      
-      {federalStudents.length > 0 && (
-        <FederalResultCard 
-          students={federalStudents}
-          schoolName="Government High School"
-        />
-      )}
+
+      <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-zinc-950 text-white border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Printer className="w-5 h-5 text-emerald-400" />
+              Configure Report
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              Select which tests to include in the exported report for the {selectedStudents.size} selected students.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            {uniqueTests.length === 0 ? (
+              <p className="text-zinc-500 text-sm">No tests available.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {uniqueTests.map(test => (
+                  <div key={test} className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleTestForReport(test)}>
+                    <Checkbox id={`rep-test-${test}`} checked={reportSelectedTests.has(test)} onCheckedChange={() => toggleTestForReport(test)} />
+                    <Label htmlFor={`rep-test-${test}`} className="flex-1 cursor-pointer font-medium text-zinc-300 text-sm">{test}</Label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReportModalOpen(false)} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleExport} 
+              disabled={isExporting || reportSelectedTests.size === 0} 
+              className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
