@@ -176,6 +176,9 @@ export async function uploadMarksAction(formData: FormData) {
           }
         })
       }
+    }, {
+      maxWait: 10000,
+      timeout: 60000 // 60 seconds
     })
 
     revalidatePath('/')
@@ -395,6 +398,9 @@ export async function uploadMasterMarksAction(formData: FormData) {
           })
         }
       }
+    }, {
+      maxWait: 10000,
+      timeout: 60000 // 60 seconds
     })
 
     revalidatePath('/')

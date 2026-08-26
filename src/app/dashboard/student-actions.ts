@@ -146,6 +146,9 @@ export async function uploadStudentRosterAction(formData: FormData) {
           })
         }
       }
+    }, {
+      maxWait: 10000,
+      timeout: 60000 // 60 seconds
     })
 
     revalidatePath('/dashboard')
