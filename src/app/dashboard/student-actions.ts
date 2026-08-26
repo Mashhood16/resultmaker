@@ -13,6 +13,7 @@ function findKey(row: Record<string, any>, possibleKeys: string[]) {
 
 const rosterRowSchema = z.object({
   Name: z.string().min(1),
+  ClassName: z.string().optional().default(''),
   RegistrationNumber: z.string().optional().default(''),
   RollNumber: z.string().optional().default(''),
   Section: z.string().optional().default(''),
@@ -29,9 +30,9 @@ export async function uploadStudentRosterAction(formData: FormData) {
   }
 
   const file = formData.get('file') as File | null
-  const className = formData.get('className') as string | null
+  const defaultClassName = formData.get('className') as string | null
 
-  if (!file || !className) {
+  if (!file) {
     return { success: false, error: 'Missing required fields' }
   }
 
@@ -53,6 +54,7 @@ export async function uploadStudentRosterAction(formData: FormData) {
 
       // Flexible column mapping
       const nameKey = findKey(row, ['name', 'student', 'student name'])
+      const classKey = findKey(row, ['class', 'grade'])
       const regNoKey = findKey(row, ['reg no', 'registration', 'reg. no', 'reg number'])
       const rollNoKey = findKey(row, ['roll no', 'roll number', 'r.no', 'class roll'])
       const sectionKey = findKey(row, ['section', 'sec'])
@@ -62,6 +64,7 @@ export async function uploadStudentRosterAction(formData: FormData) {
 
       const parsedRow = rosterRowSchema.safeParse({
         Name: nameKey ? String(row[nameKey]) : undefined,
+        ClassName: classKey ? String(row[classKey]) : (defaultClassName || ''),
         RegistrationNumber: regNoKey ? String(row[regNoKey]) : '',
         RollNumber: rollNoKey ? String(row[rollNoKey]) : '',
         Section: sectionKey ? String(row[sectionKey]) : '',
@@ -70,9 +73,10 @@ export async function uploadStudentRosterAction(formData: FormData) {
         FatherCnic: fatherCnicKey ? String(row[fatherCnicKey]) : '',
       })
 
-      if (parsedRow.success) {
+      if (parsedRow.success && parsedRow.data.ClassName.trim()) {
         validatedData.push({
           name: parsedRow.data.Name.trim(),
+          className: parsedRow.data.ClassName.trim(),
           registrationNumber: parsedRow.data.RegistrationNumber.trim() || null,
           rollNumber: parsedRow.data.RollNumber.trim() || null,
           section: parsedRow.data.Section.trim() || null,
@@ -84,25 +88,31 @@ export async function uploadStudentRosterAction(formData: FormData) {
     }
 
     if (validatedData.length === 0) {
-      return { success: false, error: 'No valid data found in the uploaded file' }
+      return { success: false, error: 'No valid data found in the uploaded file. Make sure every row has a Name and Class (or you provided a default Class).' }
     }
 
     await prisma.$transaction(async (tx) => {
-      // Ensure class exists
-      const classRecord = await tx.class.upsert({
-        where: { name_schoolId: { name: className, schoolId } },
-        update: {},
-        create: { name: className, schoolId }
-      })
+      // cache classes
+      const classCache = new Map<string, any>()
 
       for (const data of validatedData) {
+        let classRecord = classCache.get(data.className)
+        if (!classRecord) {
+          classRecord = await tx.class.upsert({
+            where: { name_schoolId: { name: data.className, schoolId } },
+            update: {},
+            create: { name: data.className, schoolId }
+          })
+          classCache.set(data.className, classRecord)
+        }
+
         // We upsert by Name, Class, and Section as the unique identifier
         await tx.student.upsert({
           where: {
             name_classId_section: {
               name: data.name,
               classId: classRecord.id,
-              section: data.section
+              section: data.section || ''
             }
           },
           update: {
@@ -115,7 +125,7 @@ export async function uploadStudentRosterAction(formData: FormData) {
           create: {
             name: data.name,
             classId: classRecord.id,
-            section: data.section,
+            section: data.section || '',
             registrationNumber: data.registrationNumber,
             rollNumber: data.rollNumber,
             fatherName: data.fatherName,

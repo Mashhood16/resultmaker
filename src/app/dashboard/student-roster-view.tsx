@@ -69,17 +69,16 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!selectedClass) {
-      toast.error('Please enter a Class name before uploading (e.g., Class 6)')
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
+    if (!file) return
 
+    // If they provided a class, use it as fallback. If not, the server will check for a Class column.
     setIsUploading(true)
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('className', selectedClass)
+      if (selectedClass) {
+        formData.append('className', selectedClass)
+      }
 
       const result = await uploadStudentRosterAction(formData)
       if (result.success) {
@@ -98,7 +97,7 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
 
   function downloadTemplate() {
     const ws = xlsx.utils.json_to_sheet([
-      { 'Name': '', 'Registration Number': '', 'Roll Number': '', 'Section': '', 'Father Name': '', 'Father Phone': '', 'Father CNIC': '' }
+      { 'Name': '', 'Class': '', 'Section': '', 'Registration Number': '', 'Roll Number': '', 'Father Name': '', 'Father Phone': '', 'Father CNIC': '' }
     ])
     const wb = xlsx.utils.book_new()
     xlsx.utils.book_append_sheet(wb, ws, 'Students')
