@@ -239,7 +239,10 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                 
                 {/* The Custom Annotation Overlay */}
                 <div 
-                  className={`absolute inset-0 z-10 ${tool !== 'none' ? 'cursor-crosshair' : ''}`}
+                  className="absolute inset-0 z-10"
+                  style={{
+                    cursor: tool !== 'none' ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M9 0v9H0v2h9v9h2v-9h9V9h-9V0H9z" fill="%23ef4444"/></svg>') 10 10, crosshair` : 'default'
+                  }}
                   onPointerDown={handlePointerDown}
                   onPointerMove={handlePointerMove}
                   onPointerUp={handlePointerUp}
