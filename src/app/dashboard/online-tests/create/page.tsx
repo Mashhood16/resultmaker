@@ -39,7 +39,7 @@ export default async function CreateOnlineTestPage() {
   })
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 p-4 md:p-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Create Online Test</h1>
         <p className="text-muted-foreground mt-1">Set up test details and create multiple variants.</p>

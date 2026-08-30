@@ -25,7 +25,7 @@ export default async function GradingPage({ params }: { params: { testId: string
   if (!attempt) redirect(`/dashboard/online-tests/${params.testId}/grade`)
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 p-4 md:p-8">
       <GradingClient attempt={attempt} test={attempt.test} variant={attempt.variant} student={attempt.student} />
     </div>
   )

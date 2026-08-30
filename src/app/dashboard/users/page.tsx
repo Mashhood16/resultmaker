@@ -74,7 +74,7 @@ export default async function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-8 w-full max-w-6xl mx-auto">
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
