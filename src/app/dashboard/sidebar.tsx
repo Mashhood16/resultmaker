@@ -8,7 +8,8 @@ import {
   FileText, 
   UploadCloud,
   LogOut,
-  Settings
+  Settings,
+  MonitorPlay
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -16,6 +17,7 @@ const navItems = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true, roles: ["admin", "school", "teacher"] },
   { name: "Student Roster", href: "/dashboard/roster", icon: Users, roles: ["admin", "school", "teacher"] },
   { name: "Result Wizard", href: "/dashboard/wizard", icon: FileText, roles: ["admin", "school", "teacher"] },
+  { name: "Online Tests", href: "/dashboard/online-tests", icon: MonitorPlay, roles: ["admin", "school", "teacher"] },
   { name: "Manage Data", href: "/dashboard/uploads", icon: UploadCloud, roles: ["admin", "school", "teacher"] },
   { name: "Manage Users", href: "/dashboard/users", icon: Settings, roles: ["admin", "school", "teacher"] },
 ];

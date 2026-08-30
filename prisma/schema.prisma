@@ -15,6 +15,7 @@ model School {
   classes      Class[]
   subjects     Subject[]
   users        User[]
+  onlineTests  OnlineTest[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -27,6 +28,7 @@ model Class {
   users        User[]       @relation("UserClasses")
   students     Student[]
   subjectAccess TeacherSubjectAccess[]
+  onlineTests   OnlineTest[]
   
   @@unique([name, schoolId])
   createdAt DateTime     @default(now())
@@ -40,6 +42,7 @@ model Subject {
   school    School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   scores       Score[]
   teacherAccess TeacherSubjectAccess[]
+  onlineTests   OnlineTest[]
   
   @@unique([name, schoolId])
   createdAt DateTime     @default(now())
@@ -59,6 +62,7 @@ model Student {
   classId            String
   class              Class        @relation(fields: [classId], references: [id])
   scores             Score[]
+  testAttempts       TestAttempt[]
   
   @@unique([classId, rollNumber]) // Prevent duplicate roll numbers in the same class
   createdAt          DateTime     @default(now())
@@ -98,6 +102,7 @@ model User {
   school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classes      Class[]  @relation("UserClasses")
   subjectAccess TeacherSubjectAccess[]
+  onlineTests   OnlineTest[]
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -114,4 +119,70 @@ model TeacherSubjectAccess {
   subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, classId, subjectId])
+}
+
+model OnlineTest {
+  id          String   @id @default(cuid())
+  title       String
+  testName    String   // Matches the testName in Score
+  totalMarks  Float
+  isActive    Boolean  @default(false)
+  schoolId    String
+  teacherId   String
+  classId     String
+  subjectId   String
+
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher     User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  
+  variants    TestVariant[]
+  attempts    TestAttempt[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TestVariant {
+  id            String   @id @default(cuid())
+  testId        String
+  name          String
+  accessPin     String
+  content       String   // HTML/Rich text questions
+  
+  test          OnlineTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  attempts      TestAttempt[]
+
+  @@unique([testId, accessPin])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum AttemptStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+model TestAttempt {
+  id              String   @id @default(cuid())
+  studentId       String
+  testId          String
+  variantId       String
+  
+  status          AttemptStatus @default(IN_PROGRESS)
+  answers         String?       // JSON or HTML of answers
+  annotatedImage  String?       // Cloudinary URL for graded image
+  obtainedMarks   Float?
+  feedback        String?
+
+  student         Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  test            OnlineTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  variant         TestVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, testId]) // Only one attempt per test
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

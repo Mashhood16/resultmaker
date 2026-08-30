@@ -1,0 +1,65 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Lock, ArrowRight } from 'lucide-react'
+import { toast } from 'sonner'
+
+export default function PinEntryClient({
+  classId,
+  testId,
+  testTitle,
+  variants
+}: {
+  classId: string
+  testId: string
+  testTitle: string
+  variants: { id: string; accessPin: string }[]
+}) {
+  const router = useRouter()
+  const [pin, setPin] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleAccess = () => {
+    setLoading(true)
+    const matchedVariant = variants.find(v => v.accessPin === pin.trim())
+    
+    if (matchedVariant) {
+      toast.success('Access Granted!')
+      router.push(`/${classId}/test/${testId}/take/${matchedVariant.id}`)
+    } else {
+      toast.error('Invalid PIN. Please ask your teacher for the correct PIN.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Card className="w-full max-w-md shadow-2xl border-primary/20 animate-in fade-in zoom-in-95 duration-300">
+      <CardHeader className="text-center pb-2">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Lock className="w-8 h-8 text-primary" />
+        </div>
+        <CardTitle className="text-2xl">{testTitle}</CardTitle>
+        <CardDescription>Enter the Access PIN provided by your teacher to unlock your test variant.</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-4">
+        <Input 
+          type="text"
+          placeholder="Enter PIN (e.g., 1234)" 
+          className="text-center text-2xl tracking-[0.5em] font-mono h-14"
+          value={pin}
+          onChange={e => setPin(e.target.value.toUpperCase())}
+          onKeyDown={e => e.key === 'Enter' && handleAccess()}
+        />
+      </CardContent>
+      <CardFooter>
+        <Button className="w-full h-12 text-lg font-bold" onClick={handleAccess} disabled={loading || pin.length < 2}>
+          {loading ? 'Verifying...' : 'Unlock Test'} <ArrowRight className="ml-2 w-5 h-5" />
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
