@@ -226,7 +226,13 @@ export default function TestWizardClient({
                         const res = await fetch('/api/ai/generate-test', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ topic, numQuestions: 5, difficulty: 'medium' })
+                          body: JSON.stringify({ 
+                            topic, 
+                            className: classes.find(c => c.id === classId)?.name || 'Unknown Class',
+                            subjectName: availableSubjects.find(s => s.id === subjectId)?.name || 'Unknown Subject',
+                            totalMarks,
+                            difficulty: 'medium' 
+                          })
                         })
                         const data = await res.json()
                         if (res.ok) {
