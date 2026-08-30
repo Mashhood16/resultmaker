@@ -24,7 +24,9 @@ export default async function SchoolDashboard() {
   
   const classes = await prisma.class.findMany({
     where: { schoolId: session.user.id },
-    include: {
+    select: {
+      id: true,
+      name: true,
       _count: {
         select: { students: true }
       }
