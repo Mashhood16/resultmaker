@@ -9,6 +9,7 @@ declare module "next-auth" {
     role?: string
     schoolId?: string
     classIds?: string[]
+    subjectAccess?: Record<string, string[]>
   }
   interface Session {
     user: {
@@ -17,6 +18,7 @@ declare module "next-auth" {
       name?: string | null
       schoolId?: string
       classIds?: string[]
+      subjectAccess?: Record<string, string[]>
     }
   }
 }
@@ -52,16 +54,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Sub-user Check (Teacher / Student)
         const user = await prisma.user.findUnique({
           where: { username: credentials.username as string },
-          include: { classes: { select: { id: true } } }
+          include: { 
+            classes: { select: { id: true } },
+            subjectAccess: { select: { classId: true, subjectId: true } }
+          }
         })
 
         if (user && await compare(credentials.password as string, user.passwordHash)) {
+          const subjectAccess: Record<string, string[]> = {}
+          user.subjectAccess.forEach(access => {
+            if (!subjectAccess[access.classId]) {
+              subjectAccess[access.classId] = []
+            }
+            subjectAccess[access.classId].push(access.subjectId)
+          })
+
           return { 
             id: user.id, 
             name: user.name, 
             role: user.role.toLowerCase(), // "teacher" or "student"
             schoolId: user.schoolId,
-            classIds: user.classes.map(c => c.id) 
+            classIds: user.classes.map(c => c.id),
+            subjectAccess
           }
         }
 

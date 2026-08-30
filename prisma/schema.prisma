@@ -25,7 +25,8 @@ model Class {
   schoolId     String
   school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   users        User[]       @relation("UserClasses")
-  students  Student[]
+  students     Student[]
+  subjectAccess TeacherSubjectAccess[]
   
   @@unique([name, schoolId])
   createdAt DateTime     @default(now())
@@ -37,7 +38,8 @@ model Subject {
   name      String       // e.g., "Overall Cumulative", "English", "Science"
   schoolId  String
   school    School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  scores    Score[]
+  scores       Score[]
+  teacherAccess TeacherSubjectAccess[]
   
   @@unique([name, schoolId])
   createdAt DateTime     @default(now())
@@ -95,7 +97,21 @@ model User {
   schoolId     String
   school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classes      Class[]  @relation("UserClasses")
+  subjectAccess TeacherSubjectAccess[]
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model TeacherSubjectAccess {
+  id        String   @id @default(cuid())
+  userId    String
+  classId   String
+  subjectId String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId, subjectId])
 }

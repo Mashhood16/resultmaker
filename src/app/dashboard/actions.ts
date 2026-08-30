@@ -22,17 +22,17 @@ const rowSchema = z.object({
 
 export async function uploadMarksAction(formData: FormData) {
   const className = formData.get('className') as string | null
+  const subjectName = formData.get('subjectName') as string | null
   
   let schoolId: string
   try {
-    const authRes = await requireSchoolOrTeacherAccess(className || undefined)
+    const authRes = await requireSchoolOrTeacherAccess(className || undefined, undefined, subjectName || undefined)
     schoolId = authRes.schoolId
   } catch (e: any) {
     return { success: false, error: e.message }
   }
 
   const file = formData.get('file') as File | null
-  const subjectName = formData.get('subjectName') as string | null
   const testName = formData.get('testName') as string | null
   const defaultTotalMarks = Number(formData.get('totalMarks')) || 100
 
@@ -204,7 +204,7 @@ export async function uploadMarksAction(formData: FormData) {
 export async function deleteUploadedMarksAction(className: string, subjectName: string, testName: string) {
   let schoolId: string
   try {
-    const authRes = await requireSchoolOrTeacherAccess(className)
+    const authRes = await requireSchoolOrTeacherAccess(className, undefined, subjectName)
     schoolId = authRes.schoolId
   } catch (e: any) {
     return { success: false, error: e.message }
@@ -262,6 +262,18 @@ export async function uploadMasterMarksAction(formData: FormData) {
   }
 
   const expectedSubjects = JSON.parse(subjectsStr) as string[]
+  
+  // Teachers must have access to all uploaded subjects in this class
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(className || undefined)
+    if (authRes.session.user.role === 'teacher') {
+      for (const sub of expectedSubjects) {
+        await requireSchoolOrTeacherAccess(className || undefined, undefined, sub)
+      }
+    }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
   const subjectTotalMarks = JSON.parse(subjectTotalMarksStr) as Record<string, string>
   const lowerExpectedSubjects = expectedSubjects.map(s => s.toLowerCase().trim())
 

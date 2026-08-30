@@ -10,6 +10,7 @@ export const authConfig = {
         token.role = user.role
         token.schoolId = user.schoolId
         token.classIds = user.classIds
+        token.subjectAccess = user.subjectAccess
       }
       return token
     },
@@ -19,6 +20,7 @@ export const authConfig = {
         session.user.id = token.sub as string
         session.user.schoolId = token.schoolId as string | undefined
         session.user.classIds = token.classIds as string[] | undefined
+        session.user.subjectAccess = token.subjectAccess as Record<string, string[]> | undefined
       }
       return session
     },

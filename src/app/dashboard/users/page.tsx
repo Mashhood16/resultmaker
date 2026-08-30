@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { createUser, deleteUser } from './actions'
+import { CreateUserForm } from './create-user-form'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +32,7 @@ export default async function UsersPage() {
     // School admin sees all sub-users
     users = await prisma.user.findMany({
       where: { schoolId },
-      include: { classes: true },
+      include: { classes: true, subjectAccess: { include: { subject: true, class: true } } },
       orderBy: { createdAt: 'desc' }
     })
   } else if (role === 'teacher') {
@@ -47,15 +48,20 @@ export default async function UsersPage() {
           }
         }
       },
-      include: { classes: true },
+      include: { classes: true, subjectAccess: { include: { subject: true, class: true } } },
       orderBy: { createdAt: 'desc' }
     })
   }
 
   // Fetch classes for the assignment form
   let availableClasses = []
+  let availableSubjects = []
   if (role === 'school') {
     availableClasses = await prisma.class.findMany({
+      where: { schoolId },
+      orderBy: { name: 'asc' }
+    })
+    availableSubjects = await prisma.subject.findMany({
       where: { schoolId },
       orderBy: { name: 'asc' }
     })
@@ -81,82 +87,16 @@ export default async function UsersPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Create User Form */}
         <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-fit">
           <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
             <UserCog className="w-5 h-5 text-primary" />
             Create New Account
           </h3>
-          <form action={createUser} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Name</label>
-              <input 
-                name="name" 
-                type="text" 
-                required 
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="e.g. John Doe"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
-              <input 
-                name="username" 
-                type="text" 
-                required 
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="e.g. jdoe123"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
-              <input 
-                name="password" 
-                type="password" 
-                required 
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Role</label>
-              <select 
-                name="role" 
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {role === 'school' && <option value="TEACHER">Teacher</option>}
-                <option value="STUDENT">Student (Class Account)</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Assign Classes</label>
-              <div className="bg-muted/30 p-3 rounded-md border border-border max-h-48 overflow-y-auto space-y-2">
-                {availableClasses.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No classes available.</p>
-                ) : (
-                  availableClasses.map(cls => (
-                    <label key={cls.id} className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        name="classIds" 
-                        value={cls.id} 
-                        className="rounded border-input text-primary focus:ring-primary"
-                      />
-                      <span className="text-sm">{cls.name}</span>
-                    </label>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <Button type="submit" className="w-full">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Account
-            </Button>
-          </form>
+          <CreateUserForm 
+            role={role} 
+            availableClasses={availableClasses} 
+            availableSubjects={availableSubjects} 
+          />
         </div>
 
         {/* Existing Users List */}
@@ -199,8 +139,17 @@ export default async function UsersPage() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="text-xs text-muted-foreground max-w-[150px] truncate">
-                          {u.classes.map(c => c.name).join(', ') || 'None'}
+                        <div className="text-xs text-muted-foreground max-w-[200px] max-h-24 overflow-y-auto">
+                          {u.classes.map(c => {
+                            const subjects = u.subjectAccess?.filter((sa: any) => sa.classId === c.id).map((sa: any) => sa.subject.name) || []
+                            return (
+                              <div key={c.id}>
+                                <strong>{c.name}</strong>
+                                {subjects.length > 0 && <span> ({subjects.join(', ')})</span>}
+                              </div>
+                            )
+                          })}
+                          {u.classes.length === 0 && 'None'}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

@@ -58,6 +58,16 @@ export async function createUser(formData: FormData) {
 
   const passwordHash = await hash(password, 10)
 
+  const subjectAccess: { classId: string, subjectId: string }[] = []
+  if (role === 'TEACHER') {
+    classIds.forEach(classId => {
+      const subjects = formData.getAll(`subjectAccess_${classId}`) as string[]
+      subjects.forEach(subjectId => {
+        subjectAccess.push({ classId, subjectId })
+      })
+    })
+  }
+
   await prisma.user.create({
     data: {
       name,
@@ -67,6 +77,12 @@ export async function createUser(formData: FormData) {
       schoolId,
       classes: {
         connect: classIds.map(id => ({ id }))
+      },
+      subjectAccess: {
+        create: subjectAccess.map(sa => ({
+          classId: sa.classId,
+          subjectId: sa.subjectId
+        }))
       }
     }
   })
