@@ -20,7 +20,8 @@ export default async function SchoolDashboard() {
     redirect('/login')
   }
 
-  const students = await getStudentsBySchool(session.user.id)
+  const rawStudents = await getStudentsBySchool(session.user.id)
+  const students = JSON.parse(JSON.stringify(rawStudents))
   
   const classes = await prisma.class.findMany({
     where: { schoolId: session.user.id },
