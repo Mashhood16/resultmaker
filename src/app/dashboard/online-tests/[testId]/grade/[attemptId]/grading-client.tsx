@@ -25,9 +25,21 @@ type Tool = 'pen' | 'square' | 'circle' | 'text' | 'none'
 export default function GradingClient({ attempt, test, variant, student }: any) {
   const router = useRouter()
   const [marks, setMarks] = useState<string>(attempt.obtainedMarks?.toString() || '')
+  const [questionMarks, setQuestionMarks] = useState<string[]>([''])
   const [feedback, setFeedback] = useState(attempt.feedback || '')
   const [rubric, setRubric] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Update total marks when questionMarks change
+  const handleQuestionMarkChange = (index: number, value: string) => {
+    const newMarks = [...questionMarks]
+    newMarks[index] = value
+    setQuestionMarks(newMarks)
+    
+    // Auto calculate total
+    const total = newMarks.reduce((acc, curr) => acc + (parseFloat(curr) || 0), 0)
+    setMarks(total.toString())
+  }
   
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -374,7 +386,46 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                   {marks ? ((parseFloat(marks) / test.totalMarks) * 100).toFixed(1) : '0'}%
                 </div>
               </div>
-              <div className="space-y-2">
+              
+              <div className="space-y-3 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <Label>Question Breakdown</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setQuestionMarks([...questionMarks, ''])}
+                  >
+                    + Add Q
+                  </Button>
+                </div>
+                {questionMarks.map((qm, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="text-sm font-medium w-6 text-muted-foreground">Q{i + 1}</span>
+                    <Input 
+                      type="number" 
+                      value={qm} 
+                      onChange={e => handleQuestionMarkChange(i, e.target.value)}
+                      placeholder="Marks"
+                      className="h-8"
+                    />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        const newMarks = questionMarks.filter((_, idx) => idx !== i)
+                        setQuestionMarks(newMarks.length > 0 ? newMarks : [''])
+                        const total = newMarks.reduce((acc, curr) => acc + (parseFloat(curr) || 0), 0)
+                        setMarks(total.toString())
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2 pt-4 border-t">
                 <Label>Feedback Remarks (Optional)</Label>
                 <Textarea 
                   value={feedback} 
