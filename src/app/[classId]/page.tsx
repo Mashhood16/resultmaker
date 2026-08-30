@@ -18,25 +18,21 @@ export default async function ClassLeaderboardPage({
 }) {
   const session = await auth()
   
-  if (!session?.user) {
-    redirect('/login')
-  }
-
   const classData = await prisma.class.findUnique({
     where: { id: params.classId }
   })
 
   if (!classData) return notFound()
 
-  // Prevent schools from viewing classes that don't belong to them
-  if (session.user.role === 'school' && classData.schoolId !== session.user.id) {
-    redirect('/')
-  }
-
-  // Prevent teachers and students from viewing unassigned classes
-  if ((session.user.role === 'teacher' || session.user.role === 'student') && 
-      !session.user.classIds?.includes(classData.id)) {
-    redirect('/')
+  // Prevent schools/teachers from viewing classes that don't belong to them IF they are logged in
+  if (session?.user) {
+    if (session.user.role === 'school' && classData.schoolId !== session.user.id) {
+      redirect('/dashboard')
+    }
+    if ((session.user.role === 'teacher' || session.user.role === 'student') && 
+        !session.user.classIds?.includes(classData.id)) {
+      redirect('/dashboard')
+    }
   }
 
   // Get all subjects that have scores for this class
@@ -65,11 +61,11 @@ export default async function ClassLeaderboardPage({
             </h1>
             <p className="text-muted-foreground">Real-time academic performance rankings</p>
           </div>
-          {session.user.role !== 'student' && (
-            <Link href="/">
+          {session?.user?.role !== 'student' && (
+            <Link href={session?.user ? "/dashboard" : "/login"}>
               <Button variant="outline" className="border-border bg-card text-foreground hover:bg-accent">
                 <Home className="w-4 h-4 mr-2" />
-                Classes
+                {session?.user ? "Dashboard" : "Login"}
               </Button>
             </Link>
           )}

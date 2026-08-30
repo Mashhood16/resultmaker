@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Lock, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -20,16 +21,23 @@ export default function PinEntryClient({
   variants: { id: string; accessPin: string }[]
 }) {
   const router = useRouter()
+  const [name, setName] = useState('')
+  const [rollNumber, setRollNumber] = useState('')
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleAccess = () => {
+    if (!name.trim() || !rollNumber.trim()) {
+      toast.error('Please enter your Name and Roll Number.')
+      return
+    }
+
     setLoading(true)
     const matchedVariant = variants.find(v => v.accessPin === pin.trim())
     
     if (matchedVariant) {
       toast.success('Access Granted!')
-      router.push(`/${classId}/test/${testId}/take/${matchedVariant.id}`)
+      router.push(`/${classId}/test/${testId}/take/${matchedVariant.id}?roll=${encodeURIComponent(rollNumber.trim())}&name=${encodeURIComponent(name.trim())}`)
     } else {
       toast.error('Invalid PIN. Please ask your teacher for the correct PIN.')
       setLoading(false)
@@ -43,17 +51,36 @@ export default function PinEntryClient({
           <Lock className="w-8 h-8 text-primary" />
         </div>
         <CardTitle className="text-2xl">{testTitle}</CardTitle>
-        <CardDescription>Enter the Access PIN provided by your teacher to unlock your test variant.</CardDescription>
+        <CardDescription>Enter your details and the Access PIN provided by your teacher.</CardDescription>
       </CardHeader>
-      <CardContent className="pt-4">
-        <Input 
-          type="text"
-          placeholder="Enter PIN (e.g., 1234)" 
-          className="text-center text-2xl tracking-[0.5em] font-mono h-14"
-          value={pin}
-          onChange={e => setPin(e.target.value.toUpperCase())}
-          onKeyDown={e => e.key === 'Enter' && handleAccess()}
-        />
+      <CardContent className="pt-4 space-y-4">
+        <div className="space-y-2">
+          <Label>Full Name</Label>
+          <Input 
+            placeholder="e.g. John Doe" 
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Roll Number</Label>
+          <Input 
+            placeholder="e.g. 101" 
+            value={rollNumber}
+            onChange={e => setRollNumber(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2 pt-2 border-t">
+          <Label>Access PIN</Label>
+          <Input 
+            type="text"
+            placeholder="e.g. 1234" 
+            className="text-center text-2xl tracking-[0.5em] font-mono h-14 uppercase"
+            value={pin}
+            onChange={e => setPin(e.target.value.toUpperCase())}
+            onKeyDown={e => e.key === 'Enter' && handleAccess()}
+          />
+        </div>
       </CardContent>
       <CardFooter>
         <Button className="w-full h-12 text-lg font-bold" onClick={handleAccess} disabled={loading || pin.length < 2}>

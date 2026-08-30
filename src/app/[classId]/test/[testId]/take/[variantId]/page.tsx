@@ -1,17 +1,21 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import TestTakingClient from './test-taking-client'
 
 export const dynamic = 'force-dynamic'
 
 export default async function TakeTestPage({ 
-  params 
+  params,
+  searchParams
 }: { 
   params: { classId: string, testId: string, variantId: string } 
+  searchParams: { roll: string, name: string }
 }) {
-  const session = await auth()
-  if (!session?.user || session.user.role !== 'student') redirect('/login')
+  const { roll, name } = searchParams
+
+  if (!roll || !name) {
+    redirect(`/${params.classId}/test/${params.testId}`)
+  }
 
   const test = await prisma.onlineTest.findUnique({
     where: { id: params.testId },
@@ -26,26 +30,23 @@ export default async function TakeTestPage({
     redirect(`/${params.classId}`)
   }
 
-  // Get student ID
-  // Username for student is `schoolUsername_student_rollNumber`
-  const schoolPrefix = session.user.username.split('_')[0]
-  const rollNumber = session.user.username.split('_')[2]
-
-  const school = await prisma.school.findUnique({ where: { username: schoolPrefix } })
-  if (!school) redirect('/login')
-
-  const student = await prisma.student.findUnique({
+  // Find or Create the Student based on Roll Number
+  const student = await prisma.student.upsert({
     where: {
       classId_rollNumber: {
         classId: params.classId,
-        rollNumber: rollNumber
+        rollNumber: roll
       }
+    },
+    update: {
+      name: name // Update name in case they entered it differently this time
+    },
+    create: {
+      classId: params.classId,
+      rollNumber: roll,
+      name: name
     }
   })
-
-  if (!student) {
-    throw new Error('Student profile not found')
-  }
 
   // Find or create TestAttempt
   let attempt = await prisma.testAttempt.findUnique({
