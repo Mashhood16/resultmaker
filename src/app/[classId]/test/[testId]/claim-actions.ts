@@ -4,21 +4,49 @@ import prisma from '@/lib/prisma'
 import { cookies } from 'next/headers'
 
 export async function claimTestAccess(classId: string, testId: string, name: string, rollNumber: string) {
-  // Find or Create the Student based on Roll Number
-  const student = await prisma.student.upsert({
+  // 1. Try to find by roll number
+  let student = await prisma.student.findUnique({
     where: {
-      classId_rollNumber: {
-        classId,
-        rollNumber
-      }
-    },
-    update: {}, // Do not overwrite name. First person to claim the roll number sets it.
-    create: {
-      classId,
-      rollNumber,
-      name
+      classId_rollNumber: { classId, rollNumber }
     }
   })
+
+  if (!student) {
+    // 2. Roll number not found. Maybe they are an existing student who doesn't have a roll number yet?
+    const existingByName = await prisma.student.findFirst({
+      where: {
+        classId,
+        name: { equals: name, mode: 'insensitive' },
+        rollNumber: null
+      }
+    })
+
+    if (existingByName) {
+      // 3. Found them! Update their roll number so they are linked permanently.
+      student = await prisma.student.update({
+        where: { id: existingByName.id },
+        data: { rollNumber, showInLeaderboard: true }
+      })
+    } else {
+      // 4. Truly a new student. Create them.
+      student = await prisma.student.create({
+        data: {
+          classId,
+          rollNumber,
+          name,
+          showInLeaderboard: true // Ensure they show up!
+        }
+      })
+    }
+  } else {
+    // If student was found by roll number, make sure they are visible on leaderboard
+    if (!student.showInLeaderboard) {
+      student = await prisma.student.update({
+        where: { id: student.id },
+        data: { showInLeaderboard: true }
+      })
+    }
+  }
 
   const attempt = await prisma.testAttempt.findUnique({
     where: {
