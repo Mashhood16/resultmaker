@@ -1,111 +1,92 @@
-import prisma from '@/lib/prisma'
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Users, Trophy, ArrowRight, Building2 } from 'lucide-react'
-import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
+import { ArrowRight, CheckCircle2, Shield, Zap, FileText, BarChart3, Database } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
-export default async function HomePage() {
-  const session = await auth()
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
-  
-  const classes = await prisma.class.findMany({
-    where: session?.user?.role === 'school' ? { schoolId: session.user.id } : undefined,
-    include: {
-      _count: {
-        select: { students: true }
-      },
-      school: true
-    },
-    orderBy: [
-      { school: { name: 'asc' } },
-      { name: 'asc' }
-    ]
-  })
-
-  // Group classes by school
-  const groupedClasses = classes.reduce((acc, c) => {
-    if (!acc[c.school.name]) acc[c.school.name] = []
-    acc[c.school.name].push(c)
-    return acc
-  }, {} as Record<string, typeof classes>)
-
+export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-black text-white p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-16">
-        <header className="text-center space-y-4 pt-8 md:pt-12">
-          {session?.user?.role === 'school' && (
-            <div className="inline-flex items-center justify-center mb-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-semibold animate-in fade-in slide-in-from-top-4 duration-700">
-              <Building2 className="w-4 h-4 mr-2" />
-              {session.user.name}
-            </div>
-          )}
-          <h1 className="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            Student Leaderboards
-          </h1>
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
-            Select a class from your school to view rankings, top performers, and detailed academic statistics.
-          </p>
-        </header>
-
-        {Object.entries(groupedClasses).length === 0 ? (
-          <div className="text-center text-zinc-500 py-12 animate-in fade-in duration-1000">
-            No classes found. Please ask your school administrator to upload data.
+    <main className="min-h-screen bg-black text-white selection:bg-emerald-500/30 overflow-hidden">
+      {/* Background gradients */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/20 via-black to-black -z-10" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center lg:pt-32">
+        <div className="mx-auto max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="inline-flex items-center justify-center px-4 py-1.5 mb-6 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-sm font-semibold tracking-wide uppercase">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+            The Future of School Administration
           </div>
-        ) : (
-          Object.entries(groupedClasses).map(([schoolName, schoolClasses], index) => (
-            <div key={schoolName} className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000" style={{ animationDelay: `${index * 150 + 300}ms` }}>
-              <div className="flex items-center gap-4 border-b border-zinc-800 pb-4">
-                <div className="p-2 bg-indigo-500/10 rounded-lg">
-                  <Building2 className="w-6 h-6 text-indigo-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-zinc-100">{schoolName}</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {schoolClasses.map((c) => (
-                  <Link href={`/${c.id}`} key={c.id}>
-                    <Card className="relative overflow-hidden bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer backdrop-blur-2xl group h-full shadow-2xl hover:shadow-emerald-500/20">
-                      {/* Glowing background blob */}
-                      <div className="absolute -inset-24 bg-gradient-to-r from-emerald-500/0 via-emerald-500/10 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl rounded-full" />
-                      
-                      {/* Border highlight */}
-                      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
-                      
-                      <CardHeader className="relative z-10 pb-2">
-                        <CardTitle className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60 group-hover:to-white/90 transition-all duration-500">
-                          {c.name}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="relative z-10 pt-2">
-                        <div className="flex items-center text-zinc-400 mb-6 bg-black/40 w-fit px-3 py-1.5 rounded-full border border-white/5 shadow-inner">
-                          <Users className="w-4 h-4 mr-2 text-emerald-400" />
-                          <span className="text-sm font-medium">{c._count.students} Enrolled</span>
-                        </div>
-                        
-                        <div className="flex items-center text-sm font-bold text-white group-hover:text-emerald-300 transition-colors bg-white/5 group-hover:bg-emerald-500/20 px-4 py-3 rounded-xl border border-white/5 group-hover:border-emerald-500/30 w-full justify-between overflow-hidden relative">
-                          <span className="relative z-10 flex items-center">
-                            <Trophy className="w-4 h-4 mr-2 group-hover:animate-bounce" />
-                            View Leaderboard
-                          </span>
-                          <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
-                          {/* Swipe effect */}
-                          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
+            Manage Results with <br className="hidden md:block" />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">
+              Absolute Precision.
+            </span>
+          </h1>
+          <p className="mt-4 max-w-2xl text-xl text-zinc-400 mx-auto mb-10">
+            ResultMaker transforms raw student marks into comprehensive, beautiful PDF report cards and interactive leaderboards in seconds.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/dashboard">
+              <Button size="lg" className="h-14 px-8 bg-emerald-500 hover:bg-emerald-600 text-black font-bold rounded-full text-lg w-full sm:w-auto transition-all shadow-[0_0_40px_rgba(16,185,129,0.3)] hover:shadow-[0_0_60px_rgba(16,185,129,0.5)]">
+                Go to Dashboard
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="h-14 px-8 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-full text-lg w-full sm:w-auto">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
+
+      {/* Feature Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-white/10 bg-black/50 backdrop-blur-3xl">
+        <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything a school needs</h2>
+          <p className="text-zinc-400 max-w-2xl mx-auto text-lg">Stop wrestling with complex spreadsheets. ResultMaker automates the entire academic result pipeline.</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              title: "Automated Report Cards",
+              description: "Generate stunning portrait or landscape PDF report cards for single or multiple terms instantly.",
+              icon: FileText,
+              color: "text-blue-400",
+              bg: "bg-blue-500/10 border-blue-500/20"
+            },
+            {
+              title: "Master Student Roster",
+              description: "Manage your entire school's student body in one unified database with automatic deduplication.",
+              icon: Database,
+              color: "text-purple-400",
+              bg: "bg-purple-500/10 border-purple-500/20"
+            },
+            {
+              title: "Interactive Leaderboards",
+              description: "Live, dynamic rankings for every class and subject to gamify and track academic performance.",
+              icon: BarChart3,
+              color: "text-amber-400",
+              bg: "bg-amber-500/10 border-amber-500/20"
+            }
+          ].map((feature, i) => (
+            <div key={i} className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300 group hover:-translate-y-1">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border ${feature.bg}`}>
+                <feature.icon className={`w-7 h-7 ${feature.color}`} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-white group-hover:text-emerald-400 transition-colors">{feature.title}</h3>
+              <p className="text-zinc-400 leading-relaxed">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-black py-12 text-center">
+        <p className="text-zinc-500 font-medium">© {new Date().getFullYear()} ResultMaker. All rights reserved.</p>
+      </footer>
     </main>
   )
 }

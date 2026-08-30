@@ -3,7 +3,9 @@ import { ManageDataView } from './manage-data-view'
 import { TestManagementView } from './test-management-view'
 import { TermResultWizard } from './term-result-wizard'
 import { StudentRosterView } from './student-roster-view'
+import { ClassesView } from './classes-view'
 import { getStudentsBySchool } from './student-actions'
+import prisma from '@/lib/prisma'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -19,6 +21,16 @@ export default async function SchoolDashboard() {
   }
 
   const students = await getStudentsBySchool(session.user.id)
+  
+  const classes = await prisma.class.findMany({
+    where: { schoolId: session.user.id },
+    include: {
+      _count: {
+        select: { students: true }
+      }
+    },
+    orderBy: { name: 'asc' }
+  })
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
@@ -60,6 +72,10 @@ export default async function SchoolDashboard() {
               <Users className="w-5 h-5 mr-2" />
               Student Roster
             </TabsTrigger>
+            <TabsTrigger value="leaderboards" className="rounded-lg data-active:bg-amber-500/20 data-active:text-amber-400 hover:text-zinc-200 transition-all font-semibold h-12 px-8 flex items-center justify-center text-base bg-transparent shadow-none">
+              <Trophy className="w-5 h-5 mr-2" />
+              Leaderboards
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="term" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
@@ -99,6 +115,10 @@ export default async function SchoolDashboard() {
 
           <TabsContent value="students" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
             <StudentRosterView initialStudents={students} />
+          </TabsContent>
+
+          <TabsContent value="leaderboards" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
+            <ClassesView classes={classes} />
           </TabsContent>
         </Tabs>
       </main>

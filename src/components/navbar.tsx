@@ -17,7 +17,7 @@ export function Navbar({ session }: { session: Session | null }) {
     <header className="w-full border-b border-white/5 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="font-black text-xl tracking-tight text-white flex items-center gap-2 hover:opacity-80 transition-opacity">
-          Leader<span className="text-emerald-400">Board</span>
+          Result<span className="text-emerald-400">Maker</span>
         </Link>
         
         <div className="flex items-center gap-4">
