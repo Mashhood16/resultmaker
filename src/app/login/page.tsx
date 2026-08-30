@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground relative overflow-hidden">
+    <div className="flex min-h-[calc(100vh-4rem)] w-full bg-background text-foreground relative overflow-hidden">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-indigo-900/40 via-background to-background z-0" />
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 blur-[120px] rounded-full z-0 pointer-events-none" />

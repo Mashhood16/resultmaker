@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const role = session?.user?.role || "student"; // Default fallback
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-[calc(100vh-4rem)] bg-background">
       <Sidebar role={role} />
       <main className="flex-1 overflow-x-hidden pb-20 md:pb-0">
         {children}

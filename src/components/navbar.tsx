@@ -10,10 +10,6 @@ import { signOut } from 'next-auth/react'
 export function Navbar({ session }: { session: Session | null }) {
   const pathname = usePathname()
   
-  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/login')) {
-    return null // These pages handle their own headers
-  }
-
   return (
     <nav className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">

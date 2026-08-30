@@ -17,7 +17,7 @@ export default async function AdminDashboard() {
   const schools = await getSchools()
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
+    <div className="min-h-[calc(100vh-4rem)] bg-black text-white p-4 md:p-8">
       <header className="flex flex-col md:flex-row justify-between items-center mb-8 max-w-5xl mx-auto gap-4">
         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
           Admin Dashboard
