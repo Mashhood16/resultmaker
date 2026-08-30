@@ -22,14 +22,14 @@ ${rubric ? `\nPlease strictly follow this grading rubric / answer key:\n${rubric
 Carefully analyze their answers${textAnswers ? ' provided below:' : ' in the attached image.'}
 ${textAnswers ? `\n--- STUDENT ANSWERS ---\n${textAnswers}\n-----------------------\n` : ''}
 
-Provide your evaluation. Grade EACH question individually. Provide the marks and exactly ONE sentence of feedback in Roman Urdu for each question. Also provide an overall total and a short overall summary in Roman Urdu.
+Provide your evaluation. Grade EACH question individually. Provide the marks and exactly ONE sentence of feedback in Roman Urdu for each question. If you deduct marks for a question, your one-sentence feedback MUST explicitly explain the specific mistake or missing information that caused the deduction. Also provide an overall total and a short overall summary in Roman Urdu.
 
 Provide your evaluation in JSON format exactly like this (do NOT use markdown \`\`\`json block):
 {
   "obtainedMarks": [integer],
   "overallFeedback": "[A very short (1-2 sentences max) feedback in Roman Urdu summarizing overall performance]",
   "questionBreakdown": [
-    { "marks": [integer], "feedback": "[One sentence Roman Urdu feedback for this specific question]" }
+    { "marks": [integer], "feedback": "[One sentence Roman Urdu feedback. If marks were deducted, strictly explain WHY.]" }
   ]
 }`
 
@@ -69,7 +69,7 @@ Provide your evaluation in JSON format exactly like this (do NOT use markdown \`
                 type: 'OBJECT',
                 properties: {
                   marks: { type: 'INTEGER', description: "Marks awarded for this question" },
-                  feedback: { type: 'STRING', description: "One sentence of feedback in Roman Urdu for this specific question" }
+                  feedback: { type: 'STRING', description: "One sentence of feedback in Roman Urdu for this specific question. MUST explain deductions if any." }
                 },
                 required: ["marks", "feedback"]
               }
