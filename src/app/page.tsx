@@ -62,7 +62,7 @@ export default async function LandingPage() {
             {/* Middle Card */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-blue-500/5 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-md transform -rotate-3 -translate-x-2 translate-y-2 sm:-translate-x-4 sm:translate-y-4" />
             {/* Front Card */}
-            <div className="absolute inset-0 bg-card/95 rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-5 sm:p-6 flex flex-col overflow-hidden">
+            <div className="absolute inset-0 bg-card rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-5 sm:p-6 flex flex-col overflow-hidden">
               {/* Mock App Header */}
               <div className="flex items-center justify-between mb-6">
                 <div>

@@ -88,7 +88,7 @@ export function ResultCardModal({ isOpen, onClose, classId, uniqueTests, selecte
               <p className="text-xs text-muted-foreground">Scores from selected tests will be aggregated for the final calculation.</p>
               
               {uniqueTests.length === 0 ? (
-                <div className="p-4 bg-card/50 rounded-lg text-sm text-muted-foreground flex gap-2 items-center">
+                <div className="p-4 bg-card rounded-lg text-sm text-muted-foreground flex gap-2 items-center">
                   <AlertCircle className="w-4 h-4 text-amber-500" />
                   No tests found for this class.
                 </div>

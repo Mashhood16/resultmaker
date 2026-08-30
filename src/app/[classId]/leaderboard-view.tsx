@@ -399,13 +399,13 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                 </h4>
                                 <div className="grid gap-3">
                                   {student.breakdown.map((test, idx) => (
-                                  <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 bg-card p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-card transition-all group/test shadow-sm">
+                                  <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 bg-card p-4 rounded-xl border border-border hover:border-primary hover:bg-card transition-all group/test shadow-sm">
                                     <div className="flex items-center gap-2">
                                       <span className="font-bold text-foreground group-hover/test:text-foreground transition-colors">{test.testName}</span>
                                       {test.annotatedImage && (
                                         <Dialog>
                                           <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="h-6 text-xs bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 ml-2 rounded-full">
+                                            <Button variant="outline" size="sm" className="h-6 text-xs text-primary ml-2 rounded-full hover:brightness-110 shadow-sm shadow-black/20">
                                               View Graded Paper
                                             </Button>
                                             </DialogTrigger>

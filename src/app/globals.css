@@ -79,7 +79,7 @@
     border-color: var(--border);
   }
   body {
-    @apply bg-background text-foreground bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-background via-background to-primary/10;
+    @apply bg-background text-foreground bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-background via-background to-indigo-900/20;
   }
   html {
     @apply font-sans;
