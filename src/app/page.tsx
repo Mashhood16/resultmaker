@@ -4,7 +4,19 @@ import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
-export default function LandingPage() {
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
+
+export default async function LandingPage() {
+  const session = await auth()
+
+  if (session?.user) {
+    if (session.user.role === 'admin') {
+      redirect('/admin')
+    } else {
+      redirect('/dashboard')
+    }
+  }
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30 overflow-hidden">
       {/* Background gradients */}
