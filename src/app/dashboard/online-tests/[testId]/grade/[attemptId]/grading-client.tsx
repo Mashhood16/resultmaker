@@ -193,7 +193,7 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between bg-white p-4 rounded-xl border shadow-sm">
+      <div className="flex items-center justify-between bg-card text-card-foreground p-4 rounded-xl border shadow-sm">
         <div className="flex items-center gap-4">
           <Link href={`/dashboard/online-tests/${test.id}/grade`}>
             <Button variant="ghost" size="icon">
