@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, FileText, BarChart3, Database, Users, Shield, Zap } from 'lucide-react'
+import { ArrowRight, FileText, BarChart3, Database, Users, Shield, Zap, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
