@@ -1,36 +1,123 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Save, PenTool, Eraser, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Square, Circle, Type, Undo2, Trash2 } from 'lucide-react'
 import { submitGrade } from '../grade-actions'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { ReactSketchCanvas, ReactSketchCanvasRef } from 'react-sketch-canvas'
 import html2canvas from 'html2canvas'
+
+type Point = { x: number, y: number }
+type Annotation = 
+  | { id: string, type: 'square', start: Point, end: Point }
+  | { id: string, type: 'circle', start: Point, end: Point }
+  | { id: string, type: 'text', start: Point, text: string, isEditing: boolean }
+
+type Tool = 'square' | 'circle' | 'text' | 'none'
 
 export default function GradingClient({ attempt, test, variant, student }: any) {
   const router = useRouter()
   const [marks, setMarks] = useState<string>(attempt.obtainedMarks?.toString() || '')
   const [feedback, setFeedback] = useState(attempt.feedback || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isEraser, setIsEraser] = useState(false)
-  
-  // States for rendering the document to image
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(attempt.annotatedImage || null)
-  const [isRendering, setIsRendering] = useState(false)
   
   const contentRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<ReactSketchCanvasRef>(null)
 
-  const toggleEraser = () => {
-    setIsEraser(!isEraser)
-    canvasRef.current?.eraseMode(!isEraser)
+  // Annotation State
+  const [tool, setTool] = useState<Tool>('square')
+  const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [currentDrawing, setCurrentDrawing] = useState<Annotation | null>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+
+  const getCoordinates = (e: React.PointerEvent<HTMLDivElement>): Point => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    }
+  }
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (tool === 'none') return
+    
+    // Don't start drawing if clicking on an input (editing text)
+    if ((e.target as HTMLElement).tagName === 'INPUT') return
+
+    const pt = getCoordinates(e)
+    
+    if (tool === 'text') {
+      const newId = Date.now().toString()
+      setAnnotations([...annotations, { id: newId, type: 'text', start: pt, text: '', isEditing: true }])
+      setTool('none') // Default back to none so they don't accidentally click and make 10 text boxes
+      return
+    }
+
+    setIsDrawing(true)
+    setCurrentDrawing({ id: Date.now().toString(), type: tool, start: pt, end: pt } as Annotation)
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDrawing || !currentDrawing || currentDrawing.type === 'text') return
+    const pt = getCoordinates(e)
+    setCurrentDrawing({ ...currentDrawing, end: pt })
+  }
+
+  const handlePointerUp = () => {
+    if (isDrawing && currentDrawing) {
+      // Only add if it's not a microscopic accidental click
+      if (currentDrawing.type !== 'text') {
+        const w = Math.abs(currentDrawing.end.x - currentDrawing.start.x)
+        const h = Math.abs(currentDrawing.end.y - currentDrawing.start.y)
+        if (w > 5 || h > 5) {
+          setAnnotations([...annotations, currentDrawing])
+        }
+      }
+      setCurrentDrawing(null)
+      setIsDrawing(false)
+    }
+  }
+
+  const updateText = (id: string, text: string) => {
+    setAnnotations(annotations.map(a => a.id === id && a.type === 'text' ? { ...a, text } : a))
+  }
+
+  const finishText = (id: string) => {
+    setAnnotations(annotations.map(a => a.id === id && a.type === 'text' ? { ...a, isEditing: false } : a))
+    // Clean up empty texts
+    setAnnotations(prev => prev.filter(a => !(a.type === 'text' && !a.isEditing && a.text.trim() === '')))
+    setTool('square') // Switch back to default tool
+  }
+
+  const undo = () => {
+    setAnnotations(annotations.slice(0, -1))
+  }
+
+  const clearAll = () => {
+    setAnnotations([])
+  }
+
+  const renderShape = (a: Annotation) => {
+    if (a.type === 'square') {
+      const x = Math.min(a.start.x, a.end.x)
+      const y = Math.min(a.start.y, a.end.y)
+      const w = Math.abs(a.end.x - a.start.x)
+      const h = Math.abs(a.end.y - a.start.y)
+      return <rect key={a.id} x={x} y={y} width={w} height={h} fill="none" stroke="red" strokeWidth={4} rx={4} />
+    }
+    if (a.type === 'circle') {
+      const x = Math.min(a.start.x, a.end.x)
+      const y = Math.min(a.start.y, a.end.y)
+      const w = Math.abs(a.end.x - a.start.x)
+      const h = Math.abs(a.end.y - a.start.y)
+      return <ellipse key={a.id} cx={x + w/2} cy={y + h/2} rx={w/2} ry={h/2} fill="none" stroke="red" strokeWidth={4} />
+    }
+    return null
   }
 
   const handleSave = async () => {
@@ -39,16 +126,17 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
       return
     }
 
+    // Force finish any active text editing
+    setAnnotations(prev => prev.map(a => a.type === 'text' ? { ...a, isEditing: false } : a).filter(a => !(a.type === 'text' && a.text.trim() === '')))
+
     setIsSubmitting(true)
     let finalImageUrl = attempt.annotatedImage
 
-    // Take a snapshot of the ENTIRE container (HTML + Drawing) to upload
-    if (contentRef.current) {
+    if (contentRef.current && annotations.length > 0) {
       try {
         const canvas = await html2canvas(contentRef.current, { useCORS: true, allowTaint: true })
         const exportedImage = canvas.toDataURL('image/png')
         
-        // Upload to Cloudinary via our API route
         const res = await fetch('/api/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -118,47 +206,76 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                 <p className="text-sm text-muted-foreground mt-1">Variant: {variant.name}</p>
               </div>
               <div className="flex gap-2 bg-muted p-1 rounded-lg">
-                <Button 
-                  variant={!isEraser ? "default" : "ghost"} 
-                  size="sm" 
-                  onClick={() => { setIsEraser(false); canvasRef.current?.eraseMode(false) }}
-                >
-                  <PenTool className="w-4 h-4 mr-2" /> Red Pen
+                <Button variant={tool === 'square' ? "default" : "ghost"} size="sm" onClick={() => setTool('square')}>
+                  <Square className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant={isEraser ? "default" : "ghost"} 
-                  size="sm" 
-                  onClick={toggleEraser}
-                >
-                  <Eraser className="w-4 h-4 mr-2" /> Eraser
+                <Button variant={tool === 'circle' ? "default" : "ghost"} size="sm" onClick={() => setTool('circle')}>
+                  <Circle className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => canvasRef.current?.clearCanvas()}>
-                  Clear
+                <Button variant={tool === 'text' ? "default" : "ghost"} size="sm" onClick={() => setTool('text')}>
+                  <Type className="w-4 h-4" />
+                </Button>
+                <div className="w-px h-6 bg-border mx-1 self-center" />
+                <Button variant="ghost" size="sm" onClick={undo} disabled={annotations.length === 0}>
+                  <Undo2 className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={clearAll} disabled={annotations.length === 0}>
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
               <div 
                 ref={contentRef} 
-                className="relative border rounded-xl overflow-hidden bg-white min-h-[800px] h-auto"
+                className="relative border rounded-xl overflow-hidden bg-white min-h-[800px] h-auto select-none"
               >
                 {attempt.annotatedImage ? (
-                  <img src={attempt.annotatedImage} alt="Graded Snapshot" className="w-full h-auto block" crossOrigin="anonymous" />
+                  <img src={attempt.annotatedImage} alt="Graded Snapshot" className="w-full h-auto block pointer-events-none" crossOrigin="anonymous" />
                 ) : (
-                  <div className="p-8 prose prose-sm md:prose-base max-w-none text-black">
+                  <div className="p-8 prose prose-sm md:prose-base max-w-none text-black pointer-events-none">
                     <div dangerouslySetInnerHTML={{ __html: attempt.answers || '<p>No answers provided.</p>' }} />
                   </div>
                 )}
                 
-                {/* 2. The Transparent Drawing Overlay */}
-                <div className="absolute inset-0 z-10 pointer-events-auto">
-                  <ReactSketchCanvas
-                    ref={canvasRef}
-                    strokeWidth={4}
-                    strokeColor="red"
-                    canvasColor="transparent"
-                    className="w-full h-full"
-                  />
+                {/* The Custom Annotation Overlay */}
+                <div 
+                  className={`absolute inset-0 z-10 ${tool !== 'none' ? 'cursor-crosshair' : ''}`}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+                >
+                  {/* SVG Layer for Shapes */}
+                  <svg className="w-full h-full pointer-events-none">
+                    {annotations.map(renderShape)}
+                    {currentDrawing && renderShape(currentDrawing)}
+                  </svg>
+                  
+                  {/* HTML Layer for Text */}
+                  {annotations.filter(a => a.type === 'text').map(a => (
+                    a.type === 'text' && (
+                      <div key={a.id} style={{ position: 'absolute', left: a.start.x, top: a.start.y }} className="pointer-events-auto">
+                        {a.isEditing ? (
+                          <input 
+                            autoFocus
+                            className="bg-white/80 border border-red-500 text-red-600 font-bold px-2 py-1 outline-none rounded shadow-sm text-lg min-w-[200px]"
+                            value={a.text}
+                            onChange={e => updateText(a.id, e.target.value)}
+                            onBlur={() => finishText(a.id)}
+                            onKeyDown={e => { if (e.key === 'Enter') finishText(a.id) }}
+                            placeholder="Type annotation..."
+                          />
+                        ) : (
+                          <div className="text-red-600 font-bold whitespace-pre-wrap text-lg bg-white/60 px-1 rounded inline-block border border-transparent hover:border-red-300 cursor-pointer" onClick={() => {
+                            setAnnotations(annotations.map(ann => ann.id === a.id && ann.type === 'text' ? { ...ann, isEditing: true } : ann))
+                            setTool('none')
+                          }}>
+                            {a.text}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  ))}
                 </div>
               </div>
             </CardContent>
