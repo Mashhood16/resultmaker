@@ -18,7 +18,7 @@ export default async function CreateOnlineTestPage() {
   // Fetch classes and subjects for the dropdowns
   const classes = await prisma.class.findMany({
     where: {
-      schoolId: session.user.schoolId,
+      schoolId: access.schoolId,
       ...(isTeacher ? { id: { in: classIds } } : {})
     },
     orderBy: { name: 'asc' }
@@ -35,7 +35,7 @@ export default async function CreateOnlineTestPage() {
   })
 
   const allSubjects = await prisma.subject.findMany({
-    where: { schoolId: session.user.schoolId }
+    where: { schoolId: access.schoolId }
   })
 
   return (

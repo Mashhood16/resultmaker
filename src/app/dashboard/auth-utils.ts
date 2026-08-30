@@ -57,5 +57,10 @@ export async function requireSchoolOrTeacherAccess(className?: string, classId?:
     }
   }
 
-  return { schoolId, session }
+  return { 
+    schoolId, 
+    session,
+    isTeacher: role === 'teacher',
+    classIds: role === 'teacher' ? session.user.classIds || [] : []
+  }
 }

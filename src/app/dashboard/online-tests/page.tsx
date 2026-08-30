@@ -22,7 +22,7 @@ export default async function OnlineTestsPage() {
   // Fetch online tests created by this school
   const tests = await prisma.onlineTest.findMany({
     where: {
-      schoolId: session.user.schoolId,
+      schoolId: access.schoolId,
       ...(isTeacher ? { classId: { in: classIds } } : {})
     },
     include: {
@@ -91,11 +91,8 @@ export default async function OnlineTestsPage() {
                   <span>{test._count.attempts} Attempts</span>
                 </div>
                 <div className="flex gap-2">
-                  <Link href={`/dashboard/online-tests/${test.id}`} className="flex-1">
-                    <Button variant="secondary" className="w-full">Manage</Button>
-                  </Link>
-                  <Link href={`/dashboard/online-tests/${test.id}/grade`} className="flex-1">
-                    <Button className="w-full">Grade</Button>
+                  <Link href={`/dashboard/online-tests/${test.id}/grade`} className="w-full">
+                    <Button className="w-full">Grade Submissions</Button>
                   </Link>
                 </div>
               </CardContent>
