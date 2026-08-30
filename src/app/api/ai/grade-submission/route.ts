@@ -23,7 +23,7 @@ ${textAnswers ? `\n--- STUDENT ANSWERS ---\n${textAnswers}\n--------------------
 
 Provide your evaluation in JSON format exactly like this (do NOT use markdown \`\`\`json block):
 {
-  "obtainedMarks": [number],
+  "obtainedMarks": [integer],
   "feedback": "[A very short (1-2 sentences max) feedback in Roman Urdu summarizing what they got right and where they made mistakes]"
 }`
 
@@ -54,9 +54,10 @@ Provide your evaluation in JSON format exactly like this (do NOT use markdown \`
         responseSchema: {
           type: 'OBJECT',
           properties: {
-            obtainedMarks: { type: 'NUMBER' },
-            feedback: { type: 'STRING' }
-          }
+            obtainedMarks: { type: 'INTEGER', description: "The final score as a whole number without decimals" },
+            feedback: { type: 'STRING', description: "A very short (1-2 sentences) feedback in Roman Urdu" }
+          },
+          required: ["obtainedMarks", "feedback"]
         }
       }
     })
