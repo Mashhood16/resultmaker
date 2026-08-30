@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
 import TestTakingClient from './test-taking-client'
 
@@ -30,21 +31,19 @@ export default async function TakeTestPage({
     redirect(`/${params.classId}`)
   }
 
-  // Find or Create the Student based on Roll Number
-  const student = await prisma.student.upsert({
+  // Find the Student based on Roll Number (already created by the action)
+  const student = await prisma.student.findUnique({
     where: {
       classId_rollNumber: {
         classId: params.classId,
         rollNumber: roll
       }
-    },
-    update: {}, // Do not overwrite name. First person to claim the roll number sets it.
-    create: {
-      classId: params.classId,
-      rollNumber: roll,
-      name: name
     }
   })
+
+  if (!student) {
+    redirect(`/${params.classId}/test/${params.testId}`)
+  }
 
   // Find or create TestAttempt
   let attempt = await prisma.testAttempt.findUnique({
@@ -55,6 +54,23 @@ export default async function TakeTestPage({
       }
     }
   })
+
+  if (attempt) {
+    const cookieStore = cookies()
+    const deviceSessionKey = `test_device_lock_${test.id}`
+    const existingSession = cookieStore.get(deviceSessionKey)?.value
+
+    if (existingSession !== student.id) {
+      return (
+        <div className="min-h-screen flex items-center justify-center flex-col p-8 text-center bg-background">
+          <h1 className="text-3xl font-bold mb-2 text-destructive">Roll Number In Use</h1>
+          <p className="text-muted-foreground max-w-md">
+            This roll number is already taking the test on another device. If your computer crashed, please ask your teacher to reset your attempt.
+          </p>
+        </div>
+      )
+    }
+  }
 
   if (attempt && attempt.status === 'SUBMITTED') {
     return (

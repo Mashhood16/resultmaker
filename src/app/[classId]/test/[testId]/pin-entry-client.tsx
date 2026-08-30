@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Lock, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { claimTestAccess } from './claim-actions'
+
 export default function PinEntryClient({
   classId,
   testId,
@@ -26,7 +28,7 @@ export default function PinEntryClient({
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleAccess = () => {
+  const handleAccess = async () => {
     if (!name.trim() || !rollNumber.trim()) {
       toast.error('Please enter your Name and Roll Number.')
       return
@@ -36,6 +38,13 @@ export default function PinEntryClient({
     const matchedVariant = variants.find(v => v.accessPin === pin.trim())
     
     if (matchedVariant) {
+      const res = await claimTestAccess(classId, testId, name.trim(), rollNumber.trim())
+      if (res.error) {
+        toast.error(res.error)
+        setLoading(false)
+        return
+      }
+
       toast.success('Access Granted!')
       router.push(`/${classId}/test/${testId}/take/${matchedVariant.id}?roll=${encodeURIComponent(rollNumber.trim())}&name=${encodeURIComponent(name.trim())}`)
     } else {
