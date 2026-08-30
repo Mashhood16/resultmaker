@@ -89,7 +89,9 @@ export function ManageDataView() {
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Class</label>
               <Select value={classId} onValueChange={setClassId}>
                 <SelectTrigger className="bg-background/40 border-border text-foreground h-12">
-                  <SelectValue placeholder="Select a class" />
+                  <SelectValue placeholder="Select a class">
+                    {options.classes.find(c => c.id === classId)?.name || 'Select a class'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border text-foreground">
                   {options.classes.map(c => (
@@ -103,7 +105,9 @@ export function ManageDataView() {
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subject</label>
               <Select value={subjectId} onValueChange={setSubjectId}>
                 <SelectTrigger className="bg-background/40 border-border text-foreground h-12">
-                  <SelectValue placeholder="Select a subject" />
+                  <SelectValue placeholder="Select a subject">
+                    {options.subjects.find(s => s.id === subjectId)?.name || 'Select a subject'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border text-foreground">
                   {options.subjects.map(s => (
@@ -117,7 +121,9 @@ export function ManageDataView() {
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Test Name</label>
               <Select value={testName} onValueChange={setTestName}>
                 <SelectTrigger className="bg-background/40 border-border text-foreground h-12">
-                  <SelectValue placeholder="Select a test" />
+                  <SelectValue placeholder="Select a test">
+                    {testName || 'Select a test'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border text-foreground">
                   {options.testNames.map(t => (

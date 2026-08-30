@@ -102,7 +102,7 @@ export function EditableScoreTable({ initialScores }: { initialScores: EditableS
                     value={score.marksObtained}
                     disabled={score.isAbsent}
                     onChange={(e) => handleUpdate(idx, 'marksObtained', parseFloat(e.target.value) || 0)}
-                    className="bg-background/50 border-border text-center text-foreground h-9 focus-visible:ring-emerald-500"
+                    className="bg-transparent border-input text-center text-foreground h-9 focus-visible:ring-emerald-500"
                   />
                 </TableCell>
                 
@@ -111,7 +111,7 @@ export function EditableScoreTable({ initialScores }: { initialScores: EditableS
                     type="number" 
                     value={score.totalMarks}
                     onChange={(e) => handleUpdate(idx, 'totalMarks', parseFloat(e.target.value) || 0)}
-                    className="bg-background/50 border-border text-center text-foreground h-9 focus-visible:ring-emerald-500"
+                    className="bg-transparent border-input text-center text-foreground h-9 focus-visible:ring-emerald-500"
                   />
                 </TableCell>
 
