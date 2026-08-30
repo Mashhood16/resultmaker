@@ -25,14 +25,14 @@ export function MobileNav({ role }: { role: string }) {
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-background/80 backdrop-blur-xl z-50 pb-2">
-      <nav className="flex justify-around items-center p-2">
+      <nav className="flex justify-between items-center px-1 py-2 w-full max-w-full overflow-hidden">
         {navItems.filter(item => item.roles.includes(role)).map((item) => {
           const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link 
               key={item.name} 
               href={item.href}
-              className={`flex flex-col items-center gap-1 p-2 min-w-[4rem] rounded-xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center gap-1 p-1 flex-1 min-w-0 rounded-xl transition-all duration-300 ${
                 isActive 
                   ? "text-primary scale-110" 
                   : "text-muted-foreground hover:text-foreground"
