@@ -52,9 +52,7 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
     const pt = getCoordinates(e)
     
     if (tool === 'text') {
-      const newId = Date.now().toString()
-      setAnnotations([...annotations, { id: newId, type: 'text', start: pt, text: '', isEditing: true }])
-      setTool('none') // Default back to none so they don't accidentally click and make 10 text boxes
+      // Defer creating text box to pointerUp to prevent instant blur
       return
     }
 
@@ -68,7 +66,16 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
     setCurrentDrawing({ ...currentDrawing, end: pt })
   }
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (tool === 'text') {
+      if ((e.target as HTMLElement).tagName === 'INPUT') return
+      const pt = getCoordinates(e)
+      const newId = Date.now().toString()
+      setAnnotations([...annotations, { id: newId, type: 'text', start: pt, text: '', isEditing: true }])
+      setTool('none') // Default back to none so they don't accidentally make 10 text boxes
+      return
+    }
+
     if (isDrawing && currentDrawing) {
       // Only add if it's not a microscopic accidental click
       if (currentDrawing.type !== 'text') {
