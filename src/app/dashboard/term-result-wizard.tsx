@@ -245,7 +245,9 @@ export function TermResultWizard({ role }: { role?: string }) {
                     setSubjectsRequired(CLASS_SUBJECTS[safeVal] ? [...CLASS_SUBJECTS[safeVal]] : [])
                   }}>
                     <SelectTrigger className="bg-background/40 border-border text-foreground h-12">
-                      <SelectValue placeholder="Choose Class (1-12)" />
+                      <SelectValue placeholder="Choose Class (1-12)">
+                        {selectedClass ? `Class ${selectedClass}` : "Choose Class (1-12)"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground max-h-[300px]">
                       {CLASS_OPTIONS.map(c => (

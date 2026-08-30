@@ -136,7 +136,11 @@ export default function TestWizardClient({
             <div className="space-y-2">
               <Label>Class</Label>
               <Select value={classId} onValueChange={(val) => { setClassId(val); setSubjectId('') }}>
-                <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select class">
+                    {classes.find(c => c.id === classId)?.name}
+                  </SelectValue>
+                </SelectTrigger>
                 <SelectContent>
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
@@ -145,7 +149,11 @@ export default function TestWizardClient({
             <div className="space-y-2">
               <Label>Subject</Label>
               <Select value={subjectId} onValueChange={setSubjectId} disabled={!classId}>
-                <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select subject">
+                    {availableSubjects.find(s => s.id === subjectId)?.name}
+                  </SelectValue>
+                </SelectTrigger>
                 <SelectContent>
                   {availableSubjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
