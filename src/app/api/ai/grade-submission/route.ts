@@ -24,23 +24,8 @@ ${textAnswers ? `\n--- STUDENT ANSWERS ---\n${textAnswers}\n--------------------
 Provide your evaluation in JSON format exactly like this (do NOT use markdown \`\`\`json block):
 {
   "obtainedMarks": [number],
-  "feedback": "[A short paragraph summarizing what they got right and where they made mistakes]"${imageUrl ? `,
-  "annotations": [
-    {
-      "type": "circle",
-      "ymin": [number between 0-1000],
-      "xmin": [number between 0-1000],
-      "ymax": [number between 0-1000],
-      "xmax": [number between 0-1000]
-    },
-    {
-      "type": "text",
-      "ymin": [number between 0-1000],
-      "xmin": [number between 0-1000],
-      "text": "Your textual comment here"
-    }
-  ]` : ''}
-}${imageUrl ? '\nNote: For annotations, xmin, xmax, ymin, and ymax must be numbers between 0 and 1000 representing the relative bounding box of the error on the image (0 is top/left, 1000 is bottom/right). Use "square" or "circle" for bounding boxes, and "text" for writing textual notes at a specific coordinate. Return an empty array if there are no errors to annotate.' : ''}`
+  "feedback": "[A short paragraph summarizing what they got right and where they made mistakes]"
+}`
 
     const contents: any[] = [prompt]
 
@@ -70,21 +55,7 @@ Provide your evaluation in JSON format exactly like this (do NOT use markdown \`
           type: 'OBJECT',
           properties: {
             obtainedMarks: { type: 'NUMBER' },
-            feedback: { type: 'STRING' },
-            annotations: {
-              type: 'ARRAY',
-              items: {
-                type: 'OBJECT',
-                properties: {
-                  type: { type: 'STRING', enum: ['square', 'circle', 'text'] },
-                  xmin: { type: 'NUMBER' },
-                  ymin: { type: 'NUMBER' },
-                  xmax: { type: 'NUMBER' },
-                  ymax: { type: 'NUMBER' },
-                  text: { type: 'STRING' }
-                }
-              }
-            }
+            feedback: { type: 'STRING' }
           }
         }
       }

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Save, Loader2, Square, Circle, Type, Undo2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Square, Circle, Type, Undo2, Trash2, Pen } from 'lucide-react'
 import { submitGrade } from '../grade-actions'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -18,8 +18,9 @@ type Annotation =
   | { id: string, type: 'square', start: Point, end: Point }
   | { id: string, type: 'circle', start: Point, end: Point }
   | { id: string, type: 'text', start: Point, text: string, isEditing: boolean }
+  | { id: string, type: 'pen', points: Point[] }
 
-type Tool = 'square' | 'circle' | 'text' | 'none'
+type Tool = 'pen' | 'square' | 'circle' | 'text' | 'none'
 
 export default function GradingClient({ attempt, test, variant, student }: any) {
   const router = useRouter()
@@ -58,13 +59,22 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
     }
 
     setIsDrawing(true)
-    setCurrentDrawing({ id: Date.now().toString(), type: tool, start: pt, end: pt } as Annotation)
+    if (tool === 'pen') {
+      setCurrentDrawing({ id: Date.now().toString(), type: 'pen', points: [pt] })
+    } else {
+      setCurrentDrawing({ id: Date.now().toString(), type: tool, start: pt, end: pt } as Annotation)
+    }
   }
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDrawing || !currentDrawing || currentDrawing.type === 'text') return
     const pt = getCoordinates(e)
-    setCurrentDrawing({ ...currentDrawing, end: pt })
+    
+    if (currentDrawing.type === 'pen') {
+      setCurrentDrawing({ ...currentDrawing, points: [...currentDrawing.points, pt] })
+    } else {
+      setCurrentDrawing({ ...currentDrawing, end: pt })
+    }
   }
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -78,8 +88,11 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
     }
 
     if (isDrawing && currentDrawing) {
-      // Only add if it's not a microscopic accidental click
-      if (currentDrawing.type !== 'text') {
+      if (currentDrawing.type === 'pen') {
+        if (currentDrawing.points.length > 1) {
+          setAnnotations([...annotations, currentDrawing])
+        }
+      } else if (currentDrawing.type !== 'text') {
         const w = Math.abs(currentDrawing.end.x - currentDrawing.start.x)
         const h = Math.abs(currentDrawing.end.y - currentDrawing.start.y)
         if (w > 5 || h > 5) {
@@ -111,6 +124,10 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
   }
 
   const renderShape = (a: Annotation) => {
+    if (a.type === 'pen') {
+      const points = a.points.map(p => `${p.x},${p.y}`).join(' ')
+      return <polyline key={a.id} points={points} fill="none" stroke="red" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+    }
     if (a.type === 'square') {
       const x = Math.min(a.start.x, a.end.x)
       const y = Math.min(a.start.y, a.end.y)
@@ -150,15 +167,10 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: exportedImage })
         })
-        
-        if (res.ok) {
-          const data = await res.json()
-          finalImageUrl = data.url
-        } else {
-          toast.error("Failed to upload annotated image, saving without it.")
-        }
-      } catch (e) {
-        console.error("Canvas export/upload failed", e)
+        const data = await res.json()
+        if (data.url) finalImageUrl = data.url
+      } catch (err) {
+        toast.error('Failed to save annotated image. Proceeding with original.')
       }
     }
 
@@ -170,23 +182,30 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
         feedback,
         annotatedImage: finalImageUrl || undefined
       })
-      toast.success('Grade saved & leaderboard updated!')
+      toast.success('Grade submitted successfully')
       router.push(`/dashboard/online-tests/${test.id}/grade`)
       router.refresh()
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to save grade')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit grade')
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="space-y-6 pb-20">
-      <div className="flex items-center justify-between">
-        <Link href={`/dashboard/online-tests/${test.id}/grade`}>
-          <Button variant="ghost">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
-          </Button>
-        </Link>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between bg-white p-4 rounded-xl border shadow-sm">
+        <div className="flex items-center gap-4">
+          <Link href={`/dashboard/online-tests/${test.id}/grade`}>
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold">Grade Submission</h1>
+            <p className="text-sm text-muted-foreground">{test.title}</p>
+          </div>
+        </div>
+        
         <div className="flex items-center gap-4">
           <div className="flex-1 flex flex-col gap-2">
             <Label>Grading Rubric / Answer Key (Optional)</Label>
@@ -218,32 +237,6 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                 if (res.ok) {
                   setMarks(data.obtainedMarks?.toString() || '')
                   setFeedback(data.feedback || '')
-                  
-                  if (data.annotations && Array.isArray(data.annotations) && contentRef.current) {
-                    const width = contentRef.current.clientWidth
-                    const height = contentRef.current.clientHeight
-                    
-                    const mappedAnnotations = data.annotations.map((ann: any, idx: number) => {
-                      if (ann.type === 'text') {
-                        return {
-                          id: `ai-${Date.now()}-${idx}`,
-                          type: 'text',
-                          start: { x: (ann.xmin / 1000) * width, y: (ann.ymin / 1000) * height },
-                          text: ann.text,
-                          isEditing: false
-                        }
-                      } else {
-                        return {
-                          id: `ai-${Date.now()}-${idx}`,
-                          type: ann.type === 'circle' ? 'circle' : 'square',
-                          start: { x: (ann.xmin / 1000) * width, y: (ann.ymin / 1000) * height },
-                          end: { x: (ann.xmax / 1000) * width, y: (ann.ymax / 1000) * height }
-                        }
-                      }
-                    })
-                    setAnnotations(prev => [...prev, ...mappedAnnotations])
-                  }
-
                   toast.success('AI grading complete! Please review.', { id: toastId })
                 } else {
                   throw new Error(data.error)
@@ -281,6 +274,9 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                 <p className="text-sm text-muted-foreground mt-1">Variant: {variant.name}</p>
               </div>
               <div className="flex gap-2 bg-muted p-1 rounded-lg">
+                <Button variant={tool === 'pen' ? "default" : "ghost"} size="sm" onClick={() => setTool('pen')}>
+                  <Pen className="w-4 h-4" />
+                </Button>
                 <Button variant={tool === 'square' ? "default" : "ghost"} size="sm" onClick={() => setTool('square')}>
                   <Square className="w-4 h-4" />
                 </Button>
