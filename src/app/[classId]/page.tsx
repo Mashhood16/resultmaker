@@ -35,7 +35,6 @@ export default async function ClassLeaderboardPage({
     }
   }
 
-  // Get all subjects that have scores for this class
   const subjects = await prisma.subject.findMany({
     where: {
       scores: {
@@ -50,6 +49,11 @@ export default async function ClassLeaderboardPage({
   })
 
   const selectedSubjectId = searchParams.subject || subjects[0]?.id
+
+  const activeTests = await prisma.onlineTest.findMany({
+    where: { classId: classData.id, isActive: true },
+    include: { subject: true }
+  })
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
@@ -72,34 +76,26 @@ export default async function ClassLeaderboardPage({
         </header>
 
         {/* Live Tests Banner */}
-        {(() => {
-          return prisma.onlineTest.findMany({
-            where: { classId: classData.id, isActive: true },
-            include: { subject: true }
-          }).then(activeTests => {
-            if (activeTests.length === 0) return null
-            return (
-              <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 md:p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-primary flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                    Live Online Tests
-                  </h3>
-                  <p className="text-muted-foreground mt-1">There are active tests available to take right now.</p>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {activeTests.map(test => (
-                    <Link key={test.id} href={`/${classData.id}/test/${test.id}`}>
-                      <Button className="font-bold shadow-lg shadow-primary/20">
-                        Take {test.subject.name} Test
-                      </Button>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )
-          })
-        })()}
+        {activeTests.length > 0 && (
+          <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 md:p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-bold text-primary flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Live Online Tests
+              </h3>
+              <p className="text-muted-foreground mt-1">There are active tests available to take right now.</p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {activeTests.map(test => (
+                <Link key={test.id} href={`/${classData.id}/test/${test.id}`}>
+                  <Button className="font-bold shadow-lg shadow-primary/20">
+                    Take {test.subject.name} Test
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {subjects.length > 0 ? (
           <div className="space-y-8">
