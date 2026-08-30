@@ -14,6 +14,7 @@ model School {
   passwordHash String
   classes      Class[]
   subjects     Subject[]
+  users        User[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -21,8 +22,9 @@ model School {
 model Class {
   id        String       @id @default(cuid())
   name      String       // e.g., "Class 10", "Grade 8"
-  schoolId  String
-  school    School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId     String
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  users        User[]       @relation("UserClasses")
   students  Student[]
   
   @@unique([name, schoolId])
@@ -77,4 +79,23 @@ model Score {
   @@unique([studentId, subjectId, testName]) // A student has one score per test per subject
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classes      Class[]  @relation("UserClasses")
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

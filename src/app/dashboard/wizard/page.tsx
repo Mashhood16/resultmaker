@@ -1,12 +1,26 @@
 import { TermResultWizard } from '../term-result-wizard'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
+import prisma from '@/lib/prisma'
 
 export default async function WizardPage() {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'school') {
+  if (!session?.user) {
     redirect('/login')
   }
+  const role = session.user.role
+  if (role !== 'school' && role !== 'teacher') {
+    redirect('/')
+  }
+
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+
+  const rawClasses = await prisma.class.findMany({
+    where: { 
+      schoolId: schoolId,
+      ...(role === 'teacher' ? { id: { in: session.user.classIds || [] } } : {})
+    }
+  })
 
   return (
     <div className="p-4 md:p-8 w-full max-w-6xl mx-auto">

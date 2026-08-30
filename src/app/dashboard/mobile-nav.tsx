@@ -6,23 +6,25 @@ import {
   LayoutDashboard, 
   Users, 
   FileText, 
-  UploadCloud
+  UploadCloud,
+  Settings
 } from "lucide-react";
 
 const navItems = [
-  { name: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true },
-  { name: "Roster", href: "/dashboard/roster", icon: Users },
-  { name: "Wizard", href: "/dashboard/wizard", icon: FileText },
-  { name: "Manage", href: "/dashboard/uploads", icon: UploadCloud },
+  { name: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true, roles: ["admin", "school", "teacher"] },
+  { name: "Roster", href: "/dashboard/roster", icon: Users, roles: ["admin", "school", "teacher"] },
+  { name: "Wizard", href: "/dashboard/wizard", icon: FileText, roles: ["admin", "school", "teacher"] },
+  { name: "Manage", href: "/dashboard/uploads", icon: UploadCloud, roles: ["admin", "school", "teacher"] },
+  { name: "Users", href: "/dashboard/users", icon: Settings, roles: ["admin", "school", "teacher"] },
 ];
 
-export function MobileNav() {
+export function MobileNav({ role }: { role: string }) {
   const pathname = usePathname();
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-background/80 backdrop-blur-xl z-50 pb-2">
       <nav className="flex justify-around items-center p-2">
-        {navItems.map((item) => {
+        {navItems.filter(item => item.roles.includes(role)).map((item) => {
           const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link 

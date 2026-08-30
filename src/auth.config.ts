@@ -8,6 +8,8 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.role = user.role
+        token.schoolId = user.schoolId
+        token.classIds = user.classIds
       }
       return token
     },
@@ -15,6 +17,8 @@ export const authConfig = {
       if (session.user) {
         session.user.role = token.role as string
         session.user.id = token.sub as string
+        session.user.schoolId = token.schoolId as string | undefined
+        session.user.classIds = token.classIds as string[] | undefined
       }
       return session
     },

@@ -5,11 +5,16 @@ import { redirect } from 'next/navigation'
 
 export default async function RosterPage() {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'school') {
+  if (!session?.user) {
     redirect('/login')
   }
+  const role = session.user.role
+  if (role !== 'school' && role !== 'teacher') {
+    redirect('/')
+  }
 
-  const rawStudents = await getStudentsBySchool(session.user.id)
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+  const rawStudents = await getStudentsBySchool(schoolId)
   const students = JSON.parse(JSON.stringify(rawStudents))
 
   return (

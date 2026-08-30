@@ -7,12 +7,16 @@ import prisma from "@/lib/prisma"
 declare module "next-auth" {
   interface User {
     role?: string
+    schoolId?: string
+    classIds?: string[]
   }
   interface Session {
     user: {
       id: string
       role?: string
       name?: string | null
+      schoolId?: string
+      classIds?: string[]
     }
   }
 }
@@ -43,6 +47,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (school && await compare(credentials.password as string, school.passwordHash)) {
           return { id: school.id, name: school.name, role: "school" }
+        }
+
+        // Sub-user Check (Teacher / Student)
+        const user = await prisma.user.findUnique({
+          where: { username: credentials.username as string },
+          include: { classes: { select: { id: true } } }
+        })
+
+        if (user && await compare(credentials.password as string, user.passwordHash)) {
+          return { 
+            id: user.id, 
+            name: user.name, 
+            role: user.role.toLowerCase(), // "teacher" or "student"
+            schoolId: user.schoolId,
+            classIds: user.classes.map(c => c.id) 
+          }
         }
 
         return null

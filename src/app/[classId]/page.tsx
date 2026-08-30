@@ -33,6 +33,12 @@ export default async function ClassLeaderboardPage({
     redirect('/')
   }
 
+  // Prevent teachers and students from viewing unassigned classes
+  if ((session.user.role === 'teacher' || session.user.role === 'student') && 
+      !session.user.classIds?.includes(classData.id)) {
+    redirect('/')
+  }
+
   // Get all subjects that have scores for this class
   const subjects = await prisma.subject.findMany({
     where: {

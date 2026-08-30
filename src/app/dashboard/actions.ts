@@ -5,6 +5,7 @@ import { z } from 'zod'
 import prisma from '@/lib/prisma'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import { requireSchoolOrTeacherAccess } from './auth-utils'
 
 function findKey(row: Record<string, any>, possibleKeys: string[]) {
   const keys = Object.keys(row)
@@ -20,14 +21,17 @@ const rowSchema = z.object({
 })
 
 export async function uploadMarksAction(formData: FormData) {
-  const session = await auth()
-  const schoolId = session?.user?.id
-  if (!schoolId) {
-    return { success: false, error: 'Unauthorized' }
+  const className = formData.get('className') as string | null
+  
+  let schoolId: string
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(className || undefined)
+    schoolId = authRes.schoolId
+  } catch (e: any) {
+    return { success: false, error: e.message }
   }
 
   const file = formData.get('file') as File | null
-  const className = formData.get('className') as string | null
   const subjectName = formData.get('subjectName') as string | null
   const testName = formData.get('testName') as string | null
   const defaultTotalMarks = Number(formData.get('totalMarks')) || 100
@@ -198,10 +202,12 @@ export async function uploadMarksAction(formData: FormData) {
 }
 
 export async function deleteUploadedMarksAction(className: string, subjectName: string, testName: string) {
-  const session = await auth()
-  const schoolId = session?.user?.id
-  if (!schoolId) {
-    return { success: false, error: 'Unauthorized' }
+  let schoolId: string
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(className)
+    schoolId = authRes.schoolId
+  } catch (e: any) {
+    return { success: false, error: e.message }
   }
 
   try {
@@ -236,12 +242,17 @@ export async function deleteUploadedMarksAction(className: string, subjectName: 
 }
 
 export async function uploadMasterMarksAction(formData: FormData) {
-  const session = await auth()
-  const schoolId = session?.user?.id
-  if (!schoolId) return { success: false, error: 'Unauthorized' }
+  const className = formData.get('className') as string | null
+
+  let schoolId: string
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(className || undefined)
+    schoolId = authRes.schoolId
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
 
   const file = formData.get('file') as File | null
-  const className = formData.get('className') as string | null
   const testName = formData.get('testName') as string | null
   const subjectTotalMarksStr = formData.get('subjectTotalMarks') as string | null
   const subjectsStr = formData.get('subjects') as string | null
@@ -420,9 +431,13 @@ export async function uploadMasterMarksAction(formData: FormData) {
 }
 
 export async function getTestNamesForClassAction(className: string) {
-  const session = await auth()
-  const schoolId = session?.user?.id
-  if (!schoolId) return { success: false, error: 'Unauthorized' }
+  let schoolId: string
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(className)
+    schoolId = authRes.schoolId
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
 
   try {
     const scores = await prisma.score.findMany({

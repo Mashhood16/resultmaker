@@ -5,6 +5,7 @@ import { z } from 'zod'
 import prisma from '@/lib/prisma'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import { requireSchoolOrTeacherAccess } from './auth-utils'
 
 function findKey(row: Record<string, any>, possibleKeys: string[]) {
   const keys = Object.keys(row)
@@ -23,14 +24,17 @@ const rosterRowSchema = z.object({
 })
 
 export async function uploadStudentRosterAction(formData: FormData) {
-  const session = await auth()
-  const schoolId = session?.user?.id
-  if (!schoolId) {
-    return { success: false, error: 'Unauthorized' }
+  const defaultClassName = formData.get('className') as string | null
+
+  let schoolId: string
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(defaultClassName || undefined)
+    schoolId = authRes.schoolId
+  } catch (e: any) {
+    return { success: false, error: e.message }
   }
 
   const file = formData.get('file') as File | null
-  const defaultClassName = formData.get('className') as string | null
 
   if (!file) {
     return { success: false, error: 'Missing required fields' }
@@ -160,12 +164,16 @@ export async function uploadStudentRosterAction(formData: FormData) {
 }
 
 export async function deleteStudentAction(studentId: string) {
-  const session = await auth()
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' }
-  }
-
   try {
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { class: true }
+    })
+    
+    if (!student) return { success: false, error: 'Student not found' }
+    
+    await requireSchoolOrTeacherAccess(student.class.name, student.classId)
+    
     await prisma.student.delete({
       where: { id: studentId }
     })
@@ -224,10 +232,15 @@ export async function editStudentAction(studentId: string, data: {
   fatherPhone: string
   fatherCnic: string
 }) {
-  const session = await auth()
-  if (!session?.user) return { success: false, error: 'Unauthorized' }
-
   try {
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { class: true }
+    })
+    
+    if (!student) return { success: false, error: 'Student not found' }
+    
+    await requireSchoolOrTeacherAccess(student.class.name, student.classId)
     await prisma.student.update({
       where: { id: studentId },
       data: {
@@ -248,15 +261,13 @@ export async function editStudentAction(studentId: string, data: {
 }
 
 export async function bulkMoveStudentsAction(studentIds: string[], targetClassName: string) {
-  const session = await auth()
-  const schoolId = session?.user?.id
-  if (!schoolId) return { success: false, error: 'Unauthorized' }
-
-  if (!targetClassName || studentIds.length === 0) {
-    return { success: false, error: 'Missing target class or selected students.' }
-  }
-
   try {
+    const authRes = await requireSchoolOrTeacherAccess(targetClassName)
+    const schoolId = authRes.schoolId
+    if (!targetClassName || studentIds.length === 0) {
+      return { success: false, error: 'Missing target class or selected students.' }
+    }
+
     await prisma.$transaction(async (tx) => {
       // Find or create the target class
       const targetClass = await tx.class.upsert({
@@ -284,10 +295,15 @@ export async function bulkMoveStudentsAction(studentIds: string[], targetClassNa
 }
 
 export async function toggleStudentVisibilityAction(studentId: string, isVisible: boolean) {
-  const session = await auth()
-  if (!session?.user) return { success: false, error: 'Unauthorized' }
-
   try {
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { class: true }
+    })
+    
+    if (!student) return { success: false, error: 'Student not found' }
+    
+    await requireSchoolOrTeacherAccess(student.class.name, student.classId)
     await prisma.student.update({
       where: { id: studentId },
       data: {
@@ -302,14 +318,20 @@ export async function toggleStudentVisibilityAction(studentId: string, isVisible
 }
 
 export async function bulkToggleVisibilityAction(studentIds: string[], isVisible: boolean) {
-  const session = await auth()
-  if (!session?.user) return { success: false, error: 'Unauthorized' }
-
   if (studentIds.length === 0) {
     return { success: false, error: 'No students selected.' }
   }
 
   try {
+    const students = await prisma.student.findMany({
+      where: { id: { in: studentIds } },
+      include: { class: true }
+    })
+    
+    for (const student of students) {
+      await requireSchoolOrTeacherAccess(student.class.name, student.classId)
+    }
+
     await prisma.student.updateMany({
       where: {
         id: { in: studentIds }

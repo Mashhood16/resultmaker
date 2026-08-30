@@ -8,22 +8,53 @@ import { Button } from '@/components/ui/button'
 
 export default async function DashboardOverview() {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'school') {
+  if (!session?.user) {
     redirect('/login')
   }
 
-  const rawClasses = await prisma.class.findMany({
-    where: { schoolId: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      _count: {
-        select: { students: true }
-      }
-    },
-    orderBy: { name: 'asc' }
-  })
+  const role = session.user.role
   
+  if (role === 'student') {
+    const classId = session.user.classIds?.[0]
+    if (classId) {
+      redirect(`/${classId}`)
+    } else {
+      redirect('/')
+    }
+  }
+
+  // Teacher or School logic
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+  
+  let rawClasses = []
+  if (role === 'school' && schoolId) {
+    rawClasses = await prisma.class.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { students: true } }
+      },
+      orderBy: { name: 'asc' }
+    })
+  } else if (role === 'teacher' && schoolId) {
+    rawClasses = await prisma.class.findMany({
+      where: { 
+        schoolId,
+        id: { in: session.user.classIds || [] } 
+      },
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { students: true } }
+      },
+      orderBy: { name: 'asc' }
+    })
+  } else if (role === 'admin') {
+    // Admin logic could show all schools' classes or redirect to a super admin view
+    rawClasses = []
+  }
+
   const classes = JSON.parse(JSON.stringify(rawClasses))
 
   return (

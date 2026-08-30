@@ -13,13 +13,14 @@ import {
 import { signOut } from "next-auth/react";
 
 const navItems = [
-  { name: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true },
-  { name: "Student Roster", href: "/dashboard/roster", icon: Users },
-  { name: "Result Wizard", href: "/dashboard/wizard", icon: FileText },
-  { name: "Manage Data", href: "/dashboard/uploads", icon: UploadCloud },
+  { name: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true, roles: ["admin", "school", "teacher"] },
+  { name: "Student Roster", href: "/dashboard/roster", icon: Users, roles: ["admin", "school", "teacher"] },
+  { name: "Result Wizard", href: "/dashboard/wizard", icon: FileText, roles: ["admin", "school", "teacher"] },
+  { name: "Manage Data", href: "/dashboard/uploads", icon: UploadCloud, roles: ["admin", "school", "teacher"] },
+  { name: "Manage Users", href: "/dashboard/users", icon: Settings, roles: ["admin", "school", "teacher"] },
 ];
 
-export function Sidebar() {
+export function Sidebar({ role }: { role: string }) {
   const pathname = usePathname();
 
   return (
@@ -27,7 +28,7 @@ export function Sidebar() {
       <div className="p-6">
         <h2 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-6">Dashboard</h2>
         <nav className="space-y-2">
-          {navItems.map((item) => {
+          {navItems.filter(item => item.roles.includes(role)).map((item) => {
             const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
             return (
               <Link 

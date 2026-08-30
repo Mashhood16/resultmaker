@@ -3,14 +3,28 @@ import { ManageDataView } from '../manage-data-view'
 import { TestManagementView } from '../test-management-view'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
+import prisma from '@/lib/prisma'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UploadCloud, Database, Calendar } from 'lucide-react'
 
 export default async function UploadsPage() {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'school') {
+  if (!session?.user) {
     redirect('/login')
   }
+  const role = session.user.role
+  if (role !== 'school' && role !== 'teacher') {
+    redirect('/')
+  }
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+
+  const rawClasses = await prisma.class.findMany({
+    where: { 
+      schoolId: schoolId,
+      ...(role === 'teacher' ? { id: { in: session.user.classIds || [] } } : {})
+    },
+    orderBy: { name: 'asc' }
+  })
 
   return (
     <div className="p-4 md:p-8 w-full max-w-6xl mx-auto">
