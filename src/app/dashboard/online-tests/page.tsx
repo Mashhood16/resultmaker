@@ -37,6 +37,36 @@ export default async function OnlineTestsPage() {
     }
   })
 
+  const liveTests = tests.filter(t => t.isActive)
+  const pastTests = tests.filter(t => !t.isActive)
+
+  const renderTestCard = (test: any) => (
+    <Card key={test.id} className="hover:border-primary/50 transition-colors">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-xl">{test.title}</CardTitle>
+            <CardDescription className="mt-1">{test.class.name} • {test.subject.name}</CardDescription>
+          </div>
+          <div className={`px-2 py-1 text-xs font-bold rounded-full ${test.isActive ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
+            {test.isActive ? 'Live' : (test._count.attempts > 0 ? 'Completed' : 'Draft')}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-between text-sm text-muted-foreground mb-4">
+          <span>{test._count.variants} Variants</span>
+          <span>{test._count.attempts} Attempts</span>
+        </div>
+        <div className="flex gap-2">
+          <Link href={`/dashboard/online-tests/${test.id}/grade`} className="w-full">
+            <Button className="w-full">Grade Submissions</Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -71,33 +101,29 @@ export default async function OnlineTestsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tests.map(test => (
-            <Card key={test.id} className="hover:border-primary/50 transition-colors">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-xl">{test.title}</CardTitle>
-                    <CardDescription className="mt-1">{test.class.name} • {test.subject.name}</CardDescription>
-                  </div>
-                  <div className={`px-2 py-1 text-xs font-bold rounded-full ${test.isActive ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                    {test.isActive ? 'Live' : 'Draft'}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between text-sm text-muted-foreground mb-4">
-                  <span>{test._count.variants} Variants</span>
-                  <span>{test._count.attempts} Attempts</span>
-                </div>
-                <div className="flex gap-2">
-                  <Link href={`/dashboard/online-tests/${test.id}/grade`} className="w-full">
-                    <Button className="w-full">Grade Submissions</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="space-y-8">
+          {liveTests.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                Live Tests
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {liveTests.map(renderTestCard)}
+              </div>
+            </div>
+          )}
+          
+          {pastTests.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-muted-foreground">
+                Past Tests & Drafts
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-75 hover:opacity-100 transition-opacity">
+                {pastTests.map(renderTestCard)}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

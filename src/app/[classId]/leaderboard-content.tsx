@@ -14,6 +14,23 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
     }
   })
 
+  const attempts = await prisma.testAttempt.findMany({
+    where: {
+      student: { classId, showInLeaderboard: true },
+      test: { subjectId }
+    },
+    select: {
+      studentId: true,
+      test: { select: { testName: true } },
+      annotatedImage: true
+    }
+  })
+
+  const attemptImageMap = new Map<string, string | null>()
+  attempts.forEach(a => {
+    attemptImageMap.set(`${a.studentId}_${a.test.testName}`, a.annotatedImage)
+  })
+
   // Group by student
   const studentMap = new Map<string, {
     id: string
@@ -31,6 +48,7 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       percentage: number
       isAbsent: boolean
       classAverage?: number
+      annotatedImage?: string | null
     }>
   }>()
 
@@ -71,7 +89,8 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
         obtained: score.marksObtained,
         total: score.totalMarks,
         percentage: score.percentage,
-        isAbsent: score.isAbsent
+        isAbsent: score.isAbsent,
+        annotatedImage: attemptImageMap.get(`${score.studentId}_${score.testName}`)
       })
 
       // Aggregate Student totals

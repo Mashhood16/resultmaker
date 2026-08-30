@@ -35,6 +35,7 @@ type StudentScore = {
     percentage: number
     isAbsent: boolean
     classAverage?: number
+    annotatedImage?: string | null
   }>
 }
 
@@ -399,7 +400,26 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                 <div className="grid gap-3">
                                   {student.breakdown.map((test, idx) => (
                                   <div key={idx} className="flex justify-between items-center bg-card p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-card transition-all group/test shadow-sm">
-                                    <span className="font-bold text-foreground group-hover/test:text-foreground transition-colors">{test.testName}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-foreground group-hover/test:text-foreground transition-colors">{test.testName}</span>
+                                      {test.annotatedImage && (
+                                        <Dialog>
+                                          <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="h-6 text-xs bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 ml-2 rounded-full">
+                                              View Graded Paper
+                                            </Button>
+                                            </DialogTrigger>
+                                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                            <DialogHeader>
+                                              <DialogTitle>{test.testName} - Graded Paper</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="mt-4 flex justify-center bg-zinc-900 rounded-xl p-4 overflow-hidden">
+                                              <img src={test.annotatedImage} alt="Graded Test" className="max-w-full h-auto object-contain rounded-lg shadow-xl" />
+                                            </div>
+                                          </DialogContent>
+                                        </Dialog>
+                                      )}
+                                    </div>
                                     <div className="flex gap-4 md:gap-8 text-sm items-center">
                                       <span className="text-muted-foreground font-medium w-24 text-right tracking-wide">
                                         {test.isAbsent ? <Badge variant="outline" className="text-destructive border-red-900/50 bg-red-950/40">Absent</Badge> : <><span className="text-foreground">{test.obtained}</span> <span className="text-zinc-700">/</span> {test.total}</>}
