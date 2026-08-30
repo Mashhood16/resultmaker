@@ -10,33 +10,88 @@ export async function POST(req: Request) {
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-    const { topic, difficulty, className, subjectName, totalMarks, marksPerQuestion } = await req.json()
+    const { 
+      topic, difficulty, className, subjectName, 
+      numMcqs, marksPerMcq,
+      numShortQs, marksPerShortQ,
+      numLongQs, marksPerLongQ 
+    } = await req.json()
 
     if (!topic) {
       return NextResponse.json({ error: 'Topic is required' }, { status: 400 })
     }
 
-    const tMarks = parseInt(totalMarks) || 15
-    const marksPerQ = parseFloat(marksPerQuestion) || 5
-    const numQuestions = Math.max(1, Math.floor(tMarks / marksPerQ))
+    const mcqCount = parseInt(numMcqs) || 0;
+    const shortCount = parseInt(numShortQs) || 0;
+    const longCount = parseInt(numLongQs) || 0;
+    const totalMarks = (mcqCount * parseFloat(marksPerMcq || '1')) + 
+                       (shortCount * parseFloat(marksPerShortQ || '3')) + 
+                       (longCount * parseFloat(marksPerLongQ || '5'));
 
-    const prompt = `You are an expert test creator. Generate a test for class ${className || 'Unknown'} of ${tMarks} marks for the subject ${subjectName || 'Unknown'} based on FBISE curriculum.
+    const prompt = `You are an expert test creator. Generate a test for class ${className || 'Unknown'} of ${totalMarks} total marks for the subject ${subjectName || 'Unknown'} based on FBISE curriculum.
 Topic: "${topic}"
-Create exactly ${numQuestions} multiple-choice questions. Each question carries ${marksPerQ} marks. The difficulty level should be ${difficulty || 'medium'}.
+
+The test must contain the following sections based exactly on these requirements:
+${mcqCount > 0 ? `- Section A: ${mcqCount} Multiple-Choice Questions (${marksPerMcq} marks each)` : ''}
+${shortCount > 0 ? `- Section B: ${shortCount} Short Answer Questions (${marksPerShortQ} marks each)` : ''}
+${longCount > 0 ? `- Section C: ${longCount} Long Answer Questions (${marksPerLongQ} marks each)` : ''}
+
+For each question, display the marks next to it, e.g., "[5 Marks]". The difficulty level should be ${difficulty || 'medium'}.
     
 Format the output as clean HTML. Do NOT include Markdown code block formatting (\`\`\`html). Use the following structure:
-<div class="test-container space-y-6">
-  <div class="question-block border p-4 rounded-md">
-    <h3 class="text-lg font-semibold">1. [Question Text]</h3>
-    <ul class="options-list mt-2 space-y-2">
-      <li><label><input type="radio" name="q1" value="A"> A) [Option A]</label></li>
-      <li><label><input type="radio" name="q1" value="B"> B) [Option B]</label></li>
-      <li><label><input type="radio" name="q1" value="C"> C) [Option C]</label></li>
-      <li><label><input type="radio" name="q1" value="D"> D) [Option D]</label></li>
-    </ul>
-    <div class="answer-key hidden text-green-600 font-bold mt-2">Correct Answer: [Correct Letter]</div>
-  </div>
-  ...
+<div class="test-container space-y-8">
+  ${mcqCount > 0 ? `
+  <div class="section-block">
+    <h2 class="text-xl font-bold mb-4 border-b pb-2">Section A: Multiple Choice Questions</h2>
+    <div class="space-y-6">
+      <div class="question-block border p-4 rounded-md">
+        <h3 class="text-lg font-semibold flex justify-between">
+          <span>1. [Question Text]</span>
+          <span class="text-sm font-normal text-muted-foreground">[${marksPerMcq} Marks]</span>
+        </h3>
+        <ul class="options-list mt-2 space-y-2">
+          <li><label><input type="radio" name="q1" value="A"> A) [Option A]</label></li>
+          <li><label><input type="radio" name="q1" value="B"> B) [Option B]</label></li>
+          <li><label><input type="radio" name="q1" value="C"> C) [Option C]</label></li>
+          <li><label><input type="radio" name="q1" value="D"> D) [Option D]</label></li>
+        </ul>
+        <div class="answer-key hidden text-green-600 font-bold mt-2">Correct Answer: [Correct Letter]</div>
+      </div>
+      ...
+    </div>
+  </div>` : ''}
+
+  ${shortCount > 0 ? `
+  <div class="section-block mt-8">
+    <h2 class="text-xl font-bold mb-4 border-b pb-2">Section B: Short Answer Questions</h2>
+    <div class="space-y-6">
+      <div class="question-block border p-4 rounded-md">
+        <h3 class="text-lg font-semibold flex justify-between">
+          <span>1. [Question Text]</span>
+          <span class="text-sm font-normal text-muted-foreground">[${marksPerShortQ} Marks]</span>
+        </h3>
+        <div class="mt-4 border-b border-dashed border-gray-300 pb-8"></div>
+        <div class="answer-key hidden text-green-600 font-bold mt-2">Expected Answer: [Brief explanation]</div>
+      </div>
+      ...
+    </div>
+  </div>` : ''}
+
+  ${longCount > 0 ? `
+  <div class="section-block mt-8">
+    <h2 class="text-xl font-bold mb-4 border-b pb-2">Section C: Long Answer Questions</h2>
+    <div class="space-y-6">
+      <div class="question-block border p-4 rounded-md">
+        <h3 class="text-lg font-semibold flex justify-between">
+          <span>1. [Question Text]</span>
+          <span class="text-sm font-normal text-muted-foreground">[${marksPerLongQ} Marks]</span>
+        </h3>
+        <div class="mt-4 border-b border-dashed border-gray-300 pb-24"></div>
+        <div class="answer-key hidden text-green-600 font-bold mt-2">Expected Answer: [Detailed points]</div>
+      </div>
+      ...
+    </div>
+  </div>` : ''}
 </div>`
 
     const response = await ai.models.generateContent({

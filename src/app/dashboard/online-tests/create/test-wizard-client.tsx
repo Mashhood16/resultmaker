@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -36,9 +36,25 @@ export default function TestWizardClient({
   const [title, setTitle] = useState('')
   const [testName, setTestName] = useState('')
   const [totalMarks, setTotalMarks] = useState('')
-  const [marksPerQuestion, setMarksPerQuestion] = useState('5')
+  
+  // AI Generation config
+  const [numMcqs, setNumMcqs] = useState('5')
+  const [marksPerMcq, setMarksPerMcq] = useState('1')
+  const [numShortQs, setNumShortQs] = useState('3')
+  const [marksPerShortQ, setMarksPerShortQ] = useState('3')
+  const [numLongQs, setNumLongQs] = useState('1')
+  const [marksPerLongQ, setMarksPerLongQ] = useState('5')
+
   const [classId, setClassId] = useState('')
   const [subjectId, setSubjectId] = useState('')
+
+  // Auto-calculate total marks
+  useEffect(() => {
+    const mcq = (parseInt(numMcqs) || 0) * (parseFloat(marksPerMcq) || 0)
+    const short = (parseInt(numShortQs) || 0) * (parseFloat(marksPerShortQ) || 0)
+    const long = (parseInt(numLongQs) || 0) * (parseFloat(marksPerLongQ) || 0)
+    setTotalMarks((mcq + short + long).toString())
+  }, [numMcqs, marksPerMcq, numShortQs, marksPerShortQ, numLongQs, marksPerLongQ])
 
   // Step 2: Variants
   const [variants, setVariants] = useState([{ id: 1, name: 'Variant A', accessPin: '', content: '' }])
@@ -129,15 +145,40 @@ export default function TestWizardClient({
             <Label>Internal Test Name (Used for leaderboard syncing)</Label>
             <Input value={testName} onChange={e => setTestName(e.target.value)} placeholder="e.g., Midterm" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Total Marks</Label>
-              <Input type="number" value={totalMarks} onChange={e => setTotalMarks(e.target.value)} placeholder="e.g., 20" />
+          <div className="space-y-2">
+            <Label>Total Marks (Calculated automatically from below config)</Label>
+            <Input type="number" value={totalMarks} readOnly className="bg-muted/50 cursor-not-allowed" />
+          </div>
+
+          <div className="p-4 border rounded-lg bg-primary/5 space-y-4">
+            <h4 className="text-sm font-semibold text-primary">✨ AI Test Generation Config</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Num MCQs</Label>
+                <Input type="number" value={numMcqs} onChange={e => setNumMcqs(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Marks/MCQ</Label>
+                <Input type="number" value={marksPerMcq} onChange={e => setMarksPerMcq(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Num Short Qs</Label>
+                <Input type="number" value={numShortQs} onChange={e => setNumShortQs(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Marks/Short Q</Label>
+                <Input type="number" value={marksPerShortQ} onChange={e => setMarksPerShortQ(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Num Long Qs</Label>
+                <Input type="number" value={numLongQs} onChange={e => setNumLongQs(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Marks/Long Q</Label>
+                <Input type="number" value={marksPerLongQ} onChange={e => setMarksPerLongQ(e.target.value)} />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Marks per Question (for AI)</Label>
-              <Input type="number" value={marksPerQuestion} onChange={e => setMarksPerQuestion(e.target.value)} placeholder="e.g., 5" />
-            </div>
+            <p className="text-xs text-muted-foreground">The AI will use these exact values to generate the test structure.</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -237,8 +278,9 @@ export default function TestWizardClient({
                             topic, 
                             className: classes.find(c => c.id === classId)?.name || 'Unknown Class',
                             subjectName: availableSubjects.find(s => s.id === subjectId)?.name || 'Unknown Subject',
-                            totalMarks,
-                            marksPerQuestion,
+                            numMcqs, marksPerMcq,
+                            numShortQs, marksPerShortQ,
+                            numLongQs, marksPerLongQ,
                             difficulty: 'medium' 
                           })
                         })
