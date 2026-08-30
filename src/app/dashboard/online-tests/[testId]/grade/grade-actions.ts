@@ -2,7 +2,7 @@
 
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
-import { requireSchoolOrTeacherAccess } from '../../../../auth-utils'
+import { requireSchoolOrTeacherAccess } from '../../../auth-utils'
 
 export async function submitGrade(data: {
   attemptId: string
