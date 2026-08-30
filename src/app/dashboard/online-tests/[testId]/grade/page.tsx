@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { CheckCircle, Clock } from 'lucide-react'
 
 import { RefreshButton } from './refresh-button'
+import { EndTestButton } from './end-test-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,6 +53,7 @@ export default async function GradingListPage({ params }: { params: { testId: st
           <p className="text-muted-foreground mt-1">{test.class.name} • {test.subject.name}</p>
         </div>
         <div className="flex items-center gap-4 text-sm font-medium">
+          <EndTestButton testId={test.id} isActive={test.isActive} />
           <RefreshButton />
           <span className="text-yellow-500 flex items-center gap-1"><Clock className="w-4 h-4"/> {submitted.length} Needs Grading</span>
           <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> {graded.length} Graded</span>
