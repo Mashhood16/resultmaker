@@ -23,7 +23,7 @@ export function ClassesView({ classes }: { classes: ClassData[] }) {
     <div className="w-full max-w-6xl animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {classes.map((c) => (
-          <Link href={`/${c.id}`} key={c.id}>
+          <Link href={`/leaderboard/${encodeURIComponent(c.name)}`} key={c.id}>
             <Card className="relative overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer shadow-lg hover:shadow-primary/20 group h-full">
               {/* Glowing background blob */}
               <div className="absolute -inset-24 bg-gradient-to-r from-primary/0 via-primary/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl rounded-full" />
