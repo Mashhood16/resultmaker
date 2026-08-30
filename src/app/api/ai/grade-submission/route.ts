@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { GoogleGenAI } from '@google/genai'
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user) {
@@ -11,6 +9,7 @@ export async function POST(req: Request) {
   }
 
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
     const { imageUrl, textAnswers, totalMarks, testTitle } = await req.json()
 
     if (!imageUrl && !textAnswers) {
