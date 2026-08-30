@@ -44,18 +44,18 @@ export default function LandingPage() {
         {/* Abstract Visual Right Side */}
         <div className="lg:w-1/2 relative w-full h-[400px] lg:h-[600px] animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
           {/* Abstract overlapping cards representing UI */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md h-[400px] perspective-1000">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-sm sm:max-w-md h-[300px] sm:h-[400px] perspective-1000">
             {/* Back Card */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/5 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-sm transform rotate-6 translate-x-8 translate-y-8" />
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/5 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-sm transform rotate-6 translate-x-4 translate-y-4 sm:translate-x-8 sm:translate-y-8" />
             {/* Middle Card */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-blue-500/5 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-md transform -rotate-3 -translate-x-4 translate-y-4" />
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-blue-500/5 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-md transform -rotate-3 -translate-x-2 translate-y-2 sm:-translate-x-4 sm:translate-y-4" />
             {/* Front Card */}
-            <div className="absolute inset-0 bg-card/80 rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-6 flex flex-col gap-4">
-              <div className="w-full h-8 bg-accent rounded-lg w-1/3 mb-4" />
-              <div className="w-full h-12 bg-accent/50 rounded-xl" />
-              <div className="w-full h-12 bg-accent/50 rounded-xl" />
-              <div className="w-full h-12 bg-accent/50 rounded-xl" />
-              <div className="w-full h-12 bg-primary/20 border border-primary/30 rounded-xl mt-auto" />
+            <div className="absolute inset-0 bg-card/80 rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
+              <div className="h-6 sm:h-8 bg-accent rounded-lg w-1/3 mb-2 sm:mb-4" />
+              <div className="w-full h-8 sm:h-12 bg-accent/50 rounded-xl" />
+              <div className="w-full h-8 sm:h-12 bg-accent/50 rounded-xl" />
+              <div className="w-full h-8 sm:h-12 bg-accent/50 rounded-xl" />
+              <div className="w-full h-8 sm:h-12 bg-primary/20 border border-primary/30 rounded-xl mt-auto" />
             </div>
           </div>
           {/* Glowing orb */}
