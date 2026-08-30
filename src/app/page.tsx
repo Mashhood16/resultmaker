@@ -50,12 +50,32 @@ export default function LandingPage() {
             {/* Middle Card */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-blue-500/5 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-md transform -rotate-3 -translate-x-2 translate-y-2 sm:-translate-x-4 sm:translate-y-4" />
             {/* Front Card */}
-            <div className="absolute inset-0 bg-card/80 rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
-              <div className="h-6 sm:h-8 bg-accent rounded-lg w-1/3 mb-2 sm:mb-4" />
-              <div className="w-full h-8 sm:h-12 bg-accent/50 rounded-xl" />
-              <div className="w-full h-8 sm:h-12 bg-accent/50 rounded-xl" />
-              <div className="w-full h-8 sm:h-12 bg-accent/50 rounded-xl" />
-              <div className="w-full h-8 sm:h-12 bg-primary/20 border border-primary/30 rounded-xl mt-auto" />
+            <div className="absolute inset-0 bg-card rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-hidden">
+              <div className="flex items-center justify-between mb-1 sm:mb-2">
+                <div className="h-5 sm:h-7 bg-primary/20 rounded-lg w-1/3" />
+                <div className="h-6 sm:h-8 w-6 sm:w-8 bg-muted rounded-full" />
+              </div>
+              <div className="w-full h-16 sm:h-24 bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-xl flex items-center px-4 sm:px-6">
+                <div className="h-8 sm:h-12 w-8 sm:w-12 rounded-full bg-primary/20 flex-shrink-0" />
+                <div className="ml-4 space-y-2 w-full">
+                  <div className="h-2 sm:h-3 bg-primary/30 rounded-full w-1/2" />
+                  <div className="h-2 sm:h-3 bg-primary/10 rounded-full w-3/4" />
+                </div>
+              </div>
+              <div className="flex gap-3 sm:gap-4">
+                <div className="flex-1 h-16 sm:h-20 bg-muted/50 rounded-xl p-3 sm:p-4 flex flex-col justify-between">
+                  <div className="h-2 sm:h-3 bg-muted-foreground/30 rounded-full w-1/2" />
+                  <div className="h-4 sm:h-6 bg-muted-foreground/20 rounded-full w-3/4" />
+                </div>
+                <div className="flex-1 h-16 sm:h-20 bg-muted/50 rounded-xl p-3 sm:p-4 flex flex-col justify-between">
+                  <div className="h-2 sm:h-3 bg-muted-foreground/30 rounded-full w-1/2" />
+                  <div className="h-4 sm:h-6 bg-muted-foreground/20 rounded-full w-3/4" />
+                </div>
+              </div>
+              <div className="w-full h-10 sm:h-14 bg-muted/30 rounded-xl mt-auto flex items-center px-3 sm:px-4 gap-3">
+                 <div className="h-4 sm:h-5 w-4 sm:w-5 rounded-full bg-primary/40 flex-shrink-0" />
+                 <div className="h-2 sm:h-2.5 w-16 sm:w-24 bg-muted-foreground/30 rounded-full" />
+              </div>
             </div>
           </div>
           {/* Glowing orb */}
