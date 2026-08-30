@@ -148,15 +148,19 @@ export async function addSingleManualScore(data: {
         name: data.studentName,
         rollNumber: data.rollNumber || null,
         section: data.section || null,
-        classId: data.classId
+        classId: data.classId,
+        showInLeaderboard: true // Make visible by default when manually added
       }
     })
   } else {
-    // If we adopted a student who didn't have a roll number, update them
-    if (data.rollNumber && !student.rollNumber) {
+    // Update roll number if missing, and always ensure they are visible on the leaderboard
+    if ((data.rollNumber && !student.rollNumber) || !student.showInLeaderboard) {
       await prisma.student.update({
         where: { id: student.id },
-        data: { rollNumber: data.rollNumber }
+        data: { 
+          ...(data.rollNumber && !student.rollNumber ? { rollNumber: data.rollNumber } : {}),
+          showInLeaderboard: true 
+        }
       })
     }
   }

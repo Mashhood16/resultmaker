@@ -152,7 +152,8 @@ export async function uploadMarksAction(formData: FormData) {
               name: data.name,
               classId: classRecord.id,
               section: data.section,
-              rollNumber: data.rollNumber
+              rollNumber: data.rollNumber,
+              showInLeaderboard: true
             }
           })
         }
