@@ -63,9 +63,9 @@ export default function TestTakingClient({
       if (document.hidden) {
         setWarnings(prev => {
           const newWarnings = prev + 1
-          toast.error(`Warning ${newWarnings}/3: Do not leave the test tab! Your test will be auto-submitted if you continue.`, { duration: 5000 })
+          toast.error(`Warning ${newWarnings}/2: Do not leave the test tab! Your test will be auto-submitted if you continue.`, { duration: 5000 })
           
-          if (newWarnings >= 3) {
+          if (newWarnings >= 2) {
             // Auto submit
             submitAttempt(attempt.id, answers + '<br><br><b>[AUTO-SUBMITTED DUE TO TAB SWITCHING VIOLATION]</b>')
               .then(() => {
@@ -153,7 +153,7 @@ export default function TestTakingClient({
               <ul className="list-disc list-inside space-y-1">
                 <li>This test requires Fullscreen mode.</li>
                 <li>Do not change tabs, minimize the browser, or open other windows.</li>
-                <li>If you leave the test tab 3 times, your test will be <strong>auto-submitted</strong>.</li>
+                <li>If you leave the test tab 2 times, your test will be <strong>auto-submitted</strong>.</li>
                 <li>Do not close the browser until you click "Finish Test".</li>
               </ul>
             </div>
@@ -176,7 +176,7 @@ export default function TestTakingClient({
         <div className="flex items-center gap-4">
           {warnings > 0 && (
             <span className="text-xs font-bold text-destructive bg-destructive/10 px-2 py-1 rounded-full animate-pulse">
-              Warnings: {warnings}/3
+              Warnings: {warnings}/2
             </span>
           )}
           <span className="text-xs text-muted-foreground flex items-center gap-1">
