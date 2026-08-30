@@ -10,13 +10,14 @@ export async function POST(req: Request) {
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-    const { imageUrl, textAnswers, totalMarks, testTitle, rubric } = await req.json()
+    const { imageUrl, textAnswers, totalMarks, testTitle, questionPaper, rubric } = await req.json()
 
     if (!imageUrl && !textAnswers) {
       return NextResponse.json({ error: 'Image URL or text answers required' }, { status: 400 })
     }
 
     const prompt = `You are a strict but fair AI teacher. You are grading a student's submission for the test: "${testTitle}". The total marks available for this test are ${totalMarks}.
+${questionPaper ? `\nHere is the original Question Paper (HTML format) that the student is answering. You MUST use this to determine the maximum marks available for each question and the correct context:\n--- QUESTION PAPER ---\n${questionPaper}\n----------------------\n` : ''}
 ${rubric ? `\nPlease strictly follow this grading rubric / answer key:\n${rubric}\n` : ''}
 Carefully analyze their answers${textAnswers ? ' provided below:' : ' in the attached image.'}
 ${textAnswers ? `\n--- STUDENT ANSWERS ---\n${textAnswers}\n-----------------------\n` : ''}

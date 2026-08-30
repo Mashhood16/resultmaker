@@ -243,6 +243,7 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                     textAnswers: !attempt.annotatedImage ? attempt.answers : undefined,
                     totalMarks: test.totalMarks,
                     testTitle: test.title,
+                    questionPaper: test.content,
                     rubric: rubric
                   })
                 })
