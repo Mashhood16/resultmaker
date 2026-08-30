@@ -36,6 +36,7 @@ export default function TestWizardClient({
   const [title, setTitle] = useState('')
   const [testName, setTestName] = useState('')
   const [totalMarks, setTotalMarks] = useState('')
+  const [marksPerQuestion, setMarksPerQuestion] = useState('5')
   const [classId, setClassId] = useState('')
   const [subjectId, setSubjectId] = useState('')
 
@@ -128,9 +129,15 @@ export default function TestWizardClient({
             <Label>Internal Test Name (Used for leaderboard syncing)</Label>
             <Input value={testName} onChange={e => setTestName(e.target.value)} placeholder="e.g., Midterm" />
           </div>
-          <div className="space-y-2">
-            <Label>Total Marks</Label>
-            <Input type="number" value={totalMarks} onChange={e => setTotalMarks(e.target.value)} placeholder="100" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Total Marks</Label>
+              <Input type="number" value={totalMarks} onChange={e => setTotalMarks(e.target.value)} placeholder="e.g., 20" />
+            </div>
+            <div className="space-y-2">
+              <Label>Marks per Question (for AI)</Label>
+              <Input type="number" value={marksPerQuestion} onChange={e => setMarksPerQuestion(e.target.value)} placeholder="e.g., 5" />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -231,6 +238,7 @@ export default function TestWizardClient({
                             className: classes.find(c => c.id === classId)?.name || 'Unknown Class',
                             subjectName: availableSubjects.find(s => s.id === subjectId)?.name || 'Unknown Subject',
                             totalMarks,
+                            marksPerQuestion,
                             difficulty: 'medium' 
                           })
                         })

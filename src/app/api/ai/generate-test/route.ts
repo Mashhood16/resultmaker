@@ -10,19 +10,19 @@ export async function POST(req: Request) {
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-    const { topic, difficulty, className, subjectName, totalMarks } = await req.json()
+    const { topic, difficulty, className, subjectName, totalMarks, marksPerQuestion } = await req.json()
 
     if (!topic) {
       return NextResponse.json({ error: 'Topic is required' }, { status: 400 })
     }
 
     const tMarks = parseInt(totalMarks) || 15
-    const numQuestions = Math.max(1, Math.floor(tMarks / 5))
-    const marksPerQuestion = (tMarks / numQuestions).toFixed(1).replace('.0', '')
+    const marksPerQ = parseFloat(marksPerQuestion) || 5
+    const numQuestions = Math.max(1, Math.floor(tMarks / marksPerQ))
 
     const prompt = `You are an expert test creator. Generate a test for class ${className || 'Unknown'} of ${tMarks} marks for the subject ${subjectName || 'Unknown'} based on FBISE curriculum.
 Topic: "${topic}"
-Create exactly ${numQuestions} multiple-choice questions. Each question carries ${marksPerQuestion} marks. The difficulty level should be ${difficulty || 'medium'}.
+Create exactly ${numQuestions} multiple-choice questions. Each question carries ${marksPerQ} marks. The difficulty level should be ${difficulty || 'medium'}.
     
 Format the output as clean HTML. Do NOT include Markdown code block formatting (\`\`\`html). Use the following structure:
 <div class="test-container space-y-6">
