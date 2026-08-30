@@ -53,33 +53,33 @@ export function TestManagementView() {
   }
 
   return (
-    <Card className="w-full max-w-4xl bg-white/5 border-white/10 shadow-2xl backdrop-blur-2xl overflow-hidden rounded-3xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <Card className="w-full max-w-4xl bg-card border-border shadow-2xl backdrop-blur-2xl overflow-hidden rounded-3xl animate-in fade-in slide-in-from-bottom-8 duration-700">
       <CardHeader className="pb-4 pt-8 px-8">
-        <CardTitle className="text-2xl font-black text-white flex items-center gap-3">
-          <Calendar className="w-6 h-6 text-red-400" />
+        <CardTitle className="text-2xl font-black text-foreground flex items-center gap-3">
+          <Calendar className="w-6 h-6 text-destructive" />
           Manage Past Tests
         </CardTitle>
-        <CardDescription className="text-zinc-400">
+        <CardDescription className="text-muted-foreground">
           Delete incorrect or duplicate test uploads across entire classes.
         </CardDescription>
       </CardHeader>
       <CardContent className="px-8 pb-8">
         {loading ? (
-          <div className="flex justify-center items-center py-20 text-zinc-500">
+          <div className="flex justify-center items-center py-20 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin" />
           </div>
         ) : tests.length === 0 ? (
-          <div className="text-center text-zinc-500 py-12 italic border border-dashed border-white/10 rounded-2xl">
+          <div className="text-center text-muted-foreground py-12 italic border border-dashed border-border rounded-2xl">
             No tests found in the database.
           </div>
         ) : (
           <div className="grid gap-4">
             {tests.map((t) => (
-              <div key={t.id} className="flex justify-between items-center bg-black/40 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors group">
+              <div key={t.id} className="flex justify-between items-center bg-background/40 p-4 rounded-xl border border-border hover:border-border transition-colors group">
                 <div>
-                  <div className="font-bold text-lg text-zinc-200">{t.testName}</div>
-                  <div className="text-sm text-zinc-500 font-medium mt-1">
-                    <span className="text-blue-400">{t.className}</span> &bull; <span className="text-emerald-400">{t.subjectName}</span>
+                  <div className="font-bold text-lg text-foreground">{t.testName}</div>
+                  <div className="text-sm text-muted-foreground font-medium mt-1">
+                    <span className="text-blue-400">{t.className}</span> &bull; <span className="text-primary">{t.subjectName}</span>
                   </div>
                 </div>
                 <Button 
@@ -87,7 +87,7 @@ export function TestManagementView() {
                   size="icon"
                   disabled={deletingId === t.id}
                   onClick={() => handleDelete(t)}
-                  className="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  className="bg-red-500/20 text-destructive hover:bg-red-500 hover:text-foreground border border-red-500/30 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                 >
                   {deletingId === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </Button>

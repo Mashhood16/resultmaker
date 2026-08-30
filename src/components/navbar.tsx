@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, LogIn, ShieldAlert } from 'lucide-react'
+import { LayoutDashboard, LogIn, ShieldAlert, Trophy } from 'lucide-react'
 import { Session } from 'next-auth'
 
 export function Navbar({ session }: { session: Session | null }) {
@@ -14,30 +14,35 @@ export function Navbar({ session }: { session: Session | null }) {
   }
 
   return (
-    <header className="w-full border-b border-white/5 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
+    <nav className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl tracking-tight text-white flex items-center gap-2 hover:opacity-80 transition-opacity">
-          Result<span className="text-emerald-400">Maker</span>
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <Trophy className="w-5 h-5 text-primary" />
+          </div>
+          <span className="font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
+            ResultMaker
+          </span>
         </Link>
         
         <div className="flex items-center gap-4">
           {!session ? (
             <Link href="/login">
-              <Button variant="outline" className="bg-white text-black hover:bg-zinc-200 border-none font-semibold rounded-full px-6">
+              <Button variant="default" className="font-semibold rounded-full px-6">
                 <LogIn className="w-4 h-4 mr-2" />
                 Sign In
               </Button>
             </Link>
           ) : session.user.role === 'admin' ? (
             <Link href="/admin">
-              <Button variant="outline" className="bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border-indigo-500/20 font-semibold rounded-full px-6 transition-all">
+              <Button variant="outline" className="bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-foreground border-indigo-500/20 font-semibold rounded-full px-6 transition-all">
                 <ShieldAlert className="w-4 h-4 mr-2" />
                 Super Admin
               </Button>
             </Link>
           ) : (
             <Link href="/dashboard">
-              <Button variant="outline" className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white border-emerald-500/20 font-semibold rounded-full px-6 transition-all">
+              <Button variant="outline" className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-primary/20 font-semibold rounded-full px-6 transition-all">
                 <LayoutDashboard className="w-4 h-4 mr-2" />
                 School Dashboard
               </Button>
@@ -45,6 +50,6 @@ export function Navbar({ session }: { session: Session | null }) {
           )}
         </div>
       </div>
-    </header>
+    </nav>
   )
 }

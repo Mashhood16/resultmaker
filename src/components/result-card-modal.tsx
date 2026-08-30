@@ -65,39 +65,39 @@ export function ResultCardModal({ isOpen, onClose, classId, uniqueTests, selecte
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] bg-zinc-950 text-white border-zinc-800 max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[700px] bg-card text-foreground border-border max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <ScrollText className="w-6 h-6 text-emerald-400" />
+            <ScrollText className="w-6 h-6 text-primary" />
             Generate Final Result Card
           </DialogTitle>
-          <DialogDescription className="text-zinc-400">
+          <DialogDescription className="text-muted-foreground">
             Configure the final result card for {selectedStudentCount} selected student(s).
           </DialogDescription>
         </DialogHeader>
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto pr-2 space-y-6 py-4">
             
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">1. Include Tests</h3>
-              <p className="text-xs text-zinc-500">Scores from selected tests will be aggregated for the final calculation.</p>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">1. Include Tests</h3>
+              <p className="text-xs text-muted-foreground">Scores from selected tests will be aggregated for the final calculation.</p>
               
               {uniqueTests.length === 0 ? (
-                <div className="p-4 bg-zinc-900/50 rounded-lg text-sm text-zinc-400 flex gap-2 items-center">
+                <div className="p-4 bg-card/50 rounded-lg text-sm text-muted-foreground flex gap-2 items-center">
                   <AlertCircle className="w-4 h-4 text-amber-500" />
                   No tests found for this class.
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {uniqueTests.map(test => (
-                    <div key={test} className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => handleTestToggle(test)}>
+                    <div key={test} className="flex items-center space-x-2 bg-card border border-border p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => handleTestToggle(test)}>
                       <Checkbox id={`test-${test}`} checked={selectedTests.has(test)} onCheckedChange={() => handleTestToggle(test)} />
-                      <Label htmlFor={`test-${test}`} className="flex-1 cursor-pointer font-medium text-zinc-300">{test}</Label>
+                      <Label htmlFor={`test-${test}`} className="flex-1 cursor-pointer font-medium text-muted-foreground">{test}</Label>
                     </div>
                   ))}
                 </div>
@@ -106,14 +106,14 @@ export function ResultCardModal({ isOpen, onClose, classId, uniqueTests, selecte
           </div>
         )}
 
-        <DialogFooter className="mt-4 border-t border-zinc-800 pt-4">
-          <Button variant="outline" onClick={onClose} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">
+        <DialogFooter className="mt-4 border-t border-border pt-4">
+          <Button variant="outline" onClick={onClose} className="bg-transparent border-zinc-700 text-muted-foreground hover:bg-accent hover:text-foreground">
             Cancel
           </Button>
           <Button 
             onClick={handleGenerate} 
             disabled={loading || selectedTests.size === 0} 
-            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+            className="bg-emerald-600 hover:bg-primary text-foreground shadow-lg shadow-primary/20"
           >
             <ScrollText className="w-4 h-4 mr-2" />
             Generate PDFs

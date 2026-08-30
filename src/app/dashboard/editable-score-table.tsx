@@ -62,39 +62,39 @@ export function EditableScoreTable({ initialScores }: { initialScores: EditableS
 
   if (scores.length === 0) {
     return (
-      <div className="text-center p-8 text-zinc-500 bg-white/5 border border-white/10 rounded-xl mt-6">
+      <div className="text-center p-8 text-muted-foreground bg-card border border-border rounded-xl mt-6">
         No scores found for this selection.
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden mt-6 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="rounded-xl border border-border bg-card overflow-hidden mt-6 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-white/10 hover:bg-transparent">
-              <TableHead className="text-zinc-300 font-semibold w-[20%]">Student Name</TableHead>
-              <TableHead className="text-zinc-300 font-semibold w-[15%]">Roll No.</TableHead>
-              <TableHead className="text-zinc-300 font-semibold w-[10%]">Section</TableHead>
-              <TableHead className="text-zinc-300 font-semibold w-[15%] text-center">Marks Obtained</TableHead>
-              <TableHead className="text-zinc-300 font-semibold w-[15%] text-center">Total Marks</TableHead>
-              <TableHead className="text-zinc-300 font-semibold w-[10%] text-center">Absent</TableHead>
-              <TableHead className="text-zinc-300 font-semibold w-[15%] text-right">Actions</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground font-semibold w-[20%]">Student Name</TableHead>
+              <TableHead className="text-muted-foreground font-semibold w-[15%]">Roll No.</TableHead>
+              <TableHead className="text-muted-foreground font-semibold w-[10%]">Section</TableHead>
+              <TableHead className="text-muted-foreground font-semibold w-[15%] text-center">Marks Obtained</TableHead>
+              <TableHead className="text-muted-foreground font-semibold w-[15%] text-center">Total Marks</TableHead>
+              <TableHead className="text-muted-foreground font-semibold w-[10%] text-center">Absent</TableHead>
+              <TableHead className="text-muted-foreground font-semibold w-[15%] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {scores.map((score, idx) => (
-              <TableRow key={score.id} className="border-white/10 hover:bg-white/5 transition-colors">
-                <TableCell className="font-medium text-white">{score.studentName}</TableCell>
+              <TableRow key={score.id} className="border-border hover:bg-card transition-colors">
+                <TableCell className="font-medium text-foreground">{score.studentName}</TableCell>
                 <TableCell>
                   {score.rollNumber ? (
-                    <Badge variant="outline" className="text-zinc-400 border-zinc-700 bg-zinc-900/50 font-mono text-xs">
+                    <Badge variant="outline" className="text-muted-foreground border-zinc-700 bg-card/50 font-mono text-xs">
                       {score.rollNumber}
                     </Badge>
                   ) : '-'}
                 </TableCell>
-                <TableCell className="text-zinc-400">{score.section || '-'}</TableCell>
+                <TableCell className="text-muted-foreground">{score.section || '-'}</TableCell>
                 
                 <TableCell>
                   <Input 
@@ -102,7 +102,7 @@ export function EditableScoreTable({ initialScores }: { initialScores: EditableS
                     value={score.marksObtained}
                     disabled={score.isAbsent}
                     onChange={(e) => handleUpdate(idx, 'marksObtained', parseFloat(e.target.value) || 0)}
-                    className="bg-black/50 border-white/10 text-center text-white h-9 focus-visible:ring-emerald-500"
+                    className="bg-background/50 border-border text-center text-foreground h-9 focus-visible:ring-emerald-500"
                   />
                 </TableCell>
                 
@@ -111,7 +111,7 @@ export function EditableScoreTable({ initialScores }: { initialScores: EditableS
                     type="number" 
                     value={score.totalMarks}
                     onChange={(e) => handleUpdate(idx, 'totalMarks', parseFloat(e.target.value) || 0)}
-                    className="bg-black/50 border-white/10 text-center text-white h-9 focus-visible:ring-emerald-500"
+                    className="bg-background/50 border-border text-center text-foreground h-9 focus-visible:ring-emerald-500"
                   />
                 </TableCell>
 
@@ -120,7 +120,7 @@ export function EditableScoreTable({ initialScores }: { initialScores: EditableS
                     type="checkbox" 
                     checked={score.isAbsent}
                     onChange={(e) => handleUpdate(idx, 'isAbsent', e.target.checked)}
-                    className="w-4 h-4 accent-emerald-500 bg-zinc-900 border-zinc-700 rounded cursor-pointer"
+                    className="w-4 h-4 accent-primary bg-card border-zinc-700 rounded cursor-pointer"
                   />
                 </TableCell>
                 
@@ -129,7 +129,7 @@ export function EditableScoreTable({ initialScores }: { initialScores: EditableS
                     size="sm"
                     onClick={() => handleSave(score)}
                     disabled={loadingId === score.id || (score.totalMarks <= 0)}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                    className="bg-emerald-600 hover:bg-primary text-foreground shadow-lg shadow-primary/20"
                   >
                     {loadingId === score.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

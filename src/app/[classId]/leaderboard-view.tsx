@@ -273,10 +273,10 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
             <div className="order-2 md:order-1 flex flex-col items-center animate-in slide-in-from-bottom-16 duration-700 delay-300">
               <div className="relative group w-full flex justify-center">
                 <div className="absolute -inset-1 bg-gradient-to-r from-zinc-300 to-zinc-500 rounded-2xl blur-md opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                <Card className="relative bg-zinc-900 border-zinc-500 w-28 md:w-48 text-center py-4 md:py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
-                  <Medal className="w-8 h-8 md:w-10 md:h-10 text-zinc-300 mx-auto mb-2 md:mb-3 drop-shadow-[0_0_10px_rgba(212,212,216,0.4)]" />
+                <Card className="relative bg-card border-zinc-500 w-28 md:w-48 text-center py-4 md:py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
+                  <Medal className="w-8 h-8 md:w-10 md:h-10 text-muted-foreground mx-auto mb-2 md:mb-3 drop-shadow-[0_0_10px_rgba(212,212,216,0.4)]" />
                   <div className="font-bold text-zinc-100 text-sm md:text-xl truncate px-2 md:px-4">{second.name}</div>
-                  <div className="text-zinc-400 font-bold mt-1 md:mt-2 text-xs md:text-base">{second.percentage}%</div>
+                  <div className="text-muted-foreground font-bold mt-1 md:mt-2 text-xs md:text-base">{second.percentage}%</div>
                 </Card>
               </div>
               <div className="h-16 md:h-32 w-28 md:w-48 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-zinc-400 mt-2 md:mt-3 rounded-t-xl flex items-center justify-center text-2xl md:text-4xl font-black text-zinc-600 shadow-inner">
@@ -290,7 +290,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
             <div className="order-1 md:order-2 flex flex-col items-center animate-in slide-in-from-bottom-24 duration-700 delay-500 z-10">
               <div className="relative group w-full flex justify-center">
                 <div className="absolute -inset-1 bg-gradient-to-r from-amber-200 to-yellow-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                <Card className="relative bg-zinc-900 border-yellow-500 w-32 md:w-64 text-center py-6 md:py-10 backdrop-blur-xl rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+                <Card className="relative bg-card border-yellow-500 w-32 md:w-64 text-center py-6 md:py-10 backdrop-blur-xl rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.2)]">
                   <Trophy className="w-10 h-10 md:w-14 md:h-14 text-yellow-400 mx-auto mb-2 md:mb-4 drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]" />
                   <div className="font-black text-zinc-100 text-base md:text-3xl truncate px-2 md:px-4">{first.name}</div>
                   <div className="text-yellow-400 font-black text-sm md:text-xl mt-1 md:mt-2 drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]">{first.percentage}%</div>
@@ -307,10 +307,10 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
             <div className="order-3 md:order-3 flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100">
               <div className="relative group w-full flex justify-center">
                 <div className="absolute -inset-1 bg-gradient-to-r from-amber-700 to-orange-900 rounded-2xl blur-md opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                <Card className="relative bg-zinc-900 border-amber-700 w-24 md:w-44 text-center py-4 md:py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
+                <Card className="relative bg-card border-amber-700 w-24 md:w-44 text-center py-4 md:py-8 backdrop-blur-xl rounded-2xl shadow-2xl">
                   <Star className="w-6 h-6 md:w-10 md:h-10 text-amber-600 mx-auto mb-2 md:mb-3 drop-shadow-[0_0_10px_rgba(217,119,6,0.4)]" />
                   <div className="font-bold text-zinc-100 text-xs md:text-lg truncate px-2 md:px-4">{third.name}</div>
-                  <div className="text-zinc-500 font-bold mt-1 md:mt-2 text-[10px] md:text-base">{third.percentage}%</div>
+                  <div className="text-muted-foreground font-bold mt-1 md:mt-2 text-[10px] md:text-base">{third.percentage}%</div>
                 </Card>
               </div>
               <div className="h-12 md:h-24 w-24 md:w-44 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t-4 border-amber-700 mt-2 md:mt-3 rounded-t-xl flex items-center justify-center text-xl md:text-3xl font-black text-zinc-600 shadow-inner">
@@ -322,23 +322,23 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
       )}
 
       {/* Leaderboard Table */}
-      <Card className="bg-white/5 border-white/10 max-w-6xl mx-auto overflow-hidden shadow-2xl backdrop-blur-2xl rounded-3xl">
+      <Card className="bg-card border-border max-w-6xl mx-auto overflow-hidden shadow-2xl backdrop-blur-2xl rounded-3xl">
         <CardContent className="p-0">
-          <div className="p-6 border-b border-white/10 bg-black/20 flex items-center justify-between">
+          <div className="p-6 border-b border-border bg-background/20 flex items-center justify-between">
             <div className="flex-1 max-w-md relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="w-5 h-5 text-zinc-500 group-focus-within:text-emerald-400 transition-colors" />
+                <Search className="w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
               </div>
               <Input 
                 placeholder="Search by student name or section..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-black/40 border-white/10 text-white pl-12 h-12 rounded-2xl focus-visible:ring-1 focus-visible:ring-emerald-500/50 transition-all placeholder:text-zinc-600 shadow-inner"
+                className="bg-background/40 border-border text-foreground pl-12 h-12 rounded-2xl focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-zinc-600 shadow-inner"
               />
             </div>
             {selectedStudents.size > 0 && (
               <div className="flex gap-2">
-                <Button onClick={openReportModal} disabled={isExporting} className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50">
+                <Button onClick={openReportModal} disabled={isExporting} className="bg-emerald-600 hover:bg-primary text-foreground rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50">
                   <Printer className="w-4 h-4 mr-2" />
                   {isExporting ? 'Generating...' : `Export Report`}
                 </Button>
@@ -348,23 +348,23 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-white/10 hover:bg-transparent">
+                <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="w-12 pl-6">
-                    <input type="checkbox" checked={filteredData.length > 0 && selectedStudents.size === filteredData.length} onChange={toggleAll} className="w-4 h-4 rounded border-zinc-500 bg-zinc-800 accent-emerald-500 cursor-pointer" />
+                    <input type="checkbox" checked={filteredData.length > 0 && selectedStudents.size === filteredData.length} onChange={toggleAll} className="w-4 h-4 rounded border-zinc-500 bg-accent accent-primary cursor-pointer" />
                   </TableHead>
-                  <TableHead className="w-20 font-bold text-zinc-500 uppercase tracking-widest text-[10px]">Rank</TableHead>
-                  <TableHead className="font-bold text-zinc-500 uppercase tracking-widest text-[10px]">Student Name</TableHead>
-                  <TableHead className="font-bold text-zinc-500 uppercase tracking-widest text-[10px]">Roll No.</TableHead>
-                  <TableHead className="font-bold text-zinc-500 uppercase tracking-widest text-[10px]">Section</TableHead>
-                  <TableHead className="text-right font-bold text-zinc-500 uppercase tracking-widest text-[10px]">Marks</TableHead>
-                  <TableHead className="text-right font-bold text-zinc-500 uppercase tracking-widest text-[10px]">Score</TableHead>
-                  <TableHead className="text-right font-bold text-zinc-500 uppercase tracking-widest text-[10px] pr-6">Tier</TableHead>
+                  <TableHead className="w-20 font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Rank</TableHead>
+                  <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Student Name</TableHead>
+                  <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Roll No.</TableHead>
+                  <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Section</TableHead>
+                  <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Marks</TableHead>
+                  <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Score</TableHead>
+                  <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px] pr-6">Tier</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-zinc-500 py-20 text-lg">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-20 text-lg">
                       No students found matching your search.
                     </TableCell>
                   </TableRow>
@@ -372,78 +372,78 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                   filteredData.map((student) => (
                     <React.Fragment key={student.id}>
                       <TableRow 
-                        className="border-white/5 hover:bg-white/5 transition-all cursor-pointer group"
+                        className="border-border hover:bg-card transition-all cursor-pointer group"
                         onClick={() => setExpandedRow(expandedRow === student.id ? null : student.id)}
                       >
                         <TableCell className="pl-6" onClick={(e) => toggleStudent(student.id, e)}>
-                          <input type="checkbox" checked={selectedStudents.has(student.id)} readOnly className="w-4 h-4 rounded border-zinc-500 bg-zinc-800 accent-emerald-500 cursor-pointer pointer-events-none" />
+                          <input type="checkbox" checked={selectedStudents.has(student.id)} readOnly className="w-4 h-4 rounded border-zinc-500 bg-accent accent-primary cursor-pointer pointer-events-none" />
                         </TableCell>
                         <TableCell className="font-medium py-5">
                           {student.rank === 1 && <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center font-bold border border-yellow-500/30 shadow-[0_0_15px_rgba(250,204,21,0.3)]">1</div>}
-                          {student.rank === 2 && <div className="w-8 h-8 rounded-full bg-zinc-300/20 text-zinc-300 flex items-center justify-center font-bold border border-zinc-300/30">2</div>}
+                          {student.rank === 2 && <div className="w-8 h-8 rounded-full bg-zinc-300/20 text-muted-foreground flex items-center justify-center font-bold border border-zinc-300/30">2</div>}
                           {student.rank === 3 && <div className="w-8 h-8 rounded-full bg-amber-600/20 text-amber-500 flex items-center justify-center font-bold border border-amber-600/30">3</div>}
-                          {student.rank > 3 && <div className="w-8 h-8 rounded-full bg-black/40 text-zinc-500 flex items-center justify-center font-semibold">{student.rank}</div>}
+                          {student.rank > 3 && <div className="w-8 h-8 rounded-full bg-background/40 text-muted-foreground flex items-center justify-center font-semibold">{student.rank}</div>}
                         </TableCell>
                         <TableCell className="py-5">
                           <div className="flex items-center gap-4">
-                            <div className="w-6 h-6 rounded-full bg-zinc-800/50 flex items-center justify-center group-hover:bg-zinc-700 transition-colors border border-white/5">
-                              {expandedRow === student.id ? <ChevronDown className="w-4 h-4 text-emerald-400" /> : <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />}
+                            <div className="w-6 h-6 rounded-full bg-accent/50 flex items-center justify-center group-hover:bg-zinc-700 transition-colors border border-border">
+                              {expandedRow === student.id ? <ChevronDown className="w-4 h-4 text-primary" /> : <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground" />}
                             </div>
-                            <span className="font-bold text-white text-base tracking-wide">{student.name}</span>
+                            <span className="font-bold text-foreground text-base tracking-wide">{student.name}</span>
                           </div>
                         </TableCell>
                         <TableCell className="py-5">
                           {student.rollNumber ? (
-                            <Badge variant="outline" className="text-zinc-300 border-white/10 bg-black/40 font-mono tracking-widest px-3 py-1">
+                            <Badge variant="outline" className="text-muted-foreground border-border bg-background/40 font-mono tracking-widest px-3 py-1">
                               {student.rollNumber}
                             </Badge>
                           ) : (
                             <span className="text-zinc-700">-</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-zinc-400 font-medium py-5">{student.section || '-'}</TableCell>
-                        <TableCell className="text-right text-zinc-400 font-medium py-5 tracking-wide">
-                          {student.isAbsent ? <span className="text-red-500">Absent</span> : <><span className="text-zinc-200">{student.obtained}</span> <span className="text-zinc-700">/</span> {student.total}</>}
+                        <TableCell className="text-muted-foreground font-medium py-5">{student.section || '-'}</TableCell>
+                        <TableCell className="text-right text-muted-foreground font-medium py-5 tracking-wide">
+                          {student.isAbsent ? <span className="text-red-500">Absent</span> : <><span className="text-foreground">{student.obtained}</span> <span className="text-zinc-700">/</span> {student.total}</>}
                         </TableCell>
                         <TableCell className="text-right py-5">
-                          {student.isAbsent ? '-' : <span className="text-emerald-400 font-black text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{student.percentage}%</span>}
+                          {student.isAbsent ? '-' : <span className="text-primary font-black text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{student.percentage}%</span>}
                         </TableCell>
                         <TableCell className="text-right py-5 pr-6">
                           {getTierBadge(student.percentage, student.isAbsent)}
                         </TableCell>
                       </TableRow>
                       {expandedRow === student.id && (
-                        <TableRow className="bg-black/60 border-white/5">
+                        <TableRow className="bg-background/60 border-border">
                           <TableCell colSpan={8} className="p-0 border-b-0">
                             <div className="px-6 md:px-16 py-8 animate-in slide-in-from-top-4 fade-in duration-300 flex flex-col lg:flex-row gap-8">
                               <div className="flex-1">
-                                <h4 className="text-xs font-black text-emerald-500/70 mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                <h4 className="text-xs font-black text-primary/70 mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                                   Test Breakdown
                                 </h4>
                                 <div className="grid gap-3">
                                   {student.breakdown.map((test, idx) => (
-                                  <div key={idx} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 hover:border-emerald-500/30 hover:bg-white/10 transition-all group/test shadow-sm">
-                                    <span className="font-bold text-zinc-200 group-hover/test:text-white transition-colors">{test.testName}</span>
+                                  <div key={idx} className="flex justify-between items-center bg-card p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-card transition-all group/test shadow-sm">
+                                    <span className="font-bold text-foreground group-hover/test:text-foreground transition-colors">{test.testName}</span>
                                     <div className="flex gap-4 md:gap-8 text-sm items-center">
-                                      <span className="text-zinc-400 font-medium w-24 text-right tracking-wide">
-                                        {test.isAbsent ? <Badge variant="outline" className="text-red-400 border-red-900/50 bg-red-950/40">Absent</Badge> : <><span className="text-zinc-200">{test.obtained}</span> <span className="text-zinc-700">/</span> {test.total}</>}
+                                      <span className="text-muted-foreground font-medium w-24 text-right tracking-wide">
+                                        {test.isAbsent ? <Badge variant="outline" className="text-destructive border-red-900/50 bg-red-950/40">Absent</Badge> : <><span className="text-foreground">{test.obtained}</span> <span className="text-zinc-700">/</span> {test.total}</>}
                                       </span>
                                       <span className="font-black text-blue-400 w-16 text-right text-base drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]">
                                         {test.isAbsent ? '0%' : `${test.percentage}%`}
                                       </span>
                                       <div className="w-20 text-right hidden sm:block">
-                                        <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-zinc-900/50 text-zinc-500 border-zinc-800">Avg {test.classAverage}%</Badge>
+                                        <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-card/50 text-muted-foreground border-border">Avg {test.classAverage}%</Badge>
                                       </div>
                                     </div>
                                   </div>
                                 ))}
                                 {student.breakdown.length === 0 && (
-                                  <div className="text-zinc-500 text-sm italic p-4 bg-white/5 rounded-xl border border-white/5 text-center">No tests recorded yet.</div>
+                                  <div className="text-muted-foreground text-sm italic p-4 bg-card rounded-xl border border-border text-center">No tests recorded yet.</div>
                                 )}
                                 </div>
                               </div>
-                              <div className="flex-1 min-w-[300px] h-[300px] bg-black/40 rounded-2xl p-6 border border-white/5">
+                              <div className="flex-1 min-w-[300px] h-[300px] bg-background/40 rounded-2xl p-6 border border-border">
                                 <h4 className="text-xs font-black text-blue-500/70 mb-6 uppercase tracking-[0.2em]">Performance Trend</h4>
                                 {student.breakdown.length > 1 ? (
                                   <ResponsiveContainer width="100%" height="100%">
@@ -460,7 +460,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                     </LineChart>
                                   </ResponsiveContainer>
                                 ) : (
-                                  <div className="h-full flex items-center justify-center text-zinc-500 text-sm text-center px-8">Need at least 2 tests to show progress trend.</div>
+                                  <div className="h-full flex items-center justify-center text-muted-foreground text-sm text-center px-8">Need at least 2 tests to show progress trend.</div>
                                 )}
                               </div>
                             </div>
@@ -488,28 +488,28 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
       </div>
 
       <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-zinc-950 text-white border-zinc-800">
+        <DialogContent className="sm:max-w-[500px] bg-card text-foreground border-border">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Printer className="w-5 h-5 text-emerald-400" />
+              <Printer className="w-5 h-5 text-primary" />
               Configure Report
             </DialogTitle>
-            <DialogDescription className="text-zinc-400">
+            <DialogDescription className="text-muted-foreground">
               Select which tests and subjects to aggregate for the {selectedStudents.size} selected students.
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-2">
             <div className="space-y-3">
-              <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">Include Tests</h4>
+              <h4 className="text-sm font-black tracking-widest text-muted-foreground uppercase">Include Tests</h4>
               {uniqueTests.length === 0 ? (
-                <p className="text-zinc-500 text-sm">No tests available.</p>
+                <p className="text-muted-foreground text-sm">No tests available.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {uniqueTests.map(test => (
-                    <div key={test} className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleTestForReport(test)}>
+                    <div key={test} className="flex items-center space-x-2 bg-card border border-border p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleTestForReport(test)}>
                       <Checkbox id={`rep-test-${test}`} checked={reportSelectedTests.has(test)} onCheckedChange={() => toggleTestForReport(test)} />
-                      <Label htmlFor={`rep-test-${test}`} className="flex-1 cursor-pointer font-medium text-zinc-300 text-sm">{test}</Label>
+                      <Label htmlFor={`rep-test-${test}`} className="flex-1 cursor-pointer font-medium text-muted-foreground text-sm">{test}</Label>
                     </div>
                   ))}
                 </div>
@@ -517,15 +517,15 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
             </div>
 
             <div className="space-y-3">
-              <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">Include Subjects</h4>
+              <h4 className="text-sm font-black tracking-widest text-muted-foreground uppercase">Include Subjects</h4>
               {availableSubjects.length === 0 ? (
-                <p className="text-zinc-500 text-sm">No subjects available.</p>
+                <p className="text-muted-foreground text-sm">No subjects available.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {availableSubjects.map(sub => (
-                    <div key={sub.id} className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleSubjectForReport(sub.name)}>
+                    <div key={sub.id} className="flex items-center space-x-2 bg-card border border-border p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleSubjectForReport(sub.name)}>
                       <Checkbox id={`rep-sub-${sub.id}`} checked={reportSelectedSubjects.has(sub.name)} onCheckedChange={() => toggleSubjectForReport(sub.name)} />
-                      <Label htmlFor={`rep-sub-${sub.id}`} className="flex-1 cursor-pointer font-medium text-zinc-300 text-sm">{sub.name}</Label>
+                      <Label htmlFor={`rep-sub-${sub.id}`} className="flex-1 cursor-pointer font-medium text-muted-foreground text-sm">{sub.name}</Label>
                     </div>
                   ))}
                 </div>
@@ -534,13 +534,13 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsReportModalOpen(false)} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">
+            <Button variant="outline" onClick={() => setIsReportModalOpen(false)} className="bg-transparent border-zinc-700 text-muted-foreground hover:bg-accent hover:text-foreground">
               Cancel
             </Button>
             <Button 
               onClick={handleExport} 
               disabled={isExporting || reportSelectedTests.size === 0 || reportSelectedSubjects.size === 0} 
-              className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+              className="bg-emerald-600 hover:bg-primary text-foreground shadow-lg shadow-primary/20"
             >
               <Printer className="w-4 h-4 mr-2" />
               Export PDF

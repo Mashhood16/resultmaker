@@ -50,17 +50,17 @@ export default async function ClassLeaderboardPage({
   const selectedSubjectId = searchParams.subject || subjects[0]?.id
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="space-y-1 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+            <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">
               {classData.name} Leaderboard
             </h1>
-            <p className="text-zinc-400">Real-time academic performance rankings</p>
+            <p className="text-muted-foreground">Real-time academic performance rankings</p>
           </div>
           <Link href="/">
-            <Button variant="outline" className="border-zinc-800 bg-zinc-900 text-white hover:bg-zinc-800">
+            <Button variant="outline" className="border-border bg-card text-foreground hover:bg-accent">
               <Home className="w-4 h-4 mr-2" />
               Classes
             </Button>
@@ -75,7 +75,7 @@ export default async function ClassLeaderboardPage({
                   <Link key={sub.id} href={`/${classData.id}?subject=${sub.id}`}>
                     <Button 
                       variant={selectedSubjectId === sub.id ? "default" : "outline"}
-                      className={`whitespace-nowrap ${selectedSubjectId === sub.id ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-transparent' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white'}`}
+                      className={`whitespace-nowrap ${selectedSubjectId === sub.id ? 'bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
                     >
                       {sub.name}
                     </Button>
@@ -84,12 +84,12 @@ export default async function ClassLeaderboardPage({
               </div>
             </div>
 
-            <Suspense fallback={<div className="h-64 flex items-center justify-center text-zinc-500 animate-pulse">Loading rankings...</div>}>
+            <Suspense fallback={<div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse">Loading rankings...</div>}>
               <LeaderboardContent classId={classData.id} subjectId={selectedSubjectId} availableSubjects={subjects} />
             </Suspense>
           </div>
         ) : (
-          <div className="text-center text-zinc-500 py-12">
+          <div className="text-center text-muted-foreground py-12">
             No subjects or scores found for this class.
           </div>
         )}
