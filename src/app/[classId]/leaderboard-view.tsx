@@ -410,41 +410,62 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                   Test Breakdown
                                 </h4>
                                 <div className="grid gap-3">
-                                  {student.breakdown.map((test, idx) => (
-                                  <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 bg-card p-4 rounded-xl border border-border hover:border-primary hover:bg-card transition-all group/test shadow-sm">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-bold text-foreground group-hover/test:text-foreground transition-colors">{test.testName}</span>
-                                      {test.annotatedImage && (
-                                        <Dialog>
-                                          <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="h-6 text-xs text-primary ml-2 rounded-full hover:brightness-110 shadow-sm shadow-black/20">
-                                              View Graded Paper
-                                            </Button>
-                                            </DialogTrigger>
-                                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                            <DialogHeader>
-                                              <DialogTitle>{test.testName} - Graded Paper</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="mt-4 flex justify-center bg-zinc-900 rounded-xl p-4 overflow-hidden">
-                                              <img src={test.annotatedImage} alt="Graded Test" className="max-w-full h-auto object-contain rounded-lg shadow-xl" />
-                                            </div>
-                                          </DialogContent>
-                                        </Dialog>
-                                      )}
-                                    </div>
-                                    <div className="flex w-full sm:w-auto justify-between sm:justify-end gap-4 md:gap-8 text-sm items-center">
-                                      <span className="text-muted-foreground font-medium w-24 text-right tracking-wide">
-                                        {test.isAbsent ? <Badge variant="outline" className="text-destructive border-red-900/50 bg-red-950/40">Absent</Badge> : <><span className="text-foreground">{test.obtained}</span> <span className="text-zinc-700">/</span> {test.total}</>}
-                                      </span>
-                                      <span className="font-black text-blue-400 w-16 text-right text-base drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]">
-                                        {test.isAbsent ? '0%' : `${test.percentage}%`}
-                                      </span>
-                                      <div className="w-20 text-right hidden sm:block">
-                                        <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-card/50 text-muted-foreground border-border">Avg {test.classAverage}%</Badge>
+                                  {student.breakdown.map((test, idx) => {
+                                    const hasDetails = test.annotatedImage || test.feedback;
+                                    const rowContent = (
+                                      <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 bg-card p-4 rounded-xl border border-border hover:border-primary hover:bg-card transition-all group/test shadow-sm ${hasDetails ? 'cursor-pointer' : ''}`}>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-bold text-foreground group-hover/test:text-foreground transition-colors">{test.testName}</span>
+                                          {hasDetails && (
+                                            <Badge variant="outline" className="text-xs ml-2 text-primary border-primary/30">View Details</Badge>
+                                          )}
+                                        </div>
+                                        <div className="flex w-full sm:w-auto justify-between sm:justify-end gap-4 md:gap-8 text-sm items-center">
+                                          <span className="text-muted-foreground font-medium w-24 text-right tracking-wide">
+                                            {test.isAbsent ? <Badge variant="outline" className="text-destructive border-red-900/50 bg-red-950/40">Absent</Badge> : <><span className="text-foreground">{test.obtained}</span> <span className="text-zinc-700">/</span> {test.total}</>}
+                                          </span>
+                                          <span className="font-black text-blue-400 w-16 text-right text-base drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]">
+                                            {test.isAbsent ? '0%' : `${test.percentage}%`}
+                                          </span>
+                                          <div className="w-20 text-right hidden sm:block">
+                                            <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-card/50 text-muted-foreground border-border">Avg {test.classAverage}%</Badge>
+                                          </div>
+                                        </div>
                                       </div>
-                                    </div>
-                                  </div>
-                                ))}
+                                    );
+
+                                    return (
+                                      <React.Fragment key={idx}>
+                                        {hasDetails ? (
+                                          <Dialog>
+                                            <DialogTrigger asChild>
+                                              {rowContent}
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                              <DialogHeader>
+                                                <DialogTitle>{test.testName} - Submission Details</DialogTitle>
+                                              </DialogHeader>
+                                              <div className="mt-4 space-y-6">
+                                                {test.feedback && (
+                                                  <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
+                                                    <h5 className="font-semibold text-primary mb-2">Teacher's Feedback</h5>
+                                                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{test.feedback}</p>
+                                                  </div>
+                                                )}
+                                                {test.annotatedImage ? (
+                                                  <div className="flex justify-center bg-zinc-900 rounded-xl p-4 overflow-hidden border border-border">
+                                                    <img src={test.annotatedImage} alt="Graded Test" className="max-w-full h-auto object-contain rounded-lg shadow-xl" />
+                                                  </div>
+                                                ) : (
+                                                  <div className="text-muted-foreground text-sm italic text-center p-8 bg-muted/50 rounded-xl">No image submitted for this test.</div>
+                                                )}
+                                              </div>
+                                            </DialogContent>
+                                          </Dialog>
+                                        ) : rowContent}
+                                      </React.Fragment>
+                                    )
+                                  })}
                                 {student.breakdown.length === 0 && (
                                   <div className="text-muted-foreground text-sm italic p-4 bg-card rounded-xl border border-border text-center">No tests recorded yet.</div>
                                 )}

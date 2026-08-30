@@ -26,13 +26,17 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
     select: {
       studentId: true,
       test: { select: { testName: true } },
-      annotatedImage: true
+      annotatedImage: true,
+      feedback: true
     }
   })
 
-  const attemptImageMap = new Map<string, string | null>()
+  const attemptDataMap = new Map<string, { image: string | null, feedback: string | null }>()
   attempts.forEach(a => {
-    attemptImageMap.set(`${a.studentId}_${a.test.testName}`, a.annotatedImage)
+    attemptDataMap.set(`${a.studentId}_${a.test.testName}`, {
+      image: a.annotatedImage,
+      feedback: a.feedback
+    })
   })
 
   // Group by student
@@ -54,6 +58,7 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       isAbsent: boolean
       classAverage?: number
       annotatedImage?: string | null
+      feedback?: string | null
     }>
   }>()
 
@@ -89,14 +94,16 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
     // Prevent duplicate scores for the same testName if students were merged
     const existingTest = sData.breakdown.find(b => b.testName === score.testName)
     if (!existingTest) {
+      const attemptInfo = attemptDataMap.get(`${score.studentId}_${score.testName}`)
       // Add to breakdown
       sData.breakdown.push({
         testName: score.testName,
         obtained: score.marksObtained,
         total: score.totalMarks,
-        percentage: score.percentage,
+        percentage: Number(score.percentage.toFixed(2)),
         isAbsent: score.isAbsent,
-        annotatedImage: attemptImageMap.get(`${score.studentId}_${score.testName}`)
+        annotatedImage: attemptInfo?.image,
+        feedback: attemptInfo?.feedback
       })
 
       // Aggregate Student totals
