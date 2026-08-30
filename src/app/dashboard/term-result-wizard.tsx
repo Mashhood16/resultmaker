@@ -30,7 +30,7 @@ const CLASS_SUBJECTS: Record<string, string[]> = {
 
 const CLASS_OPTIONS = Array.from({ length: 12 }, (_, i) => (i + 1).toString())
 
-export function TermResultWizard() {
+export function TermResultWizard({ role }: { role?: string }) {
   const [step, setStep] = useState(1)
   
   // State for selections
@@ -315,20 +315,22 @@ export function TermResultWizard() {
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-8">
               
-              <div className="flex gap-4 p-1 bg-card rounded-xl mb-6">
-                <button 
-                  onClick={() => setUploadMode('individual')}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all ${uploadMode === 'individual' ? 'bg-primary text-black shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  Upload by Subject
-                </button>
-                <button 
-                  onClick={() => setUploadMode('master')}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all ${uploadMode === 'master' ? 'bg-primary text-black shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  Master Sheet (All Subjects)
-                </button>
-              </div>
+              {role !== 'teacher' && (
+                <div className="flex gap-4 p-1 bg-card rounded-xl mb-6">
+                  <button 
+                    onClick={() => setUploadMode('individual')}
+                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all ${uploadMode === 'individual' ? 'bg-primary text-black shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Upload by Subject
+                  </button>
+                  <button 
+                    onClick={() => setUploadMode('master')}
+                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all ${uploadMode === 'master' ? 'bg-primary text-black shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Master Sheet (All Subjects)
+                  </button>
+                </div>
+              )}
 
               {uploadMode === 'master' ? (
                 <div className="space-y-6">

@@ -65,12 +65,14 @@ export default async function ClassLeaderboardPage({
             </h1>
             <p className="text-muted-foreground">Real-time academic performance rankings</p>
           </div>
-          <Link href="/">
-            <Button variant="outline" className="border-border bg-card text-foreground hover:bg-accent">
-              <Home className="w-4 h-4 mr-2" />
-              Classes
-            </Button>
-          </Link>
+          {session.user.role !== 'student' && (
+            <Link href="/">
+              <Button variant="outline" className="border-border bg-card text-foreground hover:bg-accent">
+                <Home className="w-4 h-4 mr-2" />
+                Classes
+              </Button>
+            </Link>
+          )}
         </header>
 
         {subjects.length > 0 ? (

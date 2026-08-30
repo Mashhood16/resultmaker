@@ -61,18 +61,22 @@ export function CreateUserForm({
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Role</label>
-        <select 
-          name="role" 
-          value={selectedRole}
-          onChange={(e) => setSelectedRole(e.target.value)}
-          className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {role === 'school' && <option value="TEACHER">Teacher</option>}
-          <option value="STUDENT">Student (Class Account)</option>
-        </select>
-      </div>
+      {role === 'school' ? (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Role</label>
+          <select 
+            name="role" 
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="TEACHER">Teacher</option>
+            <option value="STUDENT">Student (Class Account)</option>
+          </select>
+        </div>
+      ) : (
+        <input type="hidden" name="role" value="STUDENT" />
+      )}
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Assign Classes</label>

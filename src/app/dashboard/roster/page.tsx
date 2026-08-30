@@ -14,7 +14,17 @@ export default async function RosterPage() {
   }
 
   const schoolId = role === 'school' ? session.user.id : session.user.schoolId
-  const rawStudents = await getStudentsBySchool(schoolId)
+  
+  let rawStudents = []
+  if (role === 'teacher') {
+    rawStudents = await prisma.student.findMany({
+      where: { class: { schoolId, id: { in: session.user.classIds || [] } } },
+      include: { class: true },
+      orderBy: [{ classId: 'asc' }, { name: 'asc' }]
+    })
+  } else {
+    rawStudents = await getStudentsBySchool(schoolId)
+  }
   const students = JSON.parse(JSON.stringify(rawStudents))
 
   return (
@@ -27,7 +37,7 @@ export default async function RosterPage() {
       </header>
       
       <main className="w-full">
-        <StudentRosterView initialStudents={students} />
+        <StudentRosterView initialStudents={students} role={role} />
       </main>
     </div>
   )

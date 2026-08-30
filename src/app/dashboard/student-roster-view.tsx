@@ -15,7 +15,7 @@ import * as xlsx from 'xlsx'
 
 type StudentWithClass = Student & { class: Class }
 
-export function StudentRosterView({ initialStudents }: { initialStudents: StudentWithClass[] }) {
+export function StudentRosterView({ initialStudents, role }: { initialStudents: StudentWithClass[], role?: string }) {
   const [students, setStudents] = useState(initialStudents)
   const [searchQuery, setSearchQuery] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -307,12 +307,22 @@ export function StudentRosterView({ initialStudents }: { initialStudents: Studen
             </Button>
             <Button 
               variant="outline" 
-              className="bg-accent/20 text-accent-foreground border-accent/30 hover:bg-accent/30"
-              onClick={() => setIsPromoteModalOpen(true)}
+              className="bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 hover:text-foreground"
+              onClick={() => handleBulkVisibility(false)}
             >
-              <Layers className="w-4 h-4 mr-2" />
-              Promote
+              <EyeOff className="w-4 h-4 mr-2" />
+              Hide
             </Button>
+            {role !== 'teacher' && (
+              <Button 
+                variant="outline" 
+                className="bg-accent/20 text-accent-foreground border-accent/30 hover:bg-accent/30"
+                onClick={() => setIsPromoteModalOpen(true)}
+              >
+                <Layers className="w-4 h-4 mr-2" />
+                Promote
+              </Button>
+            )}
           </div>
         </div>
       )}

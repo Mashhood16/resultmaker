@@ -32,7 +32,7 @@ export default async function WizardPage() {
       </header>
       
       <main className="w-full">
-        <TermResultWizard />
+        <TermResultWizard role={role} />
       </main>
     </div>
   )
