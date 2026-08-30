@@ -10,6 +10,7 @@ export async function submitGrade(data: {
   obtainedMarks: number
   feedback?: string
   annotatedImage?: string
+  questionMarks?: string[]
 }) {
   const session = await auth()
   if (!session?.user) throw new Error('Unauthorized')
@@ -30,6 +31,7 @@ export async function submitGrade(data: {
       status: 'GRADED',
       obtainedMarks: data.obtainedMarks,
       feedback: data.feedback,
+      questionMarks: data.questionMarks ? JSON.stringify(data.questionMarks) : null,
       ...(data.annotatedImage ? { annotatedImage: data.annotatedImage } : {})
     }
   })

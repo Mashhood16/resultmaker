@@ -411,7 +411,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                 </h4>
                                 <div className="grid gap-3">
                                   {student.breakdown.map((test, idx) => {
-                                    const hasDetails = test.annotatedImage || test.feedback || test.answers;
+                                    const hasDetails = test.annotatedImage || test.feedback || test.answers || (test.questionMarks && test.questionMarks.length > 0);
                                     const rowContent = (
                                       <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 bg-card p-4 rounded-xl border border-border hover:border-primary hover:bg-card transition-all group/test shadow-sm ${hasDetails ? 'cursor-pointer' : ''}`}>
                                         <div className="flex items-center gap-2">
@@ -452,6 +452,20 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                                     <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{test.feedback}</p>
                                                   </div>
                                                 )}
+                                                
+                                                {test.questionMarks && test.questionMarks.length > 0 && (
+                                                  <div className="bg-card rounded-xl p-4 border border-border">
+                                                    <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Marks Breakdown</h5>
+                                                    <div className="flex flex-wrap gap-2">
+                                                      {test.questionMarks.map((qm: string, i: number) => (
+                                                        <Badge key={i} variant="secondary" className="px-3 py-1 bg-secondary/50 text-sm">
+                                                          Q{i + 1}: <span className="ml-2 font-bold text-primary">{qm || '0'}</span>
+                                                        </Badge>
+                                                      ))}
+                                                    </div>
+                                                  </div>
+                                                )}
+
                                                 {test.annotatedImage ? (
                                                   <div className="flex justify-center bg-zinc-900 rounded-xl p-4 overflow-hidden border border-border">
                                                     <img src={test.annotatedImage} alt="Graded Test" className="max-w-full h-auto object-contain rounded-lg shadow-xl" />

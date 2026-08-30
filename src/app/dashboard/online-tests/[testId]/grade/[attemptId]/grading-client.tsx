@@ -192,7 +192,8 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
         testId: test.id,
         obtainedMarks: parseFloat(marks),
         feedback,
-        annotatedImage: finalImageUrl || undefined
+        annotatedImage: finalImageUrl || undefined,
+        questionMarks: questionMarks.filter(qm => qm.trim() !== '')
       })
       toast.success('Grade submitted successfully')
       router.push(`/dashboard/online-tests/${test.id}/grade`)

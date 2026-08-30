@@ -177,6 +177,7 @@ model TestAttempt {
   answers         String?       // JSON or HTML of answers
   annotatedImage  String?       // Cloudinary URL for graded image
   obtainedMarks   Float?
+  questionMarks   Json?
   feedback        String?
 
   student         Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
