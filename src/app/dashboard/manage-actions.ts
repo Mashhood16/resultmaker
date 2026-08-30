@@ -107,14 +107,40 @@ export async function addSingleManualScore(data: {
   const percentage = data.isAbsent ? 0 : Number(((data.marksObtained / data.totalMarks) * 100).toFixed(2))
 
   // Find or create student
-  let student = await prisma.student.findFirst({
-    where: {
-      classId: data.classId,
-      name: data.studentName,
-      section: data.section || null,
-      class: { schoolId }
+  let student = null
+
+  if (data.rollNumber) {
+    // 1. Strict match by roll number if provided
+    student = await prisma.student.findFirst({
+      where: {
+        classId: data.classId,
+        rollNumber: data.rollNumber,
+        class: { schoolId }
+      }
+    })
+  }
+
+  if (!student) {
+    // 2. Try matching by name and section
+    const studentsWithName = await prisma.student.findMany({
+      where: {
+        classId: data.classId,
+        name: data.studentName,
+        section: data.section || null,
+        class: { schoolId }
+      }
+    })
+    
+    if (data.rollNumber) {
+      // If we provided a roll number, but no student had this roll number.
+      // We found students with the exact same name. If one of them has NO roll number,
+      // we can adopt them and assign this roll number.
+      student = studentsWithName.find(s => s.rollNumber === null) || null
+    } else {
+      // If we didn't provide a roll number, just use the first student that has this name.
+      student = studentsWithName[0] || null
     }
-  })
+  }
 
   if (!student) {
     student = await prisma.student.create({
@@ -126,7 +152,7 @@ export async function addSingleManualScore(data: {
       }
     })
   } else {
-    // If student exists but missing roll number, maybe update it? Let's leave it simple.
+    // If we adopted a student who didn't have a roll number, update them
     if (data.rollNumber && !student.rollNumber) {
       await prisma.student.update({
         where: { id: student.id },

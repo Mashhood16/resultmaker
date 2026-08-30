@@ -134,9 +134,15 @@ export async function uploadMarksAction(formData: FormData) {
         }
 
         if (!student) {
-          student = await tx.student.findFirst({
+          const studentsWithName = await tx.student.findMany({
             where: { classId: classRecord.id, name: data.name }
           })
+          
+          if (data.rollNumber) {
+            student = studentsWithName.find(s => s.rollNumber === null) || null
+          } else {
+            student = studentsWithName[0] || null
+          }
         }
 
         // If still not found, create a placeholder student to not block the upload

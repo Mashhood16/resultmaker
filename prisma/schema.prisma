@@ -56,7 +56,7 @@ model Student {
   class              Class        @relation(fields: [classId], references: [id])
   scores             Score[]
   
-  @@unique([name, classId, section]) // Prevent duplicate students in the same section/class
+  @@unique([classId, rollNumber]) // Prevent duplicate roll numbers in the same class
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
