@@ -25,6 +25,7 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
   const router = useRouter()
   const [marks, setMarks] = useState<string>(attempt.obtainedMarks?.toString() || '')
   const [feedback, setFeedback] = useState(attempt.feedback || '')
+  const [rubric, setRubric] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const contentRef = useRef<HTMLDivElement>(null)
@@ -187,9 +188,18 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
           </Button>
         </Link>
         <div className="flex items-center gap-4">
+          <div className="flex-1 flex flex-col gap-2">
+            <Label>Grading Rubric / Answer Key (Optional)</Label>
+            <Textarea 
+              placeholder="e.g. 5 marks for correct formula, 5 marks for final answer..." 
+              value={rubric} 
+              onChange={e => setRubric(e.target.value)}
+              className="min-h-[60px]"
+            />
+          </div>
           <Button 
             variant="secondary" 
-            className="bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 shadow-none border-0"
+            className="bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 shadow-none border-0 mt-auto mb-1"
             onClick={async () => {
               const toastId = toast.loading('AI is reviewing submission...')
               try {
@@ -200,13 +210,40 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                     imageUrl: attempt.annotatedImage || undefined,
                     textAnswers: !attempt.annotatedImage ? attempt.answers : undefined,
                     totalMarks: test.totalMarks,
-                    testTitle: test.title
+                    testTitle: test.title,
+                    rubric: rubric
                   })
                 })
                 const data = await res.json()
                 if (res.ok) {
                   setMarks(data.obtainedMarks?.toString() || '')
                   setFeedback(data.feedback || '')
+                  
+                  if (data.annotations && Array.isArray(data.annotations) && contentRef.current) {
+                    const width = contentRef.current.clientWidth
+                    const height = contentRef.current.clientHeight
+                    
+                    const mappedAnnotations = data.annotations.map((ann: any, idx: number) => {
+                      if (ann.type === 'text') {
+                        return {
+                          id: `ai-${Date.now()}-${idx}`,
+                          type: 'text',
+                          start: { x: (ann.xmin / 1000) * width, y: (ann.ymin / 1000) * height },
+                          text: ann.text,
+                          isEditing: false
+                        }
+                      } else {
+                        return {
+                          id: `ai-${Date.now()}-${idx}`,
+                          type: ann.type === 'circle' ? 'circle' : 'square',
+                          start: { x: (ann.xmin / 1000) * width, y: (ann.ymin / 1000) * height },
+                          end: { x: (ann.xmax / 1000) * width, y: (ann.ymax / 1000) * height }
+                        }
+                      }
+                    })
+                    setAnnotations(prev => [...prev, ...mappedAnnotations])
+                  }
+
                   toast.success('AI grading complete! Please review.', { id: toastId })
                 } else {
                   throw new Error(data.error)
