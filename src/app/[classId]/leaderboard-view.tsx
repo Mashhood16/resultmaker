@@ -211,35 +211,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
     }
   }
 
-  useEffect(() => {
-    // Fire confetti on mount if we have podium winners
-    if (initialData.length > 0) {
-      const duration = 3000;
-      const end = Date.now() + duration;
-
-      const frame = () => {
-        confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ['#3b82f6', '#10b981', '#fbbf24']
-        });
-        confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ['#3b82f6', '#10b981', '#fbbf24']
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-      frame();
-    }
-  }, [initialData])
+  // Confetti removed per user request
 
   const filteredData = useMemo(() => {
     if (!search) return initialData
