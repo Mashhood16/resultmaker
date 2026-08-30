@@ -271,11 +271,11 @@ export function TermResultWizard() {
                         <div className="space-y-4 py-4">
                           <div className="space-y-2">
                             <Label>Subject Name</Label>
-                            <Input value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} className="bg-background/40 border-border" placeholder="e.g. Art" />
+                            <Input value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} className="bg-transparent border-border" placeholder="e.g. Art" />
                           </div>
                           <div className="space-y-2">
                             <Label>Total Marks</Label>
-                            <Input type="number" value={newSubjectTotalMarks} onChange={(e) => setNewSubjectTotalMarks(e.target.value)} className="bg-background/40 border-border" />
+                            <Input type="number" value={newSubjectTotalMarks} onChange={(e) => setNewSubjectTotalMarks(e.target.value)} className="bg-transparent border-border" />
                           </div>
                         </div>
                         <DialogFooter>
@@ -302,7 +302,7 @@ export function TermResultWizard() {
                           type="number" 
                           value={subjectTotalMarks[subject] || '100'} 
                           onChange={(e) => setSubjectTotalMarks(prev => ({ ...prev, [subject]: e.target.value }))}
-                          className="bg-background/40 border-border text-foreground h-10 pr-8"
+                          className="bg-transparent border-border text-foreground h-10 pr-8"
                         />
                       </div>
                     ))}

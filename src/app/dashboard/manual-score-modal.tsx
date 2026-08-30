@@ -88,7 +88,7 @@ export function ManualScoreModal({ isOpen, onClose, classId, subjectId, testName
               value={studentName} 
               onChange={(e) => setStudentName(e.target.value)} 
               placeholder="e.g. John Doe" 
-              className="bg-background/40 border-border h-10"
+              className="bg-transparent border-border h-10"
               required
             />
           </div>
@@ -101,7 +101,7 @@ export function ManualScoreModal({ isOpen, onClose, classId, subjectId, testName
                 value={rollNumber} 
                 onChange={(e) => setRollNumber(e.target.value)} 
                 placeholder="Optional" 
-                className="bg-background/40 border-border h-10"
+                className="bg-transparent border-border h-10"
               />
             </div>
             <div className="space-y-2">
@@ -111,7 +111,7 @@ export function ManualScoreModal({ isOpen, onClose, classId, subjectId, testName
                 value={section} 
                 onChange={(e) => setSection(e.target.value)} 
                 placeholder="Optional" 
-                className="bg-background/40 border-border h-10"
+                className="bg-transparent border-border h-10"
               />
             </div>
           </div>
@@ -127,7 +127,7 @@ export function ManualScoreModal({ isOpen, onClose, classId, subjectId, testName
                 onChange={(e) => setMarksObtained(e.target.value)} 
                 disabled={isAbsent}
                 placeholder={isAbsent ? "0" : "Score"} 
-                className="bg-background/40 border-border h-10"
+                className="bg-transparent border-border h-10"
                 required={!isAbsent}
               />
             </div>
@@ -140,7 +140,7 @@ export function ManualScoreModal({ isOpen, onClose, classId, subjectId, testName
                 value={totalMarks} 
                 onChange={(e) => setTotalMarks(e.target.value)} 
                 placeholder="Total" 
-                className="bg-background/40 border-border h-10"
+                className="bg-transparent border-border h-10"
                 required
               />
             </div>
@@ -151,7 +151,7 @@ export function ManualScoreModal({ isOpen, onClose, classId, subjectId, testName
               id="isAbsent" 
               checked={isAbsent}
               onCheckedChange={(checked) => setIsAbsent(checked === true)}
-              className="border-zinc-500 bg-background/50"
+              className="border-zinc-500 bg-transparent"
             />
             <Label htmlFor="isAbsent" className="text-sm font-medium leading-none cursor-pointer">
               Mark as Absent

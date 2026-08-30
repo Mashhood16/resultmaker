@@ -60,15 +60,15 @@ export function UploadForm() {
           <form action={action} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="className" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Class Name</Label>
-              <Input id="className" name="className" placeholder="e.g. Grade 10" required className="bg-background/40 border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" />
+              <Input id="className" name="className" placeholder="e.g. Grade 10" required className="bg-transparent border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="subjectName" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Subject Name</Label>
-              <Input id="subjectName" name="subjectName" placeholder="e.g. Mathematics" required className="bg-background/40 border-border text-foreground focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl h-12 px-4 shadow-inner" />
+              <Input id="subjectName" name="subjectName" placeholder="e.g. Mathematics" required className="bg-transparent border-border text-foreground focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl h-12 px-4 shadow-inner" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="testName" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Test Name</Label>
-              <Input id="testName" name="testName" placeholder="e.g. Week 1, Midterms" required className="bg-background/40 border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" />
+              <Input id="testName" name="testName" placeholder="e.g. Week 1, Midterms" required className="bg-transparent border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" />
             </div>
             
             <div>

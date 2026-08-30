@@ -336,7 +336,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                 placeholder="Search by student name or section..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-background/40 border-border text-foreground pl-12 h-12 rounded-2xl focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-zinc-600 shadow-inner"
+                className="bg-transparent border-border text-foreground pl-12 h-12 rounded-2xl focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-zinc-600 shadow-inner"
               />
             </div>
             {selectedStudents.size > 0 && (

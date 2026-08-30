@@ -58,7 +58,7 @@ export default function LoginPage() {
                   name="username" 
                   type="text" 
                   required 
-                  className="bg-background/50 border-border text-foreground h-12 focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl" 
+                  className="bg-transparent border-border text-foreground h-12 focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl" 
                   placeholder="Enter your username"
                 />
               </div>
@@ -71,7 +71,7 @@ export default function LoginPage() {
                   name="password" 
                   type="password" 
                   required 
-                  className="bg-background/50 border-border text-foreground h-12 focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl" 
+                  className="bg-transparent border-border text-foreground h-12 focus-visible:ring-primary/50 focus-visible:border-primary transition-all rounded-xl" 
                   placeholder="••••••••"
                 />
               </div>
