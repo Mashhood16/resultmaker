@@ -38,9 +38,7 @@ export default async function TakeTestPage({
         rollNumber: roll
       }
     },
-    update: {
-      name: name // Update name in case they entered it differently this time
-    },
+    update: {}, // Do not overwrite name. First person to claim the roll number sets it.
     create: {
       classId: params.classId,
       rollNumber: roll,

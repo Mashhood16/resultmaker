@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { CheckCircle, Clock } from 'lucide-react'
 
+import { RefreshButton } from './refresh-button'
+
 export const dynamic = 'force-dynamic'
 
 export default async function GradingListPage({ params }: { params: { testId: string } }) {
@@ -50,6 +52,7 @@ export default async function GradingListPage({ params }: { params: { testId: st
           <p className="text-muted-foreground mt-1">{test.class.name} • {test.subject.name}</p>
         </div>
         <div className="flex items-center gap-4 text-sm font-medium">
+          <RefreshButton />
           <span className="text-yellow-500 flex items-center gap-1"><Clock className="w-4 h-4"/> {submitted.length} Needs Grading</span>
           <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> {graded.length} Graded</span>
         </div>
@@ -100,17 +103,18 @@ export default async function GradingListPage({ params }: { params: { testId: st
         </div>
       </div>
       
-      {inProgress.length > 0 && (
-        <div className="space-y-4 mt-8 pt-8 border-t border-border">
-          <h2 className="text-xl font-bold">In Progress ({inProgress.length})</h2>
-          <p className="text-sm text-muted-foreground">These students have started but not submitted yet.</p>
-          <div className="flex flex-wrap gap-2">
-            {inProgress.map(a => (
-              <span key={a.id} className="px-3 py-1 bg-muted rounded-full text-xs font-medium">{a.student.name}</span>
-            ))}
-          </div>
+      <div className="space-y-4 mt-8 pt-8 border-t border-border">
+        <h2 className="text-xl font-bold">In Progress ({inProgress.length})</h2>
+        <p className="text-sm text-muted-foreground">These students have started but not submitted yet.</p>
+        <div className="flex flex-wrap gap-2">
+          {inProgress.map(a => (
+            <span key={a.id} className="px-3 py-1 bg-muted rounded-full text-xs font-medium border">
+              Roll {a.student.rollNumber}: {a.student.name}
+            </span>
+          ))}
+          {inProgress.length === 0 && <p className="text-xs text-muted-foreground italic">No students are currently taking this test.</p>}
         </div>
-      )}
+      </div>
     </div>
   )
 }
