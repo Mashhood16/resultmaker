@@ -411,7 +411,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                 </h4>
                                 <div className="grid gap-3">
                                   {student.breakdown.map((test, idx) => {
-                                    const hasDetails = test.annotatedImage || test.feedback;
+                                    const hasDetails = test.annotatedImage || test.feedback || test.answers;
                                     const rowContent = (
                                       <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 bg-card p-4 rounded-xl border border-border hover:border-primary hover:bg-card transition-all group/test shadow-sm ${hasDetails ? 'cursor-pointer' : ''}`}>
                                         <div className="flex items-center gap-2">
@@ -456,8 +456,12 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                                   <div className="flex justify-center bg-zinc-900 rounded-xl p-4 overflow-hidden border border-border">
                                                     <img src={test.annotatedImage} alt="Graded Test" className="max-w-full h-auto object-contain rounded-lg shadow-xl" />
                                                   </div>
+                                                ) : test.answers ? (
+                                                  <div className="bg-card rounded-xl p-6 border border-border overflow-hidden prose prose-invert max-w-none text-foreground">
+                                                    <div dangerouslySetInnerHTML={{ __html: test.answers }} />
+                                                  </div>
                                                 ) : (
-                                                  <div className="text-muted-foreground text-sm italic text-center p-8 bg-muted/50 rounded-xl">No image submitted for this test.</div>
+                                                  <div className="text-muted-foreground text-sm italic text-center p-8 bg-muted/50 rounded-xl">No test submission found.</div>
                                                 )}
                                               </div>
                                             </DialogContent>

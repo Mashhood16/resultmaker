@@ -27,15 +27,17 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       studentId: true,
       test: { select: { testName: true } },
       annotatedImage: true,
-      feedback: true
+      feedback: true,
+      answers: true
     }
   })
 
-  const attemptDataMap = new Map<string, { image: string | null, feedback: string | null }>()
+  const attemptDataMap = new Map<string, { image: string | null, feedback: string | null, answers: string | null }>()
   attempts.forEach(a => {
     attemptDataMap.set(`${a.studentId}_${a.test.testName}`, {
       image: a.annotatedImage,
-      feedback: a.feedback
+      feedback: a.feedback,
+      answers: a.answers
     })
   })
 
@@ -59,6 +61,7 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       classAverage?: number
       annotatedImage?: string | null
       feedback?: string | null
+      answers?: string | null
     }>
   }>()
 
@@ -103,7 +106,8 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
         percentage: Number(score.percentage.toFixed(2)),
         isAbsent: score.isAbsent,
         annotatedImage: attemptInfo?.image,
-        feedback: attemptInfo?.feedback
+        feedback: attemptInfo?.feedback,
+        answers: attemptInfo?.answers
       })
 
       // Aggregate Student totals
