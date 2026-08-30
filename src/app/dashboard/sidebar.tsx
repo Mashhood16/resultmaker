@@ -23,7 +23,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 h-[calc(100vh-4rem)] border-r border-border bg-card/30 backdrop-blur-md flex flex-col justify-between sticky top-16 hidden md:flex">
+    <aside className="w-64 h-screen border-r border-border bg-card/30 backdrop-blur-md flex flex-col justify-between sticky top-0 hidden md:flex">
       <div className="p-6">
         <h2 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-6">Dashboard</h2>
         <nav className="space-y-2">
