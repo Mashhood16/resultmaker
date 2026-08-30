@@ -21,10 +21,15 @@ ${rubric ? `\nPlease strictly follow this grading rubric / answer key:\n${rubric
 Carefully analyze their answers${textAnswers ? ' provided below:' : ' in the attached image.'}
 ${textAnswers ? `\n--- STUDENT ANSWERS ---\n${textAnswers}\n-----------------------\n` : ''}
 
+Provide your evaluation. Grade EACH question individually. Provide the marks and exactly ONE sentence of feedback in Roman Urdu for each question. Also provide an overall total and a short overall summary in Roman Urdu.
+
 Provide your evaluation in JSON format exactly like this (do NOT use markdown \`\`\`json block):
 {
   "obtainedMarks": [integer],
-  "feedback": "[A very short (1-2 sentences max) feedback in Roman Urdu summarizing what they got right and where they made mistakes]"
+  "overallFeedback": "[A very short (1-2 sentences max) feedback in Roman Urdu summarizing overall performance]",
+  "questionBreakdown": [
+    { "marks": [integer], "feedback": "[One sentence Roman Urdu feedback for this specific question]" }
+  ]
 }`
 
     const contents: any[] = [prompt]
@@ -54,10 +59,22 @@ Provide your evaluation in JSON format exactly like this (do NOT use markdown \`
         responseSchema: {
           type: 'OBJECT',
           properties: {
-            obtainedMarks: { type: 'INTEGER', description: "The final score as a whole number without decimals" },
-            feedback: { type: 'STRING', description: "A very short (1-2 sentences) feedback in Roman Urdu" }
+            obtainedMarks: { type: 'INTEGER', description: "The final total score as a whole number without decimals" },
+            overallFeedback: { type: 'STRING', description: "A very short (1-2 sentences) overall feedback in Roman Urdu" },
+            questionBreakdown: {
+              type: 'ARRAY',
+              description: "An array containing the marks and feedback for each individual question",
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  marks: { type: 'INTEGER', description: "Marks awarded for this question" },
+                  feedback: { type: 'STRING', description: "One sentence of feedback in Roman Urdu for this specific question" }
+                },
+                required: ["marks", "feedback"]
+              }
+            }
           },
-          required: ["obtainedMarks", "feedback"]
+          required: ["obtainedMarks", "overallFeedback", "questionBreakdown"]
         }
       }
     })

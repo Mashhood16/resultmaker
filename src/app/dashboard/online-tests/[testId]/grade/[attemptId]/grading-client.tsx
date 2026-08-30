@@ -249,7 +249,18 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                 const data = await res.json()
                 if (res.ok) {
                   setMarks(data.obtainedMarks?.toString() || '')
-                  setFeedback(data.feedback || '')
+                  
+                  let combinedFeedback = data.overallFeedback || ''
+                  
+                  if (data.questionBreakdown && Array.isArray(data.questionBreakdown)) {
+                    const qMarks = data.questionBreakdown.map((q: any) => q.marks?.toString() || '0')
+                    setQuestionMarks(qMarks)
+                    
+                    const qFeedback = data.questionBreakdown.map((q: any, i: number) => `Q${i+1} (${q.marks} marks): ${q.feedback}`).join('\n')
+                    combinedFeedback = combinedFeedback ? `${combinedFeedback}\n\n${qFeedback}` : qFeedback
+                  }
+                  
+                  setFeedback(combinedFeedback)
                   toast.success('AI grading complete! Please review.', { id: toastId })
                 } else {
                   throw new Error(data.error)
