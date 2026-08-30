@@ -6,6 +6,8 @@ import { Home } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
+import { AnalyticsSection } from './analytics-section'
+
 export default async function DashboardOverview() {
   const session = await auth()
   if (!session?.user) {
@@ -51,11 +53,11 @@ export default async function DashboardOverview() {
       orderBy: { name: 'asc' }
     })
   } else if (role === 'admin') {
-    // Admin logic could show all schools' classes or redirect to a super admin view
     rawClasses = []
   }
 
   const classes = JSON.parse(JSON.stringify(rawClasses))
+  const classIds = rawClasses.map(c => c.id)
 
   return (
     <div className="p-4 md:p-8 w-full max-w-6xl mx-auto">
@@ -77,6 +79,7 @@ export default async function DashboardOverview() {
       </header>
       
       <main className="w-full">
+        <AnalyticsSection classIds={classIds} />
         <ClassesView classes={classes} />
       </main>
     </div>

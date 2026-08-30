@@ -24,6 +24,7 @@ type StudentScore = {
   name: string
   rollNumber: string | null
   section: string | null
+  badges?: Array<{ id: string, name: string, icon: string, description: string }>
   obtained: number
   total: number
   percentage: number
@@ -362,10 +363,21 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                         </TableCell>
                         <TableCell className="py-5">
                           <div className="flex items-center gap-4">
-                            <div className="w-6 h-6 rounded-full bg-accent/50 flex items-center justify-center group-hover:bg-zinc-700 transition-colors border border-border">
+                            <div className="w-6 h-6 rounded-full bg-accent/50 flex items-center justify-center group-hover:bg-zinc-700 transition-colors border border-border shrink-0">
                               {expandedRow === student.id ? <ChevronDown className="w-4 h-4 text-primary" /> : <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground" />}
                             </div>
-                            <span className="font-bold text-foreground text-base tracking-wide">{student.name}</span>
+                            <div className="flex flex-col gap-1">
+                              <span className="font-bold text-foreground text-base tracking-wide">{student.name}</span>
+                              {student.badges && student.badges.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {student.badges.map(badge => (
+                                    <Badge key={badge.id} variant="secondary" className="text-[10px] py-0 px-1.5 h-4 flex items-center gap-1 bg-amber-500/10 text-amber-500 border border-amber-500/20" title={badge.description}>
+                                      <span>{badge.icon}</span> {badge.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="py-5">

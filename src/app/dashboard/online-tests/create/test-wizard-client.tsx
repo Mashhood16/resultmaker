@@ -203,7 +203,38 @@ export default function TestWizardClient({
               </div>
               
               <div className="space-y-2 pt-2">
-                <Label>Questions Content</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Questions Content</Label>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20"
+                    onClick={async () => {
+                      const topic = prompt('Enter a topic for AI test generation (e.g., Photosynthesis):')
+                      if (!topic) return
+                      
+                      const toastId = toast.loading('Generating questions with AI...')
+                      try {
+                        const res = await fetch('/api/ai/generate-test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ topic, numQuestions: 5, difficulty: 'medium' })
+                        })
+                        const data = await res.json()
+                        if (res.ok) {
+                          updateVariant(variant.id, 'content', variant.content + '<br/>' + data.html)
+                          toast.success('AI generation complete!', { id: toastId })
+                        } else {
+                          throw new Error(data.error)
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || 'Failed to generate', { id: toastId })
+                      }
+                    }}
+                  >
+                    ✨ Generate with AI
+                  </Button>
+                </div>
                 <div className="border rounded-md overflow-hidden bg-background h-auto">
                   <ReactQuill 
                     theme="snow" 

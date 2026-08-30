@@ -187,6 +187,37 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
           </Button>
         </Link>
         <div className="flex items-center gap-4">
+          <Button 
+            variant="secondary" 
+            className="bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 shadow-none border-0"
+            onClick={async () => {
+              const toastId = toast.loading('AI is reviewing submission...')
+              try {
+                const res = await fetch('/api/ai/grade-submission', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    imageUrl: attempt.annotatedImage || undefined,
+                    textAnswers: !attempt.annotatedImage ? attempt.answers : undefined,
+                    totalMarks: test.totalMarks,
+                    testTitle: test.title
+                  })
+                })
+                const data = await res.json()
+                if (res.ok) {
+                  setMarks(data.obtainedMarks?.toString() || '')
+                  setFeedback(data.feedback || '')
+                  toast.success('AI grading complete! Please review.', { id: toastId })
+                } else {
+                  throw new Error(data.error)
+                }
+              } catch (err: any) {
+                toast.error(err.message || 'AI grading failed', { id: toastId })
+              }
+            }}
+          >
+            ✨ Auto-Grade with AI
+          </Button>
           <div className="flex items-center gap-2">
             <Label>Marks:</Label>
             <Input 

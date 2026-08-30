@@ -10,7 +10,11 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       student: { classId, showInLeaderboard: true }
     },
     include: {
-      student: true
+      student: {
+        include: {
+          badges: true
+        }
+      }
     }
   })
 
@@ -37,6 +41,7 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
     name: string
     rollNumber: string | null
     section: string | null
+    badges: Array<{ id: string, name: string, icon: string, description: string }>
     obtained: number
     total: number
     percentage: number
@@ -64,6 +69,7 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
         name: score.student.name,
         rollNumber: score.student.rollNumber,
         section: score.student.section,
+        badges: score.student.badges || [],
         obtained: 0,
         total: 0,
         percentage: 0,
