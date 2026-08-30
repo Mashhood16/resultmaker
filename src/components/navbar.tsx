@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, LogIn, ShieldAlert, Trophy } from 'lucide-react'
+import { LayoutDashboard, LogIn, ShieldAlert, Trophy, LogOut } from 'lucide-react'
 import { Session } from 'next-auth'
+import { signOut } from 'next-auth/react'
 
 export function Navbar({ session }: { session: Session | null }) {
   const pathname = usePathname()
@@ -41,14 +42,34 @@ export function Navbar({ session }: { session: Session | null }) {
                 <span className="sm:hidden">Admin</span>
               </Button>
             </Link>
-          ) : (
-            <Link href="/dashboard">
-              <Button variant="outline" className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-primary/20 font-semibold rounded-full px-4 md:px-6 transition-all">
-                <LayoutDashboard className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">School Dashboard</span>
-                <span className="sm:hidden">Dashboard</span>
+          ) : session.user.role === 'student' ? (
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard">
+                <Button variant="outline" className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-primary/20 font-semibold rounded-full px-4 md:px-6 transition-all">
+                  <LayoutDashboard className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">My Class</span>
+                  <span className="sm:hidden">Class</span>
+                </Button>
+              </Link>
+              <Button onClick={() => signOut({ callbackUrl: '/' })} variant="ghost" className="rounded-full px-4 text-muted-foreground hover:text-destructive">
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
               </Button>
-            </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard">
+                <Button variant="outline" className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-primary/20 font-semibold rounded-full px-4 md:px-6 transition-all">
+                  <LayoutDashboard className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">School Dashboard</span>
+                  <span className="sm:hidden">Dashboard</span>
+                </Button>
+              </Link>
+              <Button onClick={() => signOut({ callbackUrl: '/' })} variant="ghost" className="rounded-full px-4 text-muted-foreground hover:text-destructive">
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </div>
           )}
         </div>
       </div>
