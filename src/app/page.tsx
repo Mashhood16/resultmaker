@@ -50,31 +50,52 @@ export default function LandingPage() {
             {/* Middle Card */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-blue-500/5 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-md transform -rotate-3 -translate-x-2 translate-y-2 sm:-translate-x-4 sm:translate-y-4" />
             {/* Front Card */}
-            <div className="absolute inset-0 bg-card rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-hidden">
-              <div className="flex items-center justify-between mb-1 sm:mb-2">
-                <div className="h-5 sm:h-7 bg-primary/20 rounded-lg w-1/3" />
-                <div className="h-6 sm:h-8 w-6 sm:w-8 bg-muted rounded-full" />
-              </div>
-              <div className="w-full h-16 sm:h-24 bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-xl flex items-center px-4 sm:px-6">
-                <div className="h-8 sm:h-12 w-8 sm:w-12 rounded-full bg-primary/20 flex-shrink-0" />
-                <div className="ml-4 space-y-2 w-full">
-                  <div className="h-2 sm:h-3 bg-primary/30 rounded-full w-1/2" />
-                  <div className="h-2 sm:h-3 bg-primary/10 rounded-full w-3/4" />
+            <div className="absolute inset-0 bg-card/95 rounded-3xl border border-border shadow-2xl backdrop-blur-xl p-5 sm:p-6 flex flex-col overflow-hidden">
+              {/* Mock App Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Live Rankings</div>
+                  <div className="text-lg sm:text-xl font-black text-foreground">Grade 10 - Midterms</div>
+                </div>
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Trophy className="w-4 h-4 text-primary" />
                 </div>
               </div>
-              <div className="flex gap-3 sm:gap-4">
-                <div className="flex-1 h-16 sm:h-20 bg-muted/50 rounded-xl p-3 sm:p-4 flex flex-col justify-between">
-                  <div className="h-2 sm:h-3 bg-muted-foreground/30 rounded-full w-1/2" />
-                  <div className="h-4 sm:h-6 bg-muted-foreground/20 rounded-full w-3/4" />
+
+              {/* Mock Leaderboard Items */}
+              <div className="space-y-3">
+                {/* 1st Place */}
+                <div className="flex items-center justify-between bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center font-bold text-yellow-600">1</div>
+                    <span className="font-bold text-foreground text-sm sm:text-base">Sarah Jenkins</span>
+                  </div>
+                  <span className="font-black text-yellow-600">98.5%</span>
                 </div>
-                <div className="flex-1 h-16 sm:h-20 bg-muted/50 rounded-xl p-3 sm:p-4 flex flex-col justify-between">
-                  <div className="h-2 sm:h-3 bg-muted-foreground/30 rounded-full w-1/2" />
-                  <div className="h-4 sm:h-6 bg-muted-foreground/20 rounded-full w-3/4" />
+                {/* 2nd Place */}
+                <div className="flex items-center justify-between bg-zinc-500/10 border border-zinc-500/20 rounded-2xl p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-zinc-500/20 flex items-center justify-center font-bold text-zinc-400">2</div>
+                    <span className="font-bold text-foreground text-sm sm:text-base">Michael Chen</span>
+                  </div>
+                  <span className="font-black text-zinc-400">95.2%</span>
+                </div>
+                {/* 3rd Place */}
+                <div className="flex items-center justify-between bg-orange-500/10 border border-orange-500/20 rounded-2xl p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-bold text-orange-500">3</div>
+                    <span className="font-bold text-foreground text-sm sm:text-base">Emma Wilson</span>
+                  </div>
+                  <span className="font-black text-orange-500">92.8%</span>
                 </div>
               </div>
-              <div className="w-full h-10 sm:h-14 bg-muted/30 rounded-xl mt-auto flex items-center px-3 sm:px-4 gap-3">
-                 <div className="h-4 sm:h-5 w-4 sm:w-5 rounded-full bg-primary/40 flex-shrink-0" />
-                 <div className="h-2 sm:h-2.5 w-16 sm:w-24 bg-muted-foreground/30 rounded-full" />
+
+              {/* Mock Action Button */}
+              <div className="mt-auto pt-4">
+                <div className="w-full py-3 bg-primary text-primary-foreground rounded-xl flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/25">
+                  <FileText className="w-4 h-4" />
+                  Generate Report Cards
+                </div>
               </div>
             </div>
           </div>
