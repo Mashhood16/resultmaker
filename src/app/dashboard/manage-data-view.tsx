@@ -5,7 +5,9 @@ import { fetchFilterOptions, fetchScores } from './manage-actions'
 import { EditableScoreTable } from './editable-score-table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Database, Loader2 } from 'lucide-react'
+import { Database, Loader2, UserPlus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ManualScoreModal } from './manual-score-modal'
 
 type FilterOptions = {
   classes: { id: string, name: string }[]
@@ -22,6 +24,23 @@ export function ManageDataView() {
   const [scores, setScores] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const loadScores = async () => {
+    if (classId && subjectId && testName) {
+      setLoading(true)
+      try {
+        const data = await fetchScores(classId, subjectId, testName)
+        setScores(data)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      setScores([])
+    }
+  }
 
   useEffect(() => {
     async function loadOptions() {
@@ -38,22 +57,8 @@ export function ManageDataView() {
   }, [])
 
   useEffect(() => {
-    async function loadScores() {
-      if (classId && subjectId && testName) {
-        setLoading(true)
-        try {
-          const data = await fetchScores(classId, subjectId, testName)
-          setScores(data)
-        } catch (error) {
-          console.error(error)
-        } finally {
-          setLoading(false)
-        }
-      } else {
-        setScores([])
-      }
-    }
     loadScores()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId, subjectId, testName])
 
   if (initialLoading) {
@@ -129,11 +134,28 @@ export function ManageDataView() {
             </div>
           ) : (
             classId && subjectId && testName && (
-              <EditableScoreTable initialScores={scores} />
+              <div className="mt-6 space-y-4">
+                <div className="flex justify-end">
+                  <Button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/20">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add Score Manually
+                  </Button>
+                </div>
+                <EditableScoreTable key={`${classId}-${subjectId}-${testName}-${scores.length}`} initialScores={scores} />
+              </div>
             )
           )}
         </CardContent>
       </Card>
+      
+      <ManualScoreModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        classId={classId}
+        subjectId={subjectId}
+        testName={testName}
+        onSuccess={() => loadScores()}
+      />
     </div>
   )
 }

@@ -86,3 +86,81 @@ export async function updateScore(scoreId: string, marksObtained: number, totalM
   
   return { success: true }
 }
+
+export async function addSingleManualScore(data: {
+  classId: string
+  subjectId: string
+  testName: string
+  studentName: string
+  rollNumber?: string
+  section?: string
+  marksObtained: number
+  totalMarks: number
+  isAbsent: boolean
+}) {
+  const session = await auth()
+  const schoolId = session?.user?.id
+  if (!schoolId) throw new Error('Unauthorized')
+
+  if (data.totalMarks <= 0) throw new Error('Total marks must be greater than 0')
+
+  const percentage = data.isAbsent ? 0 : Number(((data.marksObtained / data.totalMarks) * 100).toFixed(2))
+
+  // Find or create student
+  let student = await prisma.student.findFirst({
+    where: {
+      classId: data.classId,
+      name: data.studentName,
+      section: data.section || null,
+      class: { schoolId }
+    }
+  })
+
+  if (!student) {
+    student = await prisma.student.create({
+      data: {
+        name: data.studentName,
+        rollNumber: data.rollNumber || null,
+        section: data.section || null,
+        classId: data.classId
+      }
+    })
+  } else {
+    // If student exists but missing roll number, maybe update it? Let's leave it simple.
+    if (data.rollNumber && !student.rollNumber) {
+      await prisma.student.update({
+        where: { id: student.id },
+        data: { rollNumber: data.rollNumber }
+      })
+    }
+  }
+
+  // Upsert the score
+  await prisma.score.upsert({
+    where: {
+      studentId_subjectId_testName: {
+        studentId: student.id,
+        subjectId: data.subjectId,
+        testName: data.testName
+      }
+    },
+    update: {
+      marksObtained: data.isAbsent ? 0 : data.marksObtained,
+      totalMarks: data.totalMarks,
+      isAbsent: data.isAbsent,
+      percentage
+    },
+    create: {
+      studentId: student.id,
+      subjectId: data.subjectId,
+      testName: data.testName,
+      marksObtained: data.isAbsent ? 0 : data.marksObtained,
+      totalMarks: data.totalMarks,
+      isAbsent: data.isAbsent,
+      percentage
+    }
+  })
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
