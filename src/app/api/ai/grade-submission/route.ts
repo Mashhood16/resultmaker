@@ -24,7 +24,7 @@ ${textAnswers ? `\n--- STUDENT ANSWERS ---\n${textAnswers}\n--------------------
 Provide your evaluation in JSON format exactly like this (do NOT use markdown \`\`\`json block):
 {
   "obtainedMarks": [number],
-  "feedback": "[A short paragraph summarizing what they got right and where they made mistakes]"
+  "feedback": "[A very short (1-2 sentences max) feedback in Roman Urdu summarizing what they got right and where they made mistakes]"
 }`
 
     const contents: any[] = [prompt]
