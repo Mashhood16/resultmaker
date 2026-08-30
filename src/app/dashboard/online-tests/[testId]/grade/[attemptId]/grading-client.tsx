@@ -28,25 +28,6 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
   const contentRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<ReactSketchCanvasRef>(null)
 
-  // Turn the HTML into an image for annotation if not already annotated
-  useEffect(() => {
-    if (!backgroundImage && contentRef.current) {
-      setIsRendering(true)
-      // Give it a small delay to ensure fonts/katex load
-      setTimeout(async () => {
-        try {
-          const canvas = await html2canvas(contentRef.current!)
-          setBackgroundImage(canvas.toDataURL('image/png'))
-        } catch (e) {
-          console.error("Failed to render document snapshot", e)
-          toast.error("Failed to load document for grading")
-        } finally {
-          setIsRendering(false)
-        }
-      }, 1000)
-    }
-  }, [backgroundImage])
-
   const toggleEraser = () => {
     setIsEraser(!isEraser)
     canvasRef.current?.eraseMode(!isEraser)
@@ -59,12 +40,13 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
     }
 
     setIsSubmitting(true)
-    let finalImageUrl = backgroundImage
+    let finalImageUrl = attempt.annotatedImage
 
-    // If they made annotations on the canvas, upload it
-    if (canvasRef.current) {
+    // Take a snapshot of the ENTIRE container (HTML + Drawing) to upload
+    if (contentRef.current) {
       try {
-        const exportedImage = await canvasRef.current.exportImage("png")
+        const canvas = await html2canvas(contentRef.current, { useCORS: true, allowTaint: true })
+        const exportedImage = canvas.toDataURL('image/png')
         
         // Upload to Cloudinary via our API route
         const res = await fetch('/api/upload', {
@@ -132,7 +114,7 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>{student.name}'s Submission</CardTitle>
+                <CardTitle>{student.name}'s Submission (Roll: {student.rollNumber})</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">Variant: {variant.name}</p>
               </div>
               <div className="flex gap-2 bg-muted p-1 rounded-lg">
@@ -156,29 +138,28 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
               </div>
             </CardHeader>
             <CardContent>
-              {isRendering && (
-                <div className="h-64 flex flex-col items-center justify-center text-muted-foreground">
-                  <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                  <p>Rendering document for grading...</p>
-                </div>
-              )}
-              
-              <div className={`relative border rounded-xl overflow-hidden bg-white min-h-[800px] ${isRendering ? 'hidden' : ''}`}>
-                {backgroundImage ? (
+              <div 
+                ref={contentRef} 
+                className="relative border rounded-xl overflow-hidden bg-white min-h-[800px] h-auto"
+              >
+                {attempt.annotatedImage ? (
+                  <img src={attempt.annotatedImage} alt="Graded Snapshot" className="w-full h-auto block" crossOrigin="anonymous" />
+                ) : (
+                  <div className="p-8 prose prose-sm md:prose-base max-w-none text-black">
+                    <div dangerouslySetInnerHTML={{ __html: attempt.answers || '<p>No answers provided.</p>' }} />
+                  </div>
+                )}
+                
+                {/* 2. The Transparent Drawing Overlay */}
+                <div className="absolute inset-0 z-10 pointer-events-auto">
                   <ReactSketchCanvas
                     ref={canvasRef}
                     strokeWidth={4}
                     strokeColor="red"
-                    backgroundImage={backgroundImage}
+                    canvasColor="transparent"
                     className="w-full h-full"
-                    preserveBackgroundImageAspectRatio="xMidYMid meet"
                   />
-                ) : (
-                  // We render the HTML here invisibly to take a snapshot, or visibly if snapshot fails
-                  <div ref={contentRef} className="p-8 prose prose-sm md:prose-base max-w-none text-black bg-white">
-                    <div dangerouslySetInnerHTML={{ __html: attempt.answers || '<p>No answers provided.</p>' }} />
-                  </div>
-                )}
+                </div>
               </div>
             </CardContent>
           </Card>
