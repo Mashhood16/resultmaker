@@ -23,7 +23,7 @@ export default async function SchoolDashboard() {
   const rawStudents = await getStudentsBySchool(session.user.id)
   const students = JSON.parse(JSON.stringify(rawStudents))
   
-  const classes = await prisma.class.findMany({
+  const rawClasses = await prisma.class.findMany({
     where: { schoolId: session.user.id },
     select: {
       id: true,
@@ -34,6 +34,8 @@ export default async function SchoolDashboard() {
     },
     orderBy: { name: 'asc' }
   })
+  
+  const classes = JSON.parse(JSON.stringify(rawClasses))
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
