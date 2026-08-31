@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { LayoutDashboard, LogIn, ShieldAlert, Trophy, LogOut } from 'lucide-react'
 import { Session } from 'next-auth'
 import { signOut } from 'next-auth/react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export function Navbar({ session }: { session: Session | null }) {
   const pathname = usePathname()
@@ -23,6 +24,7 @@ export function Navbar({ session }: { session: Session | null }) {
         </Link>
         
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {!session ? (
             <Link href="/login">
               <Button variant="default" className="font-semibold rounded-full px-2 sm:px-4 md:px-6 h-8 sm:h-10">

@@ -19,6 +19,8 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+import { ThemeProvider } from "@/components/theme-provider";
+
 export const metadata: Metadata = {
   title: "ResultMaker - Academic Result Management",
   description: "Advanced result generation, PDF reports, and student leaderboards.",
@@ -31,13 +33,15 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.className} ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen`}
       >
-        <Navbar session={session} />
-        {children}
-        <Toaster theme="dark" />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Navbar session={session} />
+          {children}
+          <Toaster theme="system" />
+        </ThemeProvider>
       </body>
     </html>
   );
