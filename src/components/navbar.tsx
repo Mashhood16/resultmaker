@@ -14,10 +14,8 @@ export function Navbar({ session }: { session: Session | null }) {
   return (
     <nav className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 relative flex items-center justify-center">
-            <img src="/logo.png" alt="CendroClass Logo" className="w-full h-full object-contain" />
-          </div>
+        <Link href="/" className="flex items-center gap-3 group">
+          <img src="/logo.png" alt="CendroClass Logo" className="h-10 sm:h-12 w-auto object-contain" />
           <span className="font-bold text-lg md:text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
             CendroClass
           </span>
