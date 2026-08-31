@@ -28,7 +28,8 @@ export async function fetchComprehensiveScores(
   selectedSubjects?: string[]
 ): Promise<ComprehensiveStudentScore[]> {
   const session = await auth()
-  const schoolId = session?.user?.id
+  const role = session?.user?.role
+  const schoolId = role === 'school' ? session?.user?.id : session?.user?.schoolId
   if (!schoolId) throw new Error('Unauthorized')
 
   // Fetch the students with their scores for the selected tests and subjects
@@ -105,7 +106,8 @@ export async function fetchComprehensiveScores(
 
 export async function fetchClassSubjects(classId: string) {
   const session = await auth()
-  const schoolId = session?.user?.id
+  const role = session?.user?.role
+  const schoolId = role === 'school' ? session?.user?.id : session?.user?.schoolId
   if (!schoolId) throw new Error('Unauthorized')
 
   // Find all subjects that have scores in this class
