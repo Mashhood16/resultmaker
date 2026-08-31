@@ -184,18 +184,23 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
 
     if (contentRef.current && annotations.length > 0) {
       try {
-        const canvas = await html2canvas(contentRef.current, { useCORS: true, allowTaint: true, scale: 1.5 })
-        const exportedImage = canvas.toDataURL('image/jpeg', 0.7)
+        const canvas = await html2canvas(contentRef.current, { useCORS: true, scale: 1 })
+        const exportedImage = canvas.toDataURL('image/jpeg', 0.5)
         
         const res = await fetch('/api/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: exportedImage })
         })
+        
+        if (!res.ok) {
+          throw new Error(`Upload failed with status ${res.status}`)
+        }
+        
         const data = await res.json()
         if (data.url) finalImageUrl = data.url
-      } catch (err) {
-        toast.error('Failed to save annotated image. Proceeding with original.')
+      } catch (err: any) {
+        toast.error(`Image save failed: ${err.message}`)
       }
     }
 
