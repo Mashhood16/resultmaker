@@ -25,7 +25,20 @@ type Tool = 'pen' | 'square' | 'circle' | 'text' | 'none'
 export default function GradingClient({ attempt, test, variant, student }: any) {
   const router = useRouter()
   const [marks, setMarks] = useState<string>(attempt.obtainedMarks?.toString() || '')
-  const [questionMarks, setQuestionMarks] = useState<string[]>([''])
+  
+  // Initialize questionMarks from DB if it exists, otherwise ['']
+  const [questionMarks, setQuestionMarks] = useState<string[]>(() => {
+    if (attempt.questionMarks) {
+      try {
+        const parsed = typeof attempt.questionMarks === 'string' ? JSON.parse(attempt.questionMarks) : attempt.questionMarks;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(String);
+      } catch (e) {
+        console.error('Failed to parse question marks', e);
+      }
+    }
+    return ['']
+  })
+  
   const [feedback, setFeedback] = useState(attempt.feedback || '')
   const [rubric, setRubric] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -171,8 +184,8 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
 
     if (contentRef.current && annotations.length > 0) {
       try {
-        const canvas = await html2canvas(contentRef.current, { useCORS: true, allowTaint: true })
-        const exportedImage = canvas.toDataURL('image/png')
+        const canvas = await html2canvas(contentRef.current, { useCORS: true, allowTaint: true, scale: 1.5 })
+        const exportedImage = canvas.toDataURL('image/jpeg', 0.7)
         
         const res = await fetch('/api/upload', {
           method: 'POST',
