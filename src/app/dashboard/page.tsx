@@ -19,7 +19,12 @@ export default async function DashboardOverview() {
   if (role === 'student') {
     const classId = session.user.classIds?.[0]
     if (classId) {
-      redirect(`/${classId}`)
+      const studentClass = await prisma.class.findUnique({ where: { id: classId } })
+      if (studentClass) {
+        redirect(`/leaderboard/${encodeURIComponent(studentClass.name)}`)
+      } else {
+        redirect('/')
+      }
     } else {
       redirect('/')
     }
