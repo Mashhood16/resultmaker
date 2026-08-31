@@ -36,7 +36,7 @@ export default async function LandingPage() {
             </span>
           </h1>
           <p className="mt-4 text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg">
-            ResultMaker revolutionizes school administration. Generate tests, auto-grade with AI, and track student performance on beautiful real-time podiums.
+            CendroClass revolutionizes school administration. Generate tests, auto-grade with AI, and track student performance on beautiful real-time podiums.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/dashboard">
@@ -120,7 +120,7 @@ export default async function LandingPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-border bg-background/50 backdrop-blur-3xl">
         <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Everything a school needs</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Stop wrestling with manual grading. ResultMaker automates the entire assessment pipeline from online tests to live 3D leaderboards.</p>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Stop wrestling with manual grading. CendroClass automates the entire assessment pipeline from online tests to live 3D leaderboards.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:auto-rows-[280px]">
@@ -177,7 +177,7 @@ export default async function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border bg-background py-12 text-center relative overflow-hidden">
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
-        <p className="text-muted-foreground font-medium relative z-10">© {new Date().getFullYear()} ResultMaker. All rights reserved.</p>
+        <p className="text-muted-foreground font-medium relative z-10">© {new Date().getFullYear()} CendroClass. All rights reserved.</p>
       </footer>
     </main>
   )

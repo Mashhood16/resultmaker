@@ -19,7 +19,7 @@ export function Navbar({ session }: { session: Session | null }) {
             <Trophy className="w-5 h-5 text-primary" />
           </div>
           <span className="font-bold text-lg md:text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
-            ResultMaker
+            CendroClass
           </span>
         </Link>
         

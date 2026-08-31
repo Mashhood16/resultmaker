@@ -22,7 +22,7 @@ const geistMono = localFont({
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "ResultMaker - Academic Result Management",
+  title: "CendroClass - Academic Result Management",
   description: "Advanced result generation, PDF reports, and student leaderboards.",
 };
 
