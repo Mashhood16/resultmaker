@@ -174,14 +174,41 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       dynamicBadges.push({ id: 'dyn_perfect', name: 'Perfect Scorer', icon: '🌟', description: 'Achieved a perfect 100% on at least one test.' })
     }
 
-    // Consistent Scholar: Maintained a highly consistent score (>= 80%) across 3+ tests
     const validTests = student.breakdown.filter(b => !b.isAbsent)
+    
+    // Consistent Scholar: Maintained a highly consistent score (>= 80%) across 3+ tests
     if (validTests.length >= 3) {
       const avg = validTests.reduce((acc, b) => acc + b.percentage, 0) / validTests.length
       const isHigh = avg >= 80
       const isConsistent = validTests.every(b => Math.abs(b.percentage - avg) <= 5)
       if (isHigh && isConsistent) {
         dynamicBadges.push({ id: 'dyn_consistent', name: 'Consistent Scholar', icon: '🎯', description: 'Maintained a consistently high score across all tests.' })
+      }
+    }
+
+    // Negative Badges
+    if (validTests.length >= 2) {
+      const firstScore = validTests[0].percentage
+      const lastScore = validTests[validTests.length - 1].percentage
+      
+      // Needs Attention: dropped 15% or more
+      if (firstScore - lastScore >= 15) {
+        dynamicBadges.push({ id: 'dyn_attention', name: 'Needs Attention', icon: '⚠️', description: 'Performance has dropped significantly (-15% or more).' })
+      }
+    }
+
+    if (validTests.length >= 1) {
+      const avg = validTests.reduce((acc, b) => acc + b.percentage, 0) / validTests.length
+      if (avg < 40) {
+        dynamicBadges.push({ id: 'dyn_struggling', name: 'At Risk', icon: '📉', description: 'Overall average is currently below 40%.' })
+      }
+    }
+
+    // Ghost: Absent for the last 2 consecutive tests
+    if (student.breakdown.length >= 2) {
+      const lastTwo = student.breakdown.slice(-2)
+      if (lastTwo.every(b => b.isAbsent)) {
+        dynamicBadges.push({ id: 'dyn_ghost', name: 'Ghost', icon: '👻', description: 'Has been absent for the last 2 consecutive tests.' })
       }
     }
 
