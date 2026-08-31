@@ -30,13 +30,13 @@ export default async function LandingPage() {
             The Future of School Administration
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-foreground leading-[1.1]">
-            Manage Results with <br />
+            AI-Powered Grading & <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-              Absolute Precision.
+              Live Leaderboards.
             </span>
           </h1>
           <p className="mt-4 text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg">
-            ResultMaker transforms raw student marks into comprehensive, beautiful PDF report cards and interactive leaderboards in seconds.
+            ResultMaker revolutionizes school administration. Generate tests, auto-grade with AI, and track student performance on beautiful real-time podiums.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/dashboard">
@@ -105,8 +105,8 @@ export default async function LandingPage() {
               {/* Mock Action Button */}
               <div className="mt-auto pt-4">
                 <div className="w-full py-3 bg-primary text-primary-foreground rounded-xl flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/25">
-                  <FileText className="w-4 h-4" />
-                  Generate Report Cards
+                  <Zap className="w-4 h-4" />
+                  Grade with AI
                 </div>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default async function LandingPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-border bg-background/50 backdrop-blur-3xl">
         <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Everything a school needs</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Stop wrestling with complex spreadsheets. ResultMaker automates the entire academic result pipeline.</p>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Stop wrestling with manual grading. ResultMaker automates the entire assessment pipeline from online tests to live 3D leaderboards.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[250px]">
@@ -129,10 +129,10 @@ export default async function LandingPage() {
             <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 blur-3xl rounded-full transition-transform group-hover:scale-150 duration-700" />
             <div className="relative z-10">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border bg-blue-500/10 border-blue-500/20">
-                <FileText className="w-7 h-7 text-blue-400" />
+                <Zap className="w-7 h-7 text-blue-400" />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Automated Report Cards</h3>
-              <p className="text-muted-foreground leading-relaxed max-w-md">Generate stunning portrait or landscape PDF report cards for single or multiple terms instantly. Say goodbye to manual formatting.</p>
+              <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">AI Auto-Grading & Feedback</h3>
+              <p className="text-muted-foreground leading-relaxed max-w-md">Let students take tests online. Our AI instantly grades submissions, assigns per-question marks based on your rubric, and provides personalized Roman Urdu feedback with deduction reasoning.</p>
             </div>
           </div>
 
@@ -141,10 +141,10 @@ export default async function LandingPage() {
              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-purple-500/10 blur-3xl rounded-full transition-transform group-hover:scale-150 duration-700" />
              <div className="relative z-10">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border bg-purple-500/10 border-purple-500/20">
-                <Database className="w-7 h-7 text-purple-400" />
+                <Trophy className="w-7 h-7 text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Master Roster</h3>
-              <p className="text-muted-foreground leading-relaxed">Manage your entire student body in one unified database.</p>
+              <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Interactive Podiums</h3>
+              <p className="text-muted-foreground leading-relaxed">Live, dynamic 3D-style podium leaderboards to celebrate student success for every class and subject.</p>
             </div>
           </div>
 
@@ -153,10 +153,10 @@ export default async function LandingPage() {
              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/10 blur-3xl rounded-full transition-transform group-hover:scale-150 duration-700" />
              <div className="relative z-10">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border bg-amber-500/10 border-amber-500/20">
-                <BarChart3 className="w-7 h-7 text-amber-400" />
+                <FileText className="w-7 h-7 text-amber-400" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Interactive Leaderboards</h3>
-              <p className="text-muted-foreground leading-relaxed">Live, dynamic rankings for every class and subject.</p>
+              <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Digital Pen Tool</h3>
+              <p className="text-muted-foreground leading-relaxed">Prefer grading by hand? Use our integrated digital pen tool to manually annotate test images.</p>
             </div>
           </div>
 
@@ -165,10 +165,10 @@ export default async function LandingPage() {
             <div className="absolute -left-10 -top-10 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full transition-transform group-hover:scale-150 duration-700" />
             <div className="relative z-10 flex flex-col items-end text-right">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border bg-indigo-500/10 border-indigo-500/20 mr-0 ml-auto">
-                <Zap className="w-7 h-7 text-indigo-400" />
+                <Database className="w-7 h-7 text-indigo-400" />
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Lightning Fast Processing</h3>
-              <p className="text-muted-foreground leading-relaxed max-w-md">Process thousands of student records and generate PDFs in milliseconds with our highly optimized edge infrastructure.</p>
+              <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">Offline Roster Sync</h3>
+              <p className="text-muted-foreground leading-relaxed max-w-md">Seamlessly upload Excel (.xlsx) or CSV files to instantly update real-time leaderboards with offline exam marks.</p>
             </div>
           </div>
         </div>
