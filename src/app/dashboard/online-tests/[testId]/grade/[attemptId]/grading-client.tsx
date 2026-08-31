@@ -11,7 +11,7 @@ import { ArrowLeft, Save, Loader2, Square, Circle, Type, Undo2, Trash2, Pen } fr
 import { submitGrade } from '../grade-actions'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import html2canvas from 'html2canvas'
+import { toJpeg } from 'html-to-image'
 
 type Point = { x: number, y: number }
 type Annotation = 
@@ -184,8 +184,7 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
 
     if (contentRef.current && annotations.length > 0) {
       try {
-        const canvas = await html2canvas(contentRef.current, { useCORS: true, scale: 1 })
-        const exportedImage = canvas.toDataURL('image/jpeg', 0.5)
+        const exportedImage = await toJpeg(contentRef.current, { quality: 0.5, backgroundColor: '#ffffff' })
         
         const res = await fetch('/api/upload', {
           method: 'POST',
