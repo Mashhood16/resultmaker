@@ -123,7 +123,7 @@ export default async function LandingPage() {
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Stop wrestling with manual grading. ResultMaker automates the entire assessment pipeline from online tests to live 3D leaderboards.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[250px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:auto-rows-[280px]">
           {/* Feature 1 - Large spanning 2 columns */}
           <div className="bg-card border border-border rounded-3xl p-8 hover:bg-accent/50 transition-all duration-300 md:col-span-2 relative overflow-hidden group">
             <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 blur-3xl rounded-full transition-transform group-hover:scale-150 duration-700" />
