@@ -162,9 +162,9 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
           dynamicBadges.push({ id: 'dyn_improved', name: 'Most Improved', icon: '📈', description: 'Showed significant improvement over time (+15% or more).' })
         }
         
-        // Comeback Kid: Below 50% initially, but hit 80% or higher recently
+        // Comeback: Below 50% initially, but hit 80% or higher recently
         if (firstScore < 50 && lastScore >= 80) {
-          dynamicBadges.push({ id: 'dyn_comeback', name: 'Comeback Kid', icon: '🚀', description: 'Bounced back from a low score to achieve excellence.' })
+          dynamicBadges.push({ id: 'dyn_comeback', name: 'Comeback', icon: '🚀', description: 'Bounced back from a low score to achieve excellence.' })
         }
       }
     }
