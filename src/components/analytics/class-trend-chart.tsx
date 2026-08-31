@@ -10,8 +10,8 @@ interface ChartData {
 }
 
 export function ClassTrendChart({ data }: { data: ChartData[] }) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   return (
     <div className="h-[250px] w-full">
