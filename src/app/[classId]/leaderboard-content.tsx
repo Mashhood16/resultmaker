@@ -15,7 +15,8 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
           badges: true
         }
       }
-    }
+    },
+    orderBy: { createdAt: 'asc' }
   })
 
   const attempts = await prisma.testAttempt.findMany({
@@ -146,6 +147,47 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       ...b,
       classAverage: testAverages.get(b.testName) || 0
     }))
+    
+    // Evaluate Dynamic Badges based on performance history
+    const dynamicBadges = []
+    
+    if (student.breakdown.length >= 2) {
+      const validTests = student.breakdown.filter(b => !b.isAbsent)
+      if (validTests.length >= 2) {
+        const firstScore = validTests[0].percentage
+        const lastScore = validTests[validTests.length - 1].percentage
+        
+        // Most Improved: +15% or more from first to last test
+        if (lastScore - firstScore >= 15) {
+          dynamicBadges.push({ id: 'dyn_improved', name: 'Most Improved', icon: '📈', description: 'Showed significant improvement over time (+15% or more).' })
+        }
+        
+        // Comeback Kid: Below 50% initially, but hit 80% or higher recently
+        if (firstScore < 50 && lastScore >= 80) {
+          dynamicBadges.push({ id: 'dyn_comeback', name: 'Comeback Kid', icon: '🚀', description: 'Bounced back from a low score to achieve excellence.' })
+        }
+      }
+    }
+    
+    // Perfect Scorer: 100% on any test
+    if (student.breakdown.some(b => !b.isAbsent && b.percentage === 100)) {
+      dynamicBadges.push({ id: 'dyn_perfect', name: 'Perfect Scorer', icon: '🌟', description: 'Achieved a perfect 100% on at least one test.' })
+    }
+
+    // Consistent Scholar: Maintained a highly consistent score (>= 80%) across 3+ tests
+    const validTests = student.breakdown.filter(b => !b.isAbsent)
+    if (validTests.length >= 3) {
+      const avg = validTests.reduce((acc, b) => acc + b.percentage, 0) / validTests.length
+      const isHigh = avg >= 80
+      const isConsistent = validTests.every(b => Math.abs(b.percentage - avg) <= 5)
+      if (isHigh && isConsistent) {
+        dynamicBadges.push({ id: 'dyn_consistent', name: 'Consistent Scholar', icon: '🎯', description: 'Maintained a consistently high score across all tests.' })
+      }
+    }
+
+    // Add dynamic badges to the student's badge array
+    student.badges = [...student.badges, ...dynamicBadges]
+
     return student
   })
 
