@@ -15,6 +15,10 @@ export default async function DashboardOverview() {
   }
 
   const role = session.user.role
+
+  if (role === 'admin') {
+    redirect('/admin')
+  }
   
   if (role === 'student') {
     const classId = session.user.classIds?.[0]

@@ -20,8 +20,14 @@ export async function endTestManually(testId: string) {
   if (test.schoolId !== access.schoolId) {
     throw new Error('Forbidden: Access denied to this school test')
   }
-  if (access.isTeacher && !access.classIds.includes(test.classId)) {
-    throw new Error('Forbidden: You are not assigned to this class')
+  if (access.isTeacher) {
+    if (!access.classIds.includes(test.classId)) {
+      throw new Error('Forbidden: You are not assigned to this class')
+    }
+    const teacherSubjects = session.user.subjectAccess?.[test.classId] || []
+    if (!teacherSubjects.includes(test.subjectId)) {
+      throw new Error('Forbidden: You are not assigned to manage tests for this subject')
+    }
   }
 
   // 1. Deactivate test

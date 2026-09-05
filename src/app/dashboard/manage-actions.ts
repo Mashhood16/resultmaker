@@ -46,8 +46,14 @@ export async function fetchScores(classId: string, subjectId: string, testName: 
   const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) throw new Error('Unauthorized')
 
-  if (role === 'teacher' && !session.user.classIds?.includes(classId)) {
-    throw new Error('Forbidden: You do not have access to this class')
+  if (role === 'teacher') {
+    if (!session.user.classIds?.includes(classId)) {
+      throw new Error('Forbidden: You do not have access to this class')
+    }
+    const allowedSubjects = session.user.subjectAccess?.[classId] || []
+    if (!allowedSubjects.includes(subjectId)) {
+      throw new Error('Forbidden: You do not have access to this subject in this class')
+    }
   }
 
   if (!classId || !subjectId || !testName) return []
@@ -105,11 +111,23 @@ export async function updateScore(scoreId: string, marksObtained: number, totalM
           ...(role === 'teacher' ? { id: { in: session.user.classIds || [] } } : {})
         }
       }
+    },
+    include: {
+      student: {
+        select: { classId: true }
+      }
     }
   })
 
   if (!existingScore) {
     throw new Error('Score not found or access denied')
+  }
+
+  if (role === 'teacher') {
+    const allowedSubjects = session.user.subjectAccess?.[existingScore.student.classId] || []
+    if (!allowedSubjects.includes(existingScore.subjectId)) {
+      throw new Error('Forbidden: You do not have access to manage this subject')
+    }
   }
 
   const percentage = isAbsent ? 0 : Number(((marksObtained / totalMarks) * 100).toFixed(2))

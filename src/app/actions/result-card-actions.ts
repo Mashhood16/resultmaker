@@ -35,6 +35,22 @@ export async function fetchComprehensiveScores(
   const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) throw new Error('Unauthorized')
 
+  if (!classId || typeof classId !== 'string' || classId.length > 100) {
+    throw new Error('Invalid class ID')
+  }
+
+  if (!Array.isArray(studentIds) || studentIds.length === 0 || studentIds.length > 500) {
+    throw new Error('Please select between 1 and 500 students.')
+  }
+
+  if (!Array.isArray(selectedTests) || selectedTests.length === 0 || selectedTests.length > 100) {
+    throw new Error('Please select between 1 and 100 tests.')
+  }
+
+  if (selectedSubjects && (!Array.isArray(selectedSubjects) || selectedSubjects.length > 100)) {
+    throw new Error('Invalid subject filter list.')
+  }
+
   if (role === 'teacher' && !session.user.classIds?.includes(classId)) {
     throw new Error('Forbidden: You do not have access to this class')
   }

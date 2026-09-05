@@ -20,6 +20,10 @@ export default async function ClassLeaderboardPage({
     redirect('/login?callbackUrl=' + encodeURIComponent(`/leaderboard/${params.className}/${params.subjectName}`))
   }
 
+  if (session.user.role === 'admin') {
+    redirect('/admin')
+  }
+
   // Lookup the class for the currently logged in school
   const decodedClassName = decodeURIComponent(params.className)
   const decodedSubjectName = decodeURIComponent(params.subjectName)

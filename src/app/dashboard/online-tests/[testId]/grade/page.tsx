@@ -41,9 +41,15 @@ export default async function GradingListPage({ params }: { params: { testId: st
     redirect('/dashboard/online-tests')
   }
 
-  // Only allow if teacher has access to this class, or is school
-  if (access.isTeacher && !access.classIds.includes(test.classId)) {
-    redirect('/dashboard/online-tests')
+  // Only allow if teacher has access to this class and subject, or is school
+  if (access.isTeacher) {
+    if (!access.classIds.includes(test.classId)) {
+      redirect('/dashboard/online-tests')
+    }
+    const teacherSubjects = session.user.subjectAccess?.[test.classId] || []
+    if (!teacherSubjects.includes(test.subjectId)) {
+      redirect('/dashboard/online-tests')
+    }
   }
 
   const submitted = test.attempts.filter(a => a.status === 'SUBMITTED')

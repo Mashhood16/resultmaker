@@ -12,14 +12,39 @@ export async function createUser(formData: FormData) {
     throw new Error('Unauthorized')
   }
 
-  const name = formData.get('name') as string
-  const username = formData.get('username') as string
-  const password = formData.get('password') as string
-  const role = formData.get('role') as 'TEACHER' | 'STUDENT'
+  const rawName = formData.get('name')
+  const rawUsername = formData.get('username')
+  const rawPassword = formData.get('password')
+  const rawRole = formData.get('role')
   const classIds = formData.getAll('classIds') as string[]
 
-  if (!name || !username || !password || !role) {
-    throw new Error('Missing required fields')
+  if (typeof rawName !== 'string' || typeof rawUsername !== 'string' || typeof rawPassword !== 'string' || typeof rawRole !== 'string') {
+    throw new Error('Missing or invalid required fields.')
+  }
+
+  const cleanName = rawName.trim()
+  const cleanUsername = rawUsername.trim().toLowerCase()
+  const password = rawPassword
+  const role = rawRole as 'TEACHER' | 'STUDENT'
+
+  if (cleanName.length < 1 || cleanName.length > 100) {
+    throw new Error('Name must be between 1 and 100 characters.')
+  }
+
+  if (!/^[a-zA-Z0-9_.-]{3,50}$/.test(cleanUsername)) {
+    throw new Error('Username must be 3-50 alphanumeric characters (letters, numbers, underscores, dots, hyphens).')
+  }
+
+  if (password.length < 6 || password.length > 100) {
+    throw new Error('Password must be between 6 and 100 characters.')
+  }
+
+  if (role !== 'TEACHER' && role !== 'STUDENT') {
+    throw new Error('Invalid role specified.')
+  }
+
+  if (!Array.isArray(classIds) || classIds.length > 50) {
+    throw new Error('Cannot assign more than 50 classes at once.')
   }
 
   // Permission checks
@@ -59,11 +84,11 @@ export async function createUser(formData: FormData) {
 
   // Check if username exists
   const existingUser = await prisma.user.findUnique({
-    where: { username }
+    where: { username: cleanUsername }
   })
   
   const existingSchool = await prisma.school.findUnique({
-    where: { username }
+    where: { username: cleanUsername }
   })
 
   if (existingUser || existingSchool) {
@@ -98,8 +123,8 @@ export async function createUser(formData: FormData) {
 
   await prisma.user.create({
     data: {
-      name,
-      username,
+      name: cleanName,
+      username: cleanUsername,
       passwordHash,
       role,
       schoolId,
@@ -123,6 +148,10 @@ export async function deleteUser(userId: string) {
   
   if (!session?.user) {
     throw new Error('Unauthorized')
+  }
+
+  if (!userId || typeof userId !== 'string' || userId.length > 100) {
+    throw new Error('Invalid user ID.')
   }
 
   const targetUser = await prisma.user.findUnique({

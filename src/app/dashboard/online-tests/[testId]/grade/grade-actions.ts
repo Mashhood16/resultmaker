@@ -24,16 +24,43 @@ export async function submitGrade(data: {
 
   if (!attempt) throw new Error('Attempt not found')
 
+  if (attempt.testId !== data.testId) {
+    throw new Error('Forbidden: Attempt does not belong to the specified test')
+  }
+
   if (attempt.test.schoolId !== access.schoolId) {
     throw new Error('Forbidden: Attempt belongs to another school')
   }
 
-  if (access.isTeacher && !access.classIds.includes(attempt.test.classId)) {
-    throw new Error('Forbidden: You do not have access to grade this class')
+  if (access.isTeacher) {
+    if (!access.classIds.includes(attempt.test.classId)) {
+      throw new Error('Forbidden: You do not have access to grade this class')
+    }
+    const teacherSubjects = session.user.subjectAccess?.[attempt.test.classId] || []
+    if (!teacherSubjects.includes(attempt.test.subjectId)) {
+      throw new Error('Forbidden: You do not have access to grade this subject')
+    }
   }
 
-  if (data.obtainedMarks < 0 || data.obtainedMarks > attempt.test.totalMarks) {
+  if (typeof data.obtainedMarks !== 'number' || isNaN(data.obtainedMarks) || data.obtainedMarks < 0 || data.obtainedMarks > attempt.test.totalMarks) {
     throw new Error(`Obtained marks must be between 0 and ${attempt.test.totalMarks}`)
+  }
+
+  if (data.feedback && (typeof data.feedback !== 'string' || data.feedback.length > 5000)) {
+    throw new Error('Feedback must not exceed 5000 characters')
+  }
+
+  if (data.annotatedImage) {
+    if (typeof data.annotatedImage !== 'string' || data.annotatedImage.length > 2 * 1024 * 1024) {
+      throw new Error('Annotated image payload exceeds allowable size (2MB)')
+    }
+    if (!data.annotatedImage.startsWith('data:image/') && !data.annotatedImage.startsWith('/uploads/') && !data.annotatedImage.startsWith('https://')) {
+      throw new Error('Invalid annotated image format')
+    }
+  }
+
+  if (data.questionMarks && (!Array.isArray(data.questionMarks) || data.questionMarks.length > 200)) {
+    throw new Error('Invalid question marks structure')
   }
 
   // Update Test Attempt

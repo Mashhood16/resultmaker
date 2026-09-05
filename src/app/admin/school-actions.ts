@@ -12,20 +12,36 @@ export async function addSchool(formData: FormData) {
     return { error: 'Forbidden: Admin access required.' }
   }
 
-  const name = formData.get('name') as string
-  const username = formData.get('username') as string
-  const password = formData.get('password') as string
+  const rawName = formData.get('name')
+  const rawUsername = formData.get('username')
+  const rawPassword = formData.get('password')
 
-  if (!name || !username || !password) {
-    return { error: 'All fields are required.' }
+  if (typeof rawName !== 'string' || typeof rawUsername !== 'string' || typeof rawPassword !== 'string') {
+    return { error: 'All fields are required and must be valid text.' }
+  }
+
+  const cleanName = rawName.trim()
+  const cleanUsername = rawUsername.trim().toLowerCase()
+  const password = rawPassword
+
+  if (cleanName.length < 2 || cleanName.length > 100) {
+    return { error: 'School name must be between 2 and 100 characters.' }
+  }
+
+  if (!/^[a-zA-Z0-9_-]{3,50}$/.test(cleanUsername)) {
+    return { error: 'Username must be 3-50 alphanumeric characters (letters, numbers, underscores, hyphens).' }
+  }
+
+  if (password.length < 6 || password.length > 100) {
+    return { error: 'Password must be between 6 and 100 characters.' }
   }
 
   try {
     const passwordHash = await hash(password, 10)
     await prisma.school.create({
       data: {
-        name,
-        username,
+        name: cleanName,
+        username: cleanUsername,
         passwordHash
       }
     })

@@ -79,7 +79,7 @@ export default async function TakeTestPage({
         <h1 className="text-3xl font-bold mb-2 text-foreground">Test Graded</h1>
         <p className="text-muted-foreground">Your test has been graded by the teacher.</p>
         <p className="font-bold text-primary text-2xl mt-4">Score: {attempt.obtainedMarks} / {test.totalMarks}</p>
-        {attempt.annotatedImage && (
+        {attempt.annotatedImage && (attempt.annotatedImage.startsWith('data:image/') || attempt.annotatedImage.startsWith('/uploads/') || attempt.annotatedImage.startsWith('https://')) && (
           <img src={attempt.annotatedImage} alt="Graded Test" className="mt-8 max-w-4xl border shadow-xl rounded-xl" />
         )}
       </div>

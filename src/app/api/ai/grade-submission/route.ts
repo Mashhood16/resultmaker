@@ -2,10 +2,31 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { GoogleGenAI } from '@google/genai'
 
+// In-memory rate limiting for AI grading (20 requests per minute per user)
+const gradingRateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkGradingRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const record = gradingRateLimitMap.get(userId)
+  if (!record || record.resetAt <= now) {
+    gradingRateLimitMap.set(userId, { count: 1, resetAt: now + 60 * 1000 })
+    return true
+  }
+  if (record.count >= 20) {
+    return false
+  }
+  record.count += 1
+  return true
+}
+
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user || (session.user.role !== 'teacher' && session.user.role !== 'school' && session.user.role !== 'admin')) {
     return NextResponse.json({ error: 'Forbidden: Teacher access required.' }, { status: 403 })
+  }
+
+  if (!checkGradingRateLimit(session.user.id)) {
+    return NextResponse.json({ error: 'Rate limit exceeded. You can grade up to 20 submissions per minute.' }, { status: 429 })
   }
 
   try {
@@ -16,7 +37,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Image URL or text answers required' }, { status: 400 })
     }
 
-    const prompt = `You are a strict but fair AI teacher. You are grading a student's submission for the test: "${testTitle}". The total marks available for this test are ${totalMarks}.
+    if (textAnswers && (typeof textAnswers !== 'string' || textAnswers.length > 100 * 1024)) {
+      return NextResponse.json({ error: 'Student answers payload exceeds 100KB limit.' }, { status: 400 })
+    }
+    if (questionPaper && (typeof questionPaper !== 'string' || questionPaper.length > 100 * 1024)) {
+      return NextResponse.json({ error: 'Question paper payload exceeds 100KB limit.' }, { status: 400 })
+    }
+    if (rubric && (typeof rubric !== 'string' || rubric.length > 50 * 1024)) {
+      return NextResponse.json({ error: 'Rubric payload exceeds 50KB limit.' }, { status: 400 })
+    }
+
+    const safeTotalMarks = Math.max(1, Math.min(1000, parseInt(totalMarks) || 100))
+    const safeTestTitle = typeof testTitle === 'string' ? testTitle.slice(0, 200) : 'Assessment'
+
+    const prompt = `You are a strict but fair AI teacher. You are grading a student's submission for the test: "${safeTestTitle}". The total marks available for this test are ${safeTotalMarks}.
 ${questionPaper ? `\nHere is the original Question Paper (HTML format) that the student is answering. You MUST use this to determine the maximum marks available for each question and the correct context:\n--- QUESTION PAPER ---\n${questionPaper}\n----------------------\n` : ''}
 ${rubric ? `\nPlease strictly follow this grading rubric / answer key:\n${rubric}\n` : ''}
 Carefully analyze their answers${textAnswers ? ' provided below:' : ' in the attached image.'}

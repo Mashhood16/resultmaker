@@ -266,6 +266,28 @@ export async function editStudentAction(studentId: string, data: {
   fatherCnic: string
 }) {
   try {
+    if (!studentId || typeof studentId !== 'string' || studentId.length > 100) {
+      return { success: false, error: 'Invalid student ID.' }
+    }
+
+    const name = typeof data.name === 'string' ? data.name.trim() : ''
+    const registrationNumber = typeof data.registrationNumber === 'string' ? data.registrationNumber.trim() : ''
+    const rollNumber = typeof data.rollNumber === 'string' ? data.rollNumber.trim() : ''
+    const section = typeof data.section === 'string' ? data.section.trim() : ''
+    const fatherName = typeof data.fatherName === 'string' ? data.fatherName.trim() : ''
+    const fatherPhone = typeof data.fatherPhone === 'string' ? data.fatherPhone.trim() : ''
+    const fatherCnic = typeof data.fatherCnic === 'string' ? data.fatherCnic.trim() : ''
+
+    if (!name || name.length > 100) {
+      return { success: false, error: 'Student name is required and must not exceed 100 characters.' }
+    }
+    if (registrationNumber.length > 50) return { success: false, error: 'Registration number must not exceed 50 characters.' }
+    if (rollNumber.length > 50) return { success: false, error: 'Roll number must not exceed 50 characters.' }
+    if (section.length > 20) return { success: false, error: 'Section must not exceed 20 characters.' }
+    if (fatherName.length > 100) return { success: false, error: 'Father name must not exceed 100 characters.' }
+    if (fatherPhone.length > 30) return { success: false, error: 'Father phone must not exceed 30 characters.' }
+    if (fatherCnic.length > 30) return { success: false, error: 'Father CNIC must not exceed 30 characters.' }
+
     const student = await prisma.student.findUnique({
       where: { id: studentId },
       include: { class: true }
@@ -277,13 +299,13 @@ export async function editStudentAction(studentId: string, data: {
     await prisma.student.update({
       where: { id: studentId },
       data: {
-        name: data.name.trim(),
-        registrationNumber: data.registrationNumber.trim() || null,
-        rollNumber: data.rollNumber.trim() || null,
-        section: data.section.trim() || null,
-        fatherName: data.fatherName.trim() || null,
-        fatherPhone: data.fatherPhone.trim() || null,
-        fatherCnic: data.fatherCnic.trim() || null,
+        name,
+        registrationNumber: registrationNumber || null,
+        rollNumber: rollNumber || null,
+        section: section || null,
+        fatherName: fatherName || null,
+        fatherPhone: fatherPhone || null,
+        fatherCnic: fatherCnic || null,
       }
     })
     revalidatePath('/dashboard')
@@ -295,11 +317,15 @@ export async function editStudentAction(studentId: string, data: {
 
 export async function bulkMoveStudentsAction(studentIds: string[], targetClassName: string) {
   try {
-    const authRes = await requireSchoolOrTeacherAccess(targetClassName)
-    const schoolId = authRes.schoolId
-    if (!targetClassName || studentIds.length === 0) {
-      return { success: false, error: 'Missing target class or selected students.' }
+    if (!Array.isArray(studentIds) || studentIds.length === 0 || studentIds.length > 500) {
+      return { success: false, error: 'Please select between 1 and 500 students.' }
     }
+    if (!targetClassName || typeof targetClassName !== 'string' || targetClassName.trim().length === 0 || targetClassName.length > 100) {
+      return { success: false, error: 'Invalid target class name.' }
+    }
+
+    const authRes = await requireSchoolOrTeacherAccess(targetClassName.trim())
+    const schoolId = authRes.schoolId
 
     if (authRes.isTeacher) {
       // Verify that all students being moved currently belong to classes this teacher is assigned to
@@ -353,6 +379,10 @@ export async function bulkMoveStudentsAction(studentIds: string[], targetClassNa
 
 export async function toggleStudentVisibilityAction(studentId: string, isVisible: boolean) {
   try {
+    if (!studentId || typeof studentId !== 'string' || studentId.length > 100) {
+      return { success: false, error: 'Invalid student ID.' }
+    }
+
     const student = await prisma.student.findUnique({
       where: { id: studentId },
       include: { class: true }
@@ -364,7 +394,7 @@ export async function toggleStudentVisibilityAction(studentId: string, isVisible
     await prisma.student.update({
       where: { id: studentId },
       data: {
-        showInLeaderboard: isVisible
+        showInLeaderboard: Boolean(isVisible)
       }
     })
     revalidatePath('/dashboard')
@@ -375,8 +405,8 @@ export async function toggleStudentVisibilityAction(studentId: string, isVisible
 }
 
 export async function bulkToggleVisibilityAction(studentIds: string[], isVisible: boolean) {
-  if (studentIds.length === 0) {
-    return { success: false, error: 'No students selected.' }
+  if (!Array.isArray(studentIds) || studentIds.length === 0 || studentIds.length > 500) {
+    return { success: false, error: 'Please select between 1 and 500 students.' }
   }
 
   try {
@@ -385,6 +415,10 @@ export async function bulkToggleVisibilityAction(studentIds: string[], isVisible
       include: { class: true }
     })
     
+    if (students.length !== studentIds.length) {
+      return { success: false, error: 'One or more selected students were not found.' }
+    }
+
     for (const student of students) {
       await requireSchoolOrTeacherAccess(student.class.name, student.classId)
     }
@@ -394,7 +428,7 @@ export async function bulkToggleVisibilityAction(studentIds: string[], isVisible
         id: { in: students.map(s => s.id) }
       },
       data: {
-        showInLeaderboard: isVisible
+        showInLeaderboard: Boolean(isVisible)
       }
     })
     revalidatePath('/dashboard')

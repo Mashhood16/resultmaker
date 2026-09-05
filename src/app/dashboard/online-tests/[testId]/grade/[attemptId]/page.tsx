@@ -24,14 +24,24 @@ export default async function GradingPage({ params }: { params: { testId: string
 
   if (!attempt) redirect(`/dashboard/online-tests/${params.testId}/grade`)
 
+  if (attempt.testId !== params.testId) {
+    redirect('/dashboard/online-tests')
+  }
+
   // Enforce tenant isolation
   if (attempt.test.schoolId !== access.schoolId) {
     redirect('/dashboard/online-tests')
   }
 
-  // Teacher class assignment verification
-  if (access.isTeacher && !access.classIds.includes(attempt.test.classId)) {
-    redirect('/dashboard/online-tests')
+  // Teacher class and subject assignment verification
+  if (access.isTeacher) {
+    if (!access.classIds.includes(attempt.test.classId)) {
+      redirect('/dashboard/online-tests')
+    }
+    const teacherSubjects = session.user.subjectAccess?.[attempt.test.classId] || []
+    if (!teacherSubjects.includes(attempt.test.subjectId)) {
+      redirect('/dashboard/online-tests')
+    }
   }
 
   return (
