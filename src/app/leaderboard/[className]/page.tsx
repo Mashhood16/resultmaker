@@ -29,6 +29,12 @@ export default async function ClassLeaderboardRedirectPage({
 
   if (!classData) return notFound()
 
+  // Prevent teachers/students from viewing classes they don't have access to
+  if ((session.user.role === 'teacher' || session.user.role === 'student') && 
+      !session.user.classIds?.includes(classData.id)) {
+    redirect('/dashboard')
+  }
+
   // Find the first subject that has scores for this class
   const subjects = await prisma.subject.findMany({
     where: {

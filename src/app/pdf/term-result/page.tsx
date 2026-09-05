@@ -10,18 +10,53 @@ export default async function TermResultPDFPage({
   searchParams: { className?: string; testNames?: string; testName?: string }
 }) {
   const session = await auth()
-  const schoolId = session?.user?.id
-  const schoolName = session?.user?.name
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  const role = session.user.role
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
 
   if (!schoolId) {
     redirect('/login')
+  }
+
+  // Block unauthorized roles
+  if (role === 'student' || role === 'admin') {
+    redirect('/')
   }
 
   const { className } = searchParams
   const rawTestNames = searchParams.testNames || searchParams.testName
   
   if (!className || !rawTestNames) {
-    return <div>Missing className or testNames parameters</div>
+    return <div className="p-8 text-center text-muted-foreground">Missing className or testNames parameters</div>
+  }
+
+  // Look up school for official display name
+  const school = await prisma.school.findUnique({
+    where: { id: schoolId },
+    select: { name: true }
+  })
+  const schoolName = school?.name || session.user.name || 'SCHOOL NAME'
+
+  // Look up the target class and enforce class-level teacher authorization
+  const targetClass = await prisma.class.findFirst({
+    where: {
+      name: { equals: className, mode: 'insensitive' },
+      schoolId: schoolId,
+    }
+  })
+
+  if (!targetClass) {
+    return <div className="p-8 text-center text-red-500">Class "{className}" not found for this school.</div>
+  }
+
+  if (role === 'teacher') {
+    const classIds = session.user.classIds || []
+    if (!classIds.includes(targetClass.id)) {
+      redirect('/')
+    }
   }
 
   const testNamesArray = rawTestNames.split(',').map(t => t.trim()).filter(Boolean)
@@ -29,10 +64,7 @@ export default async function TermResultPDFPage({
 
   const rawStudents = await prisma.student.findMany({
     where: {
-      class: {
-        name: className,
-        schoolId: schoolId,
-      }
+      classId: targetClass.id,
     },
     include: {
       scores: {

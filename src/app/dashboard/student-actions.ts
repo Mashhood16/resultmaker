@@ -40,6 +40,10 @@ export async function uploadStudentRosterAction(formData: FormData) {
     return { success: false, error: 'Missing required fields' }
   }
 
+  if (file.size > 10 * 1024 * 1024) {
+    return { success: false, error: 'File size exceeds maximum allowable limit (10MB)' }
+  }
+
   try {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
@@ -49,11 +53,14 @@ export async function uploadStudentRosterAction(formData: FormData) {
     
     const rawData = xlsx.utils.sheet_to_json(worksheet, { blankrows: false })
     const validatedData = []
+    const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype']
 
     for (const rawRow of rawData as any[]) {
-      const row: Record<string, any> = {}
+      const row: Record<string, any> = Object.create(null)
       for (const [key, value] of Object.entries(rawRow)) {
-        row[key.toLowerCase().trim()] = value
+        const cleanKey = key.toLowerCase().trim()
+        if (DANGEROUS_KEYS.includes(cleanKey)) continue
+        row[cleanKey] = value
       }
 
       // Flexible column mapping
@@ -93,6 +100,22 @@ export async function uploadStudentRosterAction(formData: FormData) {
 
     if (validatedData.length === 0) {
       return { success: false, error: 'No valid data found in the uploaded file. Make sure every row has a Name and Class (or you provided a default Class).' }
+    }
+
+    if (authRes.isTeacher) {
+      const assignedClasses = await prisma.class.findMany({
+        where: { id: { in: authRes.classIds }, schoolId },
+        select: { name: true }
+      })
+      const allowedNames = new Set(assignedClasses.map(c => c.name.toLowerCase().trim()))
+      for (const item of validatedData) {
+        if (!allowedNames.has(item.className.toLowerCase().trim())) {
+          return {
+            success: false,
+            error: `Unauthorized: You are not assigned to class "${item.className}" in the uploaded roster.`
+          }
+        }
+      }
     }
 
     await prisma.$transaction(async (tx) => {
@@ -278,6 +301,26 @@ export async function bulkMoveStudentsAction(studentIds: string[], targetClassNa
       return { success: false, error: 'Missing target class or selected students.' }
     }
 
+    if (authRes.isTeacher) {
+      // Verify that all students being moved currently belong to classes this teacher is assigned to
+      const unassignedStudents = await prisma.student.findMany({
+        where: {
+          id: { in: studentIds },
+          class: {
+            schoolId,
+            id: { notIn: authRes.classIds }
+          }
+        },
+        select: { id: true }
+      })
+      if (unassignedStudents.length > 0) {
+        return {
+          success: false,
+          error: `Forbidden: You cannot move students from classes you are not assigned to.`
+        }
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       // Find or create the target class
       const targetClass = await tx.class.upsert({
@@ -286,11 +329,14 @@ export async function bulkMoveStudentsAction(studentIds: string[], targetClassNa
         create: { name: targetClassName.trim(), schoolId }
       })
 
-      // Move all selected students to the new class ONLY if they belong to this school
+      // Move all selected students to the new class ONLY if they belong to this school and caller's scope
       await tx.student.updateMany({
         where: {
           id: { in: studentIds },
-          class: { schoolId }
+          class: { 
+            schoolId,
+            ...(authRes.isTeacher ? { id: { in: authRes.classIds } } : {})
+          }
         },
         data: {
           classId: targetClass.id

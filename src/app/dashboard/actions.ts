@@ -40,6 +40,10 @@ export async function uploadMarksAction(formData: FormData) {
     return { success: false, error: 'Missing required fields' }
   }
 
+  if (file.size > 10 * 1024 * 1024) {
+    return { success: false, error: 'File size exceeds maximum allowable limit (10MB)' }
+  }
+
   try {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
@@ -50,11 +54,14 @@ export async function uploadMarksAction(formData: FormData) {
     const rawData = xlsx.utils.sheet_to_json(worksheet, { blankrows: false })
     
     const validatedData = []
+    const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype']
 
     for (const rawRow of rawData as any[]) {
-      const row: Record<string, any> = {}
+      const row: Record<string, any> = Object.create(null)
       for (const [key, value] of Object.entries(rawRow)) {
-        row[key.toLowerCase().trim()] = value
+        const cleanKey = key.toLowerCase().trim()
+        if (DANGEROUS_KEYS.includes(cleanKey)) continue
+        row[cleanKey] = value
       }
 
       const nameKey = findKey(row, ['name of student', 'student name', 'name', 'student'])
@@ -277,6 +284,10 @@ export async function uploadMasterMarksAction(formData: FormData) {
   const subjectTotalMarks = JSON.parse(subjectTotalMarksStr) as Record<string, string>
   const lowerExpectedSubjects = expectedSubjects.map(s => s.toLowerCase().trim())
 
+  if (file.size > 10 * 1024 * 1024) {
+    return { success: false, error: 'File size exceeds maximum allowable limit (10MB)' }
+  }
+
   try {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
@@ -286,11 +297,14 @@ export async function uploadMasterMarksAction(formData: FormData) {
     
     const rawData = xlsx.utils.sheet_to_json(worksheet, { blankrows: false })
     const validatedData: any[] = []
+    const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype']
 
     for (const rawRow of rawData as any[]) {
-      const row: Record<string, any> = {}
+      const row: Record<string, any> = Object.create(null)
       for (const [key, value] of Object.entries(rawRow)) {
-        row[key.toLowerCase().trim()] = value
+        const cleanKey = key.toLowerCase().trim()
+        if (DANGEROUS_KEYS.includes(cleanKey)) continue
+        row[cleanKey] = value
       }
 
       const nameKey = findKey(row, ['name of student', 'student name', 'name', 'student'])

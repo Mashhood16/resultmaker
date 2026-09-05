@@ -149,8 +149,35 @@ export async function addSingleManualScore(data: {
   const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) throw new Error('Unauthorized')
 
-  if (role === 'teacher' && !session.user.classIds?.includes(data.classId)) {
-    throw new Error('Forbidden: You are not assigned to this class')
+  // Validate that the target class belongs to this school
+  const targetClass = await prisma.class.findFirst({
+    where: { id: data.classId, schoolId }
+  })
+  if (!targetClass) {
+    throw new Error('Forbidden: Class not found or does not belong to your school.')
+  }
+
+  // Validate that the target subject belongs to this school
+  const targetSubject = await prisma.subject.findFirst({
+    where: { id: data.subjectId, schoolId }
+  })
+  if (!targetSubject) {
+    throw new Error('Forbidden: Subject not found or does not belong to your school.')
+  }
+
+  if (role === 'teacher') {
+    if (!session.user.classIds?.includes(data.classId)) {
+      throw new Error('Forbidden: You are not assigned to this class')
+    }
+    const allowedSubjects = session.user.subjectAccess?.[data.classId]
+    if (allowedSubjects && !allowedSubjects.includes(data.subjectId)) {
+      throw new Error('Forbidden: You are not assigned to manage this subject in this class')
+    }
+  }
+
+  const trimmedName = data.studentName?.trim()
+  if (!trimmedName || trimmedName.length > 100) {
+    throw new Error('Student name is required and must be under 100 characters')
   }
 
   if (data.totalMarks <= 0) throw new Error('Total marks must be greater than 0')

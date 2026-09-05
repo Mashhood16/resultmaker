@@ -43,6 +43,20 @@ export async function createUser(formData: FormData) {
     throw new Error('School ID not found')
   }
 
+  // Validate that all assigned classIds belong to this school
+  if (classIds.length > 0) {
+    const verifiedClasses = await prisma.class.findMany({
+      where: {
+        id: { in: classIds },
+        schoolId: schoolId
+      },
+      select: { id: true }
+    })
+    if (verifiedClasses.length !== classIds.length) {
+      throw new Error('One or more selected classes do not belong to your school.')
+    }
+  }
+
   // Check if username exists
   const existingUser = await prisma.user.findUnique({
     where: { username }
@@ -66,6 +80,20 @@ export async function createUser(formData: FormData) {
         subjectAccess.push({ classId, subjectId })
       })
     })
+
+    if (subjectAccess.length > 0) {
+      const allSubjectIds = Array.from(new Set(subjectAccess.map(sa => sa.subjectId)))
+      const verifiedSubjects = await prisma.subject.findMany({
+        where: {
+          id: { in: allSubjectIds },
+          schoolId: schoolId
+        },
+        select: { id: true }
+      })
+      if (verifiedSubjects.length !== allSubjectIds.length) {
+        throw new Error('One or more selected subjects do not belong to your school.')
+      }
+    }
   }
 
   await prisma.user.create({

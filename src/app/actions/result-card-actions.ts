@@ -28,9 +28,16 @@ export async function fetchComprehensiveScores(
   selectedSubjects?: string[]
 ): Promise<ComprehensiveStudentScore[]> {
   const session = await auth()
-  const role = session?.user?.role
-  const schoolId = role === 'school' ? session?.user?.id : session?.user?.schoolId
+  if (!session?.user) throw new Error('Unauthorized')
+  const role = session.user.role
+  if (role === 'student' || role === 'admin') throw new Error('Forbidden: Access denied')
+
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) throw new Error('Unauthorized')
+
+  if (role === 'teacher' && !session.user.classIds?.includes(classId)) {
+    throw new Error('Forbidden: You do not have access to this class')
+  }
 
   // Fetch the students with their scores for the selected tests and subjects
   const students = await prisma.student.findMany({
@@ -106,9 +113,16 @@ export async function fetchComprehensiveScores(
 
 export async function fetchClassSubjects(classId: string) {
   const session = await auth()
-  const role = session?.user?.role
-  const schoolId = role === 'school' ? session?.user?.id : session?.user?.schoolId
+  if (!session?.user) throw new Error('Unauthorized')
+  const role = session.user.role
+  if (role === 'student' || role === 'admin') throw new Error('Forbidden: Access denied')
+
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) throw new Error('Unauthorized')
+
+  if (role === 'teacher' && !session.user.classIds?.includes(classId)) {
+    throw new Error('Forbidden: You do not have access to this class')
+  }
 
   // Find all subjects that have scores in this class
   const scores = await prisma.score.findMany({

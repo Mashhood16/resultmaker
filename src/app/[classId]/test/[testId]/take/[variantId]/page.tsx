@@ -27,8 +27,8 @@ export default async function TakeTestPage({
     }
   })
 
-  if (!test || !test.isActive || test.variants.length === 0) {
-    redirect(`/${params.classId}`)
+  if (!test || !test.isActive || test.classId !== params.classId || test.variants.length === 0) {
+    redirect('/')
   }
 
   // Find the Student based on Roll Number (already created by the action)

@@ -14,7 +14,7 @@ export default async function TestEntryPage({ params }: { params: { classId: str
     }
   })
 
-  if (!test || !test.isActive) redirect(`/${params.classId}`)
+  if (!test || !test.isActive || test.classId !== params.classId) redirect('/')
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

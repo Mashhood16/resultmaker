@@ -2,6 +2,7 @@ import { StudentRosterView } from '../student-roster-view'
 import { getStudentsBySchool } from '../student-actions'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
+import prisma from '@/lib/prisma'
 
 export default async function RosterPage() {
   const session = await auth()

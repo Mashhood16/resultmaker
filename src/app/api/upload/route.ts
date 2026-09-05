@@ -10,8 +10,8 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
   const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session?.user || (session.user.role !== 'teacher' && session.user.role !== 'school' && session.user.role !== 'admin')) {
+    return NextResponse.json({ error: 'Forbidden: Insufficient privileges to upload files.' }, { status: 403 })
   }
 
   try {

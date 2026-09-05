@@ -28,6 +28,9 @@ async function verifyAttemptAccess(attemptId: string) {
 }
 
 export async function autosaveAttempt(attemptId: string, answers: string) {
+  if (typeof answers !== 'string' || answers.length > 500 * 1024) {
+    throw new Error('Payload too large: answers cannot exceed 500KB.')
+  }
   await verifyAttemptAccess(attemptId)
 
   await prisma.testAttempt.update({
@@ -37,6 +40,9 @@ export async function autosaveAttempt(attemptId: string, answers: string) {
 }
 
 export async function submitAttempt(attemptId: string, answers: string) {
+  if (typeof answers !== 'string' || answers.length > 500 * 1024) {
+    throw new Error('Payload too large: answers cannot exceed 500KB.')
+  }
   await verifyAttemptAccess(attemptId)
 
   await prisma.testAttempt.update({
