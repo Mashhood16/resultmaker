@@ -22,6 +22,17 @@ export async function createOnlineTest(data: {
     throw new Error('You do not have access to this class')
   }
 
+  // Validate that the target class and subject belong to this school
+  const targetClass = await prisma.class.findFirst({
+    where: { id: data.classId, schoolId: access.schoolId }
+  })
+  if (!targetClass) throw new Error('Class not found in your school')
+
+  const targetSubject = await prisma.subject.findFirst({
+    where: { id: data.subjectId, schoolId: access.schoolId }
+  })
+  if (!targetSubject) throw new Error('Subject not found in your school')
+
   const test = await prisma.onlineTest.create({
     data: {
       title: data.title,

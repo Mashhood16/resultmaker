@@ -6,13 +6,20 @@ import { revalidatePath } from 'next/cache'
 
 export async function getTestsAction() {
   const session = await auth()
-  const schoolId = session?.user?.id
+  if (!session?.user) return { success: false, error: 'Unauthorized' }
+  const role = session.user.role
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) return { success: false, error: 'Unauthorized' }
 
   try {
     const scores = await prisma.score.findMany({
       where: {
-        student: { class: { schoolId } }
+        student: { 
+          class: { 
+            schoolId,
+            ...(role === 'teacher' ? { id: { in: session.user.classIds || [] } } : {})
+          } 
+        }
       },
       select: {
         testName: true,

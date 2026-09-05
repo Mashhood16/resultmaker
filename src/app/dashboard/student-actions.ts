@@ -286,10 +286,11 @@ export async function bulkMoveStudentsAction(studentIds: string[], targetClassNa
         create: { name: targetClassName.trim(), schoolId }
       })
 
-      // Move all selected students to the new class
+      // Move all selected students to the new class ONLY if they belong to this school
       await tx.student.updateMany({
         where: {
-          id: { in: studentIds }
+          id: { in: studentIds },
+          class: { schoolId }
         },
         data: {
           classId: targetClass.id
@@ -344,7 +345,7 @@ export async function bulkToggleVisibilityAction(studentIds: string[], isVisible
 
     await prisma.student.updateMany({
       where: {
-        id: { in: studentIds }
+        id: { in: students.map(s => s.id) }
       },
       data: {
         showInLeaderboard: isVisible

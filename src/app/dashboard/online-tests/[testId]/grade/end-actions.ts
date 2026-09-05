@@ -17,8 +17,11 @@ export async function endTestManually(testId: string) {
   })
   
   if (!test) throw new Error('Test not found')
+  if (test.schoolId !== access.schoolId) {
+    throw new Error('Forbidden: Access denied to this school test')
+  }
   if (access.isTeacher && !access.classIds.includes(test.classId)) {
-    throw new Error('Forbidden')
+    throw new Error('Forbidden: You are not assigned to this class')
   }
 
   // 1. Deactivate test

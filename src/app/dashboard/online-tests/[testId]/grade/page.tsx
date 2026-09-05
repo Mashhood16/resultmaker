@@ -36,6 +36,11 @@ export default async function GradingListPage({ params }: { params: { testId: st
 
   if (!test) redirect('/dashboard/online-tests')
 
+  // Enforce tenant isolation
+  if (test.schoolId !== access.schoolId) {
+    redirect('/dashboard/online-tests')
+  }
+
   // Only allow if teacher has access to this class, or is school
   if (access.isTeacher && !access.classIds.includes(test.classId)) {
     redirect('/dashboard/online-tests')

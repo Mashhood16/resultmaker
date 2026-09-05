@@ -24,6 +24,18 @@ export async function submitGrade(data: {
 
   if (!attempt) throw new Error('Attempt not found')
 
+  if (attempt.test.schoolId !== access.schoolId) {
+    throw new Error('Forbidden: Attempt belongs to another school')
+  }
+
+  if (access.isTeacher && !access.classIds.includes(attempt.test.classId)) {
+    throw new Error('Forbidden: You do not have access to grade this class')
+  }
+
+  if (data.obtainedMarks < 0 || data.obtainedMarks > attempt.test.totalMarks) {
+    throw new Error(`Obtained marks must be between 0 and ${attempt.test.totalMarks}`)
+  }
+
   // Update Test Attempt
   await prisma.testAttempt.update({
     where: { id: data.attemptId },

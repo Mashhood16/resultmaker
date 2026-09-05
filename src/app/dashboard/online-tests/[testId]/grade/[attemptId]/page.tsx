@@ -24,6 +24,16 @@ export default async function GradingPage({ params }: { params: { testId: string
 
   if (!attempt) redirect(`/dashboard/online-tests/${params.testId}/grade`)
 
+  // Enforce tenant isolation
+  if (attempt.test.schoolId !== access.schoolId) {
+    redirect('/dashboard/online-tests')
+  }
+
+  // Teacher class assignment verification
+  if (access.isTeacher && !access.classIds.includes(attempt.test.classId)) {
+    redirect('/dashboard/online-tests')
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-4 md:p-8">
       <GradingClient attempt={attempt} test={attempt.test} variant={attempt.variant} student={attempt.student} />
