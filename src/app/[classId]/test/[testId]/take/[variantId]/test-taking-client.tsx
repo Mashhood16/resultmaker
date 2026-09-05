@@ -10,6 +10,7 @@ import { autosaveAttempt, submitAttempt } from './test-actions'
 import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 import { ReactSketchCanvas, ReactSketchCanvasRef } from 'react-sketch-canvas'
+import DOMPurify from 'isomorphic-dompurify'
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false })
 import 'react-quill/dist/quill.snow.css'
@@ -199,7 +200,7 @@ export default function TestTakingClient({
         {/* Left Side: Questions */}
         <div className="w-full md:w-1/2 p-6 overflow-y-auto border-r border-border bg-muted/20">
           <h2 className="text-xl font-bold mb-6 pb-2 border-b">Questions ({variant.name})</h2>
-          <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: variant.content }} />
+          <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(variant.content) }} />
         </div>
 
         {/* Right Side: Answers Editor */}

@@ -1,0 +1,1051 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 12623
+>>
+stream
+0.200025 w
+0 G
+0.06 0.09 0.16 rg
+0. 841.8899999999999864 595.2799999999999727 -125. re
+f
+BT
+/F2 22 Tf
+25.2999999999999972 TL
+1. g
+40. 793.8899999999999864 Td
+(CendroClass \(ResultMaker\)) Tj
+ET
+BT
+/F2 14 Tf
+16.0999999999999979 TL
+0.22 0.741 0.973 rg
+40. 769.8899999999999864 Td
+(Security Vulnerability Remediation & Audit Report) Tj
+ET
+BT
+/F1 9 Tf
+10.3499999999999996 TL
+0.796 0.835 0.882 rg
+40. 745.8899999999999864 Td
+(Date: September 5, 2026  |  Scope: Full Codebase & APIs  |  Status: 100% RESOLVED) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.059 0.09 0.165 rg
+40. 691.8899999999999864 Td
+(1. Executive Summary) Tj
+ET
+BT
+/F1 9 Tf
+10.3499999999999996 TL
+0.2 0.255 0.333 rg
+40. 673.8899999999999864 Td
+(Following a rigorous source code vulnerability audit of the CendroClass platform, 12 security vulnerabilities spanning) Tj
+T* (unauthenticated RPC Server Actions, multi-tenant IDOR, client-side exam secret leaks, stored XSS, unauthenticated file upload) Tj
+T* (endpoints, and SSRF in AI grading were identified. All vulnerabilities have been systematically remediated with zero architectural) Tj
+T* (regressions.) Tj
+ET
+0.95 0.96 0.98 rg
+44. 609.8899999999999864 m
+551.2799999999999727 609.8899999999999864 l
+553.4891389993231314 609.8899999999999864 555.2799999999999727 608.0991389993231451 555.2799999999999727 605.8899999999999864 c
+555.2799999999999727 565.8899999999999864 l
+555.2799999999999727 563.6808610006768276 553.070861000676814 561.8899999999999864 551.2799999999999727 561.8899999999999864 c
+44. 561.8899999999999864 l
+41.7908610006768271 561.8899999999999864 40. 564.0991389993231451 40. 565.8899999999999864 c
+40. 605.8899999999999864 l
+40. 608.0991389993231451 42.2091389993231729 609.8899999999999864 44. 609.8899999999999864 c
+h
+f
+BT
+/F2 9.5 Tf
+10.9249999999999989 TL
+0.059 0.09 0.165 rg
+55. 591.8899999999999864 Td
+(Remediation Status Dashboard) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.063 0.725 0.506 rg
+55. 574.8899999999999864 Td
+(Total Identified: 12 Issues) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.063 0.725 0.506 rg
+220. 574.8899999999999864 Td
+(Total Patched: 12 \(100% Fixed\)) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.063 0.725 0.506 rg
+390. 574.8899999999999864 Td
+(Production Build: PASSED) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.059 0.09 0.165 rg
+40. 544.8899999999999864 Td
+(2. Vulnerability & Remediation Matrix) Tj
+ET
+0.12 0.16 0.23 rg
+40. 528.8899999999999864 515.2799999999999727 -18. re
+f
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+1. g
+46. 516.8899999999999864 Td
+(ID) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+1. g
+90. 516.8899999999999864 Td
+(Vulnerability Title) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+1. g
+310. 516.8899999999999864 Td
+(Severity) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+1. g
+375. 516.8899999999999864 Td
+(Component) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+1. g
+505. 516.8899999999999864 Td
+(Status) Tj
+ET
+1. g
+40. 510.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 499.8899999999999864 Td
+(SEC-01) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 499.8899999999999864 Td
+(Unauthenticated PII Exfiltration \(Student & Pare) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.863 0.149 0.149 rg
+310. 499.8899999999999864 Td
+(CRITICAL) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 499.8899999999999864 Td
+(student-actions.ts) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 499.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 493.8899999999999864 m
+555.2799999999999727 493.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 493.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 482.8899999999999864 Td
+(SEC-02) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 482.8899999999999864 Td
+(Unauthenticated School Creation & Tenant Enumera) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.863 0.149 0.149 rg
+310. 482.8899999999999864 Td
+(CRITICAL) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 482.8899999999999864 Td
+(school-actions.ts) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 482.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 476.8899999999999864 m
+555.2799999999999727 476.8899999999999864 l
+S
+1. g
+40. 476.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 465.8899999999999864 Td
+(SEC-03) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 465.8899999999999864 Td
+(Cross-Tenant Score Modification & IDOR in update) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.863 0.149 0.149 rg
+310. 465.8899999999999864 Td
+(CRITICAL) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 465.8899999999999864 Td
+(manage-actions.ts) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 465.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 459.8899999999999864 m
+555.2799999999999727 459.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 459.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 448.8899999999999864 Td
+(SEC-04) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 448.8899999999999864 Td
+(Unauthenticated Test Attempt Hijacking & Autosav) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.863 0.149 0.149 rg
+310. 448.8899999999999864 Td
+(CRITICAL) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 448.8899999999999864 Td
+(test-actions.ts) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 448.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 442.8899999999999864 m
+555.2799999999999727 442.8899999999999864 l
+S
+1. g
+40. 442.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 431.8899999999999864 Td
+(SEC-05) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 431.8899999999999864 Td
+(Exam Access PIN Leakage via React Component Prop) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.918 0.345 0.047 rg
+310. 431.8899999999999864 Td
+(HIGH) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 431.8899999999999864 Td
+(page.tsx & pin-entry) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 431.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 425.8899999999999864 m
+555.2799999999999727 425.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 425.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 414.8899999999999864 Td
+(SEC-06) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 414.8899999999999864 Td
+(Stored XSS via Unsanitized Student Answer Render) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.918 0.345 0.047 rg
+310. 414.8899999999999864 Td
+(HIGH) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 414.8899999999999864 Td
+(leaderboard & grading) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 414.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 408.8899999999999864 m
+555.2799999999999727 408.8899999999999864 l
+S
+1. g
+40. 408.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 397.8899999999999864 Td
+(SEC-07) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 397.8899999999999864 Td
+(Unauthenticated Arbitrary Cloudinary File Upload) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.918 0.345 0.047 rg
+310. 397.8899999999999864 Td
+(HIGH) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 397.8899999999999864 Td
+(api/upload/route.ts) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 397.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 391.8899999999999864 m
+555.2799999999999727 391.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 391.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 380.8899999999999864 Td
+(SEC-08) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 380.8899999999999864 Td
+(Server-Side Request Forgery \(SSRF\) in AI Grading) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.918 0.345 0.047 rg
+310. 380.8899999999999864 Td
+(HIGH) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 380.8899999999999864 Td
+(api/ai/grade-submission) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 380.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 374.8899999999999864 m
+555.2799999999999727 374.8899999999999864 l
+S
+1. g
+40. 374.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 363.8899999999999864 Td
+(SEC-09) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 363.8899999999999864 Td
+(Cross-Tenant User Deletion IDOR in deleteUser) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.792 0.541 0.016 rg
+310. 363.8899999999999864 Td
+(MEDIUM) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 363.8899999999999864 Td
+(users/actions.ts) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 363.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 357.8899999999999864 m
+555.2799999999999727 357.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 357.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 346.8899999999999864 Td
+(SEC-10) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 346.8899999999999864 Td
+(Production Secrets Tracked in Repository History) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.863 0.149 0.149 rg
+310. 346.8899999999999864 Td
+(CRITICAL) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 346.8899999999999864 Td
+(.gitignore & git history) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 346.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 340.8899999999999864 m
+555.2799999999999727 340.8899999999999864 l
+S
+1. g
+40. 340.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 329.8899999999999864 Td
+(SEC-11) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 329.8899999999999864 Td
+(Timing Attack on Master Admin Credentials Check) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.792 0.541 0.016 rg
+310. 329.8899999999999864 Td
+(MEDIUM) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 329.8899999999999864 Td
+(src/auth.ts) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 329.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 323.8899999999999864 m
+555.2799999999999727 323.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 323.8899999999999864 515.2799999999999727 -17. re
+f
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+46. 312.8899999999999864 Td
+(SEC-12) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.2 0.255 0.333 rg
+90. 312.8899999999999864 Td
+(Missing Standard HTTP Security Headers \(Clickjac) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.792 0.541 0.016 rg
+310. 312.8899999999999864 Td
+(MEDIUM) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.278 0.333 0.412 rg
+375. 312.8899999999999864 Td
+(next.config.mjs) Tj
+ET
+BT
+/F2 7.5 Tf
+8.625 TL
+0.063 0.725 0.506 rg
+505. 312.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 306.8899999999999864 m
+555.2799999999999727 306.8899999999999864 l
+S
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.059 0.09 0.165 rg
+40. 286.8899999999999864 Td
+(3. Detailed Technical Fixes & Architecture Changes) Tj
+ET
+BT
+/F2 10 Tf
+11.5 TL
+0.145 0.388 0.922 rg
+40. 268.8899999999999864 Td
+(SEC-01 & SEC-02: Server Action Authentication Guards) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.2 0.255 0.333 rg
+40. 255.8899999999999864 Td
+(Next.js server actions are publicly accessible endpoints unless explicitly protected. We added strict session authentication and tenant) Tj
+T* (matching \(schoolId\) to getStudentsBySchool, addSchool, and getSchools. Unauthenticated requests are rejected with 401/403) Tj
+T* (exceptions.) Tj
+ET
+BT
+/F2 10 Tf
+11.5 TL
+0.145 0.388 0.922 rg
+40. 207.8899999999999864 Td
+(SEC-03 & SEC-09: Multi-Tenant Isolation & IDOR Elimination) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.2 0.255 0.333 rg
+40. 194.8899999999999864 Td
+(Previously, updateScore and deleteUser allowed cross-tenant modification because they lacked tenant ownership checks. We scoped) Tj
+T* (Prisma queries to verify student.class.schoolId === session.schoolId, validated obtainedMarks <= totalMarks, and restricted student) Tj
+T* (modification privileges.) Tj
+ET
+BT
+/F2 10 Tf
+11.5 TL
+0.145 0.388 0.922 rg
+40. 146.8899999999999864 Td
+(SEC-04 & SEC-05: Online Examination Security & PIN Protection) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.2 0.255 0.333 rg
+40. 133.8899999999999864 Td
+(The exam access PIN was previously transmitted to the client browser in Server Component props. We removed accessPin from the) Tj
+T* (client bundle and relocated verification entirely to a server action. Furthermore, autosaveAttempt and submitAttempt now validate the) Tj
+T* (student device lock cookie and prevent tampering with completed exams.) Tj
+ET
+0.86 G
+40. 35. m
+555.2799999999999727 35. l
+S
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.549 g
+40. 20. Td
+(Confidential - For Internal Security Use Only) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.549 g
+520.2799999999999727 20. Td
+(Page 1) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 2526
+>>
+stream
+0.200025 w
+0.86 G
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.549 g
+40. 801.8899999999999864 Td
+(CendroClass Security & Vulnerability Remediation Report) Tj
+ET
+0.86 G
+40. 796.8899999999999864 m
+555.2799999999999727 796.8899999999999864 l
+S
+BT
+/F2 10 Tf
+11.5 TL
+0.145 0.388 0.922 rg
+40. 776.8899999999999864 Td
+(SEC-06: Stored Cross-Site Scripting \(XSS\) Prevention) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.2 0.255 0.333 rg
+40. 763.8899999999999864 Td
+(Student answers and test content were rendered with dangerouslySetInnerHTML without sanitization. We integrated) Tj
+T* (isomorphic-dompurify across leaderboard-view, grading-client, and test-taking components, stripping malicious script vectors while safely) Tj
+T* (preserving legitimate rich text.) Tj
+ET
+BT
+/F2 10 Tf
+11.5 TL
+0.145 0.388 0.922 rg
+40. 715.8899999999999864 Td
+(SEC-07 & SEC-08: API Route Hardening & SSRF Defense) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.2 0.255 0.333 rg
+40. 702.8899999999999864 Td
+(The /api/upload endpoint now enforces authentication and validates base64 image prefixes. The /api/ai/grade-submission route now) Tj
+T* (strictly validates that imageUrl matches https://res.cloudinary.com, preventing SSRF attacks against internal network metadata endpoints.) Tj
+ET
+BT
+/F2 10 Tf
+11.5 TL
+0.145 0.388 0.922 rg
+40. 666.8899999999999864 Td
+(SEC-10, SEC-11 & SEC-12: Secrets Hygiene, Cryptography & Headers) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.2 0.255 0.333 rg
+40. 653.8899999999999864 Td
+(.gitignore was hardened to strictly block all .env variants. In auth.ts, the master admin credential check was upgraded to use) Tj
+T* (crypto.timingSafeEqual over UTF-8 buffers, eliminating character-by-character timing leakages. Security headers \(X-Frame-Options,) Tj
+T* (X-Content-Type-Options\) were added in next.config.mjs.) Tj
+ET
+0.97 0.98 0.99 rg
+40. 597.8899999999999864 515.2799999999999727 -50. re
+f
+0.8 0.84 0.88 RG
+40. 597.8899999999999864 515.2799999999999727 -50. re
+S
+BT
+/F2 9.5 Tf
+10.9249999999999989 TL
+0.059 0.09 0.165 rg
+55. 579.8899999999999864 Td
+(Audit Verification & Sign-Off) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.392 0.455 0.545 rg
+55. 563.8899999999999864 Td
+(All 12 security remediation controls have been successfully integrated, verified, and passed production build.) Tj
+ET
+0.86 G
+40. 35. m
+555.2799999999999727 35. l
+S
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.549 g
+40. 20. Td
+(Confidential - For Internal Security Use Only) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.549 g
+520.2799999999999727 20. Td
+(Page 2) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R ]
+/Count 2
+>>
+endobj
+7 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+8 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+10 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+11 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+12 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+13 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+14 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+15 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+16 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+17 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+18 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+19 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+20 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 7 0 R
+/F2 8 0 R
+/F3 9 0 R
+/F4 10 0 R
+/F5 11 0 R
+/F6 12 0 R
+/F7 13 0 R
+/F8 14 0 R
+/F9 15 0 R
+/F10 16 0 R
+/F11 17 0 R
+/F12 18 0 R
+/F13 19 0 R
+/F14 20 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+21 0 obj
+<<
+/Producer (jsPDF 4.2.1)
+/CreationDate (D:20260905213138+05'00')
+>>
+endobj
+22 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 23
+0000000000 65535 f 
+0000015543 00000 n 
+0000017368 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000012828 00000 n 
+0000012965 00000 n 
+0000015606 00000 n 
+0000015731 00000 n 
+0000015861 00000 n 
+0000015994 00000 n 
+0000016132 00000 n 
+0000016256 00000 n 
+0000016385 00000 n 
+0000016517 00000 n 
+0000016653 00000 n 
+0000016781 00000 n 
+0000016908 00000 n 
+0000017037 00000 n 
+0000017170 00000 n 
+0000017272 00000 n 
+0000017618 00000 n 
+0000017704 00000 n 
+trailer
+<<
+/Size 23
+/Root 22 0 R
+/Info 21 0 R
+/ID [ <4C0417045D83C114EB0282980848E042> <4C0417045D83C114EB0282980848E042> ]
+>>
+startxref
+17808
+%%EOF

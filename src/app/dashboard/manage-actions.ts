@@ -6,15 +6,28 @@ import { revalidatePath } from 'next/cache'
 
 export async function fetchFilterOptions() {
   const session = await auth()
-  const schoolId = session?.user?.id
-  if (!schoolId) throw new Error('Unauthorized')
+  if (!session?.user) throw new Error('Unauthorized')
+  const role = session.user.role
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+  if (!schoolId) throw new Error('Unauthorized: School context missing')
 
-  const classes = await prisma.class.findMany({ where: { schoolId }, orderBy: { name: 'asc' } })
+  const classes = await prisma.class.findMany({ 
+    where: { 
+      schoolId,
+      ...(role === 'teacher' ? { id: { in: session.user.classIds || [] } } : {})
+    }, 
+    orderBy: { name: 'asc' } 
+  })
   const subjects = await prisma.subject.findMany({ where: { schoolId }, orderBy: { name: 'asc' } })
   
   const testNamesResult = await prisma.score.findMany({
     where: {
-      student: { class: { schoolId } }
+      student: { 
+        class: { 
+          schoolId,
+          ...(role === 'teacher' ? { id: { in: session.user.classIds || [] } } : {})
+        } 
+      }
     },
     select: { testName: true },
     distinct: ['testName'],
@@ -28,8 +41,14 @@ export async function fetchFilterOptions() {
 
 export async function fetchScores(classId: string, subjectId: string, testName: string) {
   const session = await auth()
-  const schoolId = session?.user?.id
+  if (!session?.user) throw new Error('Unauthorized')
+  const role = session.user.role
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) throw new Error('Unauthorized')
+
+  if (role === 'teacher' && !session.user.classIds?.includes(classId)) {
+    throw new Error('Forbidden: You do not have access to this class')
+  }
 
   if (!classId || !subjectId || !testName) return []
 
@@ -66,8 +85,32 @@ export async function fetchScores(classId: string, subjectId: string, testName: 
 export async function updateScore(scoreId: string, marksObtained: number, totalMarks: number, isAbsent: boolean) {
   const session = await auth()
   if (!session?.user) throw new Error('Unauthorized')
+  const role = session.user.role
+  if (role === 'student') throw new Error('Forbidden: Students cannot modify scores')
+  
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+  if (!schoolId) throw new Error('Unauthorized: School context missing')
 
   if (totalMarks <= 0) throw new Error('Total marks must be greater than 0')
+  if (marksObtained < 0 || marksObtained > totalMarks) {
+    throw new Error(`Marks obtained must be between 0 and ${totalMarks}`)
+  }
+
+  const existingScore = await prisma.score.findFirst({
+    where: {
+      id: scoreId,
+      student: {
+        class: {
+          schoolId,
+          ...(role === 'teacher' ? { id: { in: session.user.classIds || [] } } : {})
+        }
+      }
+    }
+  })
+
+  if (!existingScore) {
+    throw new Error('Score not found or access denied')
+  }
 
   const percentage = isAbsent ? 0 : Number(((marksObtained / totalMarks) * 100).toFixed(2))
 
@@ -99,10 +142,21 @@ export async function addSingleManualScore(data: {
   isAbsent: boolean
 }) {
   const session = await auth()
-  const schoolId = session?.user?.id
+  if (!session?.user) throw new Error('Unauthorized')
+  const role = session.user.role
+  if (role === 'student') throw new Error('Forbidden: Students cannot add scores')
+
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
   if (!schoolId) throw new Error('Unauthorized')
 
+  if (role === 'teacher' && !session.user.classIds?.includes(data.classId)) {
+    throw new Error('Forbidden: You are not assigned to this class')
+  }
+
   if (data.totalMarks <= 0) throw new Error('Total marks must be greater than 0')
+  if (data.marksObtained < 0 || data.marksObtained > data.totalMarks) {
+    throw new Error(`Marks obtained must be between 0 and ${data.totalMarks}`)
+  }
 
   const percentage = data.isAbsent ? 0 : Number(((data.marksObtained / data.totalMarks) * 100).toFixed(2))
 

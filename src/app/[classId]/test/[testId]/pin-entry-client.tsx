@@ -14,13 +14,11 @@ import { claimTestAccess } from './claim-actions'
 export default function PinEntryClient({
   classId,
   testId,
-  testTitle,
-  variants
+  testTitle
 }: {
   classId: string
   testId: string
   testTitle: string
-  variants: { id: string; accessPin: string }[]
 }) {
   const router = useRouter()
   const [name, setName] = useState('')
@@ -34,21 +32,25 @@ export default function PinEntryClient({
       return
     }
 
-    setLoading(true)
-    const matchedVariant = variants.find(v => v.accessPin === pin.trim())
-    
-    if (matchedVariant) {
-      const res = await claimTestAccess(classId, testId, name.trim(), rollNumber.trim())
-      if (res.error) {
-        toast.error(res.error)
-        setLoading(false)
-        return
-      }
+    if (!pin.trim()) {
+      toast.error('Please enter the Access PIN provided by your teacher.')
+      return
+    }
 
+    setLoading(true)
+    const res = await claimTestAccess(classId, testId, name.trim(), rollNumber.trim(), pin.trim())
+    
+    if (res.error) {
+      toast.error(res.error)
+      setLoading(false)
+      return
+    }
+
+    if (res.variantId) {
       toast.success('Access Granted!')
-      router.push(`/${classId}/test/${testId}/take/${matchedVariant.id}?roll=${encodeURIComponent(rollNumber.trim())}&name=${encodeURIComponent(name.trim())}`)
+      router.push(`/${classId}/test/${testId}/take/${res.variantId}?roll=${encodeURIComponent(rollNumber.trim())}&name=${encodeURIComponent(name.trim())}`)
     } else {
-      toast.error('Invalid PIN. Please ask your teacher for the correct PIN.')
+      toast.error('Unexpected error unlocking test.')
       setLoading(false)
     }
   }

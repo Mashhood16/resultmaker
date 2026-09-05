@@ -17,6 +17,7 @@ import { toPng, toJpeg } from 'html-to-image'
 import jsPDF from 'jspdf'
 import { toast } from 'sonner'
 import { fetchComprehensiveScores } from '@/app/actions/result-card-actions'
+import DOMPurify from 'isomorphic-dompurify'
 
 type StudentScore = {
   id: string
@@ -472,7 +473,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                                                   </div>
                                                 ) : test.answers ? (
                                                   <div className="bg-card rounded-xl p-6 border border-border overflow-hidden prose prose-invert max-w-none text-foreground">
-                                                    <div dangerouslySetInnerHTML={{ __html: test.answers }} />
+                                                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(test.answers) }} />
                                                   </div>
                                                 ) : (
                                                   <div className="text-muted-foreground text-sm italic text-center p-8 bg-muted/50 rounded-xl">No test submission found.</div>

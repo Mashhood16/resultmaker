@@ -4,8 +4,8 @@ import { GoogleGenAI } from '@google/genai'
 
 export async function POST(req: Request) {
   const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session?.user || (session.user.role !== 'teacher' && session.user.role !== 'school' && session.user.role !== 'admin')) {
+    return NextResponse.json({ error: 'Forbidden: Teacher access required.' }, { status: 403 })
   }
 
   try {
@@ -36,6 +36,18 @@ Provide your evaluation in JSON format exactly like this (do NOT use markdown \`
     const contents: any[] = [prompt]
 
     if (imageUrl) {
+      // Validate imageUrl to prevent SSRF
+      let parsedUrl: URL
+      try {
+        parsedUrl = new URL(imageUrl)
+      } catch {
+        return NextResponse.json({ error: 'Invalid image URL format.' }, { status: 400 })
+      }
+
+      if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'res.cloudinary.com') {
+        return NextResponse.json({ error: 'Forbidden: Image must be hosted on res.cloudinary.com.' }, { status: 400 })
+      }
+
       // Fetch image from Cloudinary to pass to Gemini
       const imageResp = await fetch(imageUrl)
       if (!imageResp.ok) throw new Error('Failed to fetch image')

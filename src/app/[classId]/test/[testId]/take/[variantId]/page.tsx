@@ -55,21 +55,13 @@ export default async function TakeTestPage({
     }
   })
 
-  if (attempt) {
-    const cookieStore = cookies()
-    const deviceSessionKey = `test_device_lock_${test.id}`
-    const existingSession = cookieStore.get(deviceSessionKey)?.value
+  // Verify that this device has unlocked this test with the teacher PIN
+  const cookieStore = cookies()
+  const deviceSessionKey = `test_device_lock_${test.id}`
+  const existingSession = cookieStore.get(deviceSessionKey)?.value
 
-    if (existingSession !== student.id) {
-      return (
-        <div className="min-h-screen flex items-center justify-center flex-col p-8 text-center bg-background">
-          <h1 className="text-3xl font-bold mb-2 text-destructive">Roll Number In Use</h1>
-          <p className="text-muted-foreground max-w-md">
-            This roll number is already taking the test on another device. If your computer crashed, please ask your teacher to reset your attempt.
-          </p>
-        </div>
-      )
-    }
+  if (!existingSession || existingSession !== student.id) {
+    redirect(`/${params.classId}/test/${params.testId}`)
   }
 
   if (attempt && attempt.status === 'SUBMITTED') {

@@ -5,7 +5,13 @@ import PinEntryClient from './pin-entry-client'
 export default async function TestEntryPage({ params }: { params: { classId: string, testId: string } }) {
   const test = await prisma.onlineTest.findUnique({
     where: { id: params.testId },
-    include: { variants: { select: { accessPin: true, id: true } } }
+    select: { 
+      id: true, 
+      title: true, 
+      isActive: true,
+      classId: true,
+      variants: { select: { id: true, name: true } } 
+    }
   })
 
   if (!test || !test.isActive) redirect(`/${params.classId}`)
@@ -16,7 +22,6 @@ export default async function TestEntryPage({ params }: { params: { classId: str
         classId={params.classId} 
         testId={params.testId} 
         testTitle={test.title}
-        variants={test.variants}
       />
     </div>
   )

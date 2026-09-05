@@ -4,6 +4,16 @@ import { authConfig } from "./auth.config"
 import { compare } from "bcryptjs"
 import prisma from "@/lib/prisma"
 
+import crypto from "crypto"
+
+function safeCompare(a: string, b: string): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') return false
+  const bufA = Buffer.from(a, 'utf8')
+  const bufB = Buffer.from(b, 'utf8')
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
+}
+
 declare module "next-auth" {
   interface User {
     role?: string
@@ -34,10 +44,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null
         
-        // Master Admin Check
+        // Master Admin Check with timing-safe comparison
+        const adminUser = process.env.ADMIN_USERNAME
+        const adminPass = process.env.ADMIN_PASSWORD
         if (
-          credentials.username === process.env.ADMIN_USERNAME &&
-          credentials.password === process.env.ADMIN_PASSWORD
+          adminUser && adminPass &&
+          safeCompare(credentials.username as string, adminUser) &&
+          safeCompare(credentials.password as string, adminPass)
         ) {
           return { id: "admin", name: "Admin", role: "admin" }
         }

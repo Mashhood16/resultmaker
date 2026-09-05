@@ -3,7 +3,24 @@
 import prisma from '@/lib/prisma'
 import { cookies } from 'next/headers'
 
-export async function claimTestAccess(classId: string, testId: string, name: string, rollNumber: string) {
+export async function claimTestAccess(classId: string, testId: string, name: string, rollNumber: string, pin: string) {
+  const trimmedPin = pin.trim()
+  if (!trimmedPin) {
+    return { error: 'Access PIN is required.' }
+  }
+
+  // Verify PIN securely on the server
+  const variant = await prisma.testVariant.findFirst({
+    where: {
+      testId,
+      accessPin: trimmedPin
+    }
+  })
+
+  if (!variant) {
+    return { error: 'Invalid PIN. Please ask your teacher for the correct PIN.' }
+  }
+
   // 1. Try to find by roll number
   let student = await prisma.student.findUnique({
     where: {
@@ -34,7 +51,7 @@ export async function claimTestAccess(classId: string, testId: string, name: str
           classId,
           rollNumber,
           name,
-          showInLeaderboard: true // Ensure they show up!
+          showInLeaderboard: true
         }
       })
     }
@@ -76,5 +93,5 @@ export async function claimTestAccess(classId: string, testId: string, name: str
     })
   }
 
-  return { success: true }
+  return { success: true, variantId: variant.id }
 }

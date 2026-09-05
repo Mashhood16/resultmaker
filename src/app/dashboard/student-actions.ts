@@ -185,6 +185,16 @@ export async function deleteStudentAction(studentId: string) {
 }
 
 export async function getStudentsBySchool(schoolId: string) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error('Unauthorized: Authentication required.')
+  }
+
+  const callerSchoolId = session.user.role === 'school' ? session.user.id : session.user.schoolId
+  if (callerSchoolId !== schoolId && session.user.role !== 'admin') {
+    throw new Error('Forbidden: Access denied to this school roster.')
+  }
+
   const students = await prisma.student.findMany({
     where: {
       class: {

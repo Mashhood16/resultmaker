@@ -4,8 +4,8 @@ import { GoogleGenAI } from '@google/genai'
 
 export async function POST(req: Request) {
   const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session?.user || (session.user.role !== 'teacher' && session.user.role !== 'school' && session.user.role !== 'admin')) {
+    return NextResponse.json({ error: 'Forbidden: Teacher access required.' }, { status: 403 })
   }
 
   try {

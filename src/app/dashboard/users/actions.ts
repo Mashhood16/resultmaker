@@ -108,6 +108,10 @@ export async function deleteUser(userId: string) {
 
   // Permission checks
   if (session.user.role === 'teacher') {
+    if (targetUser.schoolId !== session.user.schoolId) {
+      throw new Error('Forbidden: You can only manage users in your school')
+    }
+
     if (targetUser.role === 'TEACHER') {
       throw new Error('Teachers cannot delete other teachers')
     }
@@ -117,7 +121,11 @@ export async function deleteUser(userId: string) {
     if (!sharesClass) {
       throw new Error('You can only manage students in your assigned classes')
     }
-  } else if (session.user.role !== 'school') {
+  } else if (session.user.role === 'school') {
+    if (targetUser.schoolId !== session.user.id) {
+      throw new Error('Forbidden: Cannot delete users from another school')
+    }
+  } else if (session.user.role !== 'admin') {
     throw new Error('Unauthorized')
   }
 
