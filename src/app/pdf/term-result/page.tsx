@@ -33,6 +33,14 @@ export default async function TermResultPDFPage({
     return <div className="p-8 text-center text-muted-foreground">Missing className or testNames parameters</div>
   }
 
+  if (typeof className !== 'string' || className.length > 100) {
+    return <div className="p-8 text-center text-red-500">Invalid class name parameter.</div>
+  }
+
+  if (typeof rawTestNames !== 'string' || rawTestNames.length > 5000) {
+    return <div className="p-8 text-center text-red-500">Invalid test names parameter.</div>
+  }
+
   // Look up school for official display name
   const school = await prisma.school.findUnique({
     where: { id: schoolId },
@@ -59,7 +67,7 @@ export default async function TermResultPDFPage({
     }
   }
 
-  const testNamesArray = rawTestNames.split(',').map(t => t.trim()).filter(Boolean)
+  const testNamesArray = rawTestNames.split(',').map(t => t.trim()).filter(Boolean).slice(0, 50)
   const isLandscape = testNamesArray.length > 1
 
   const rawStudents = await prisma.student.findMany({

@@ -37,7 +37,7 @@ BT
 10.3499999999999996 TL
 0.796 0.835 0.882 rg
 40. 745.8899999999999864 Td
-(Date: September 5, 2026  |  Scope: 100% Platform Audited  |  Status: ALL 46 VULNERABILITIES REMEDIATED) Tj
+(Date: September 5, 2026  |  Scope: 100% Platform Audited  |  Status: ALL 50 VULNERABILITIES REMEDIATED) Tj
 ET
 BT
 /F2 13 Tf
@@ -53,7 +53,7 @@ BT
 40. 673.8899999999999864 Td
 (An exhaustive, multi-phase architectural and source code security audit of the CendroClass platform was completed across four) Tj
 T* (exhaustive audit passes. Every server action, API route, authentication flow, database query, AI integration, online test engine, file) Tj
-T* (upload mechanism, and client view was systematically reviewed for vulnerabilities. A total of 46 security vulnerabilities across) Tj
+T* (upload mechanism, and client view was systematically reviewed for vulnerabilities. A total of 50 security vulnerabilities across) Tj
 T* (critical, high, and medium severity tiers were identified and permanently remediated. Multi-tenant isolation is strictly verified down) Tj
 T* (to the teacher-subject assignment level, brute-force rate limiters protect login and examination PINs, prompt injection bounds) Tj
 T* (defend AI models, prototype pollution vectors have been neutralized, and safe URI schemes prevent XSS.) Tj
@@ -82,7 +82,7 @@ BT
 9.7749999999999986 TL
 0.063 0.725 0.506 rg
 55. 548.8899999999999864 Td
-(Total Audited & Patched: 46 Controls) Tj
+(Total Audited & Patched: 50 Controls) Tj
 ET
 BT
 /F1 8.5 Tf
@@ -1433,7 +1433,7 @@ endobj
 endobj
 6 0 obj
 <<
-/Length 15745
+/Length 18037
 >>
 stream
 0.200025 w
@@ -2121,25 +2121,193 @@ ET
 40. 552.8899999999999864 m
 555.2799999999999727 552.8899999999999864 l
 S
+1. g
+40. 552.8899999999999864 515.2799999999999727 -14. re
+f
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+46. 543.8899999999999864 Td
+(SEC-47) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+90. 543.8899999999999864 Td
+(Missing HSTS, XSS-Protection & DNS Prefetch Head) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.792 0.541 0.016 rg
+310. 543.8899999999999864 Td
+(MEDIUM) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.278 0.333 0.412 rg
+375. 543.8899999999999864 Td
+(next.config.mjs) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.063 0.725 0.506 rg
+505. 543.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 538.8899999999999864 m
+555.2799999999999727 538.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 538.8899999999999864 515.2799999999999727 -14. re
+f
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+46. 529.8899999999999864 Td
+(SEC-48) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+90. 529.8899999999999864 Td
+(Unbounded Test Query Array & Parameter DoS in PD) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.792 0.541 0.016 rg
+310. 529.8899999999999864 Td
+(MEDIUM) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.278 0.333 0.412 rg
+375. 529.8899999999999864 Td
+(pdf/term-result/page.tsx) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.063 0.725 0.506 rg
+505. 529.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 524.8899999999999864 m
+555.2799999999999727 524.8899999999999864 l
+S
+1. g
+40. 524.8899999999999864 515.2799999999999727 -14. re
+f
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+46. 515.8899999999999864 Td
+(SEC-49) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+90. 515.8899999999999864 Td
+(Session Strategy & Explicit 30-Day JWT Lifetime) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.792 0.541 0.016 rg
+310. 515.8899999999999864 Td
+(LOW) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.278 0.333 0.412 rg
+375. 515.8899999999999864 Td
+(src/auth.config.ts) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.063 0.725 0.506 rg
+505. 515.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 510.8899999999999864 m
+555.2799999999999727 510.8899999999999864 l
+S
+0.97 0.98 0.99 rg
+40. 510.8899999999999864 515.2799999999999727 -14. re
+f
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+46. 501.8899999999999864 Td
+(SEC-50) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.2 0.255 0.333 rg
+90. 501.8899999999999864 Td
+(Database Schema Information Disclosure in Catch ) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.792 0.541 0.016 rg
+310. 501.8899999999999864 Td
+(MEDIUM) Tj
+ET
+BT
+/F1 7 Tf
+8.0499999999999989 TL
+0.278 0.333 0.412 rg
+375. 501.8899999999999864 Td
+(actions & student-action) Tj
+ET
+BT
+/F2 7 Tf
+8.0499999999999989 TL
+0.063 0.725 0.506 rg
+505. 501.8899999999999864 Td
+(FIXED) Tj
+ET
+0.89 0.91 0.94 RG
+40. 496.8899999999999864 m
+555.2799999999999727 496.8899999999999864 l
+S
 BT
 /F2 13 Tf
 14.9499999999999993 TL
 0.059 0.09 0.165 rg
-40. 532.8899999999999864 Td
+40. 476.8899999999999864 Td
 (3. Core Technical Fixes & Architecture Changes) Tj
 ET
 BT
 /F2 10 Tf
 11.5 TL
 0.145 0.388 0.922 rg
-40. 514.8899999999999864 Td
+40. 458.8899999999999864 Td
 (1. Multi-Tenant Query Scoping & Granular Subject Authorization) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.2 0.255 0.333 rg
-40. 501.8899999999999864 Td
+40. 445.8899999999999864 Td
 (Every Prisma query validates tenant boundaries \(schoolId\). Beyond class-level scoping, teachers are now verified against granular) Tj
 T* (subject permissions \(session.user.subjectAccess\). Teachers cannot view, grade, terminate, or edit scores for subjects they are not) Tj
 T* (assigned to.) Tj
@@ -2148,14 +2316,14 @@ BT
 /F2 10 Tf
 11.5 TL
 0.145 0.388 0.922 rg
-40. 453.8899999999999864 Td
+40. 397.8899999999999864 Td
 (2. Examination Integrity & Cryptographic Device Locks) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.2 0.255 0.333 rg
-40. 440.8899999999999864 Td
+40. 384.8899999999999864 Td
 (Online test PIN verification is strictly executed on the server against the database. Students cannot bypass PIN entry via client props or) Tj
 T* (URL tampering. Ongoing test attempts enforce cryptographic device session cookie bindings, preventing session hijacking.) Tj
 ET
@@ -2163,14 +2331,14 @@ BT
 /F2 10 Tf
 11.5 TL
 0.145 0.388 0.922 rg
-40. 404.8899999999999864 Td
+40. 348.8899999999999864 Td
 (3. Stored XSS Elimination & Safe Protocol Encodings) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.2 0.255 0.333 rg
-40. 391.8899999999999864 Td
+40. 335.8899999999999864 Td
 (All dangerouslySetInnerHTML injections across leaderboard tables, teacher grading canvas overlays, and question paper viewers are) Tj
 T* (wrapped in DOMPurify.sanitize\(\). Graded test images enforce strict URI protocol verification \(data:image/, /uploads/, https://\).) Tj
 ET
@@ -2178,14 +2346,14 @@ BT
 /F2 10 Tf
 11.5 TL
 0.145 0.388 0.922 rg
-40. 355.8899999999999864 Td
+40. 299.8899999999999864 Td
 (4. Anti-Brute-Force Throttling & Account Lockout) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.2 0.255 0.333 rg
-40. 342.8899999999999864 Td
+40. 286.8899999999999864 Td
 (Rolling in-memory rate limiting map defends the login route \(/login\) with a 15-minute lockout after 5 consecutive failed attempts,) Tj
 T* (preventing automated password guessing and bcrypt CPU starvation. Exam PIN entry enforces 5-minute cooldowns.) Tj
 ET
@@ -2193,14 +2361,14 @@ BT
 /F2 10 Tf
 11.5 TL
 0.145 0.388 0.922 rg
-40. 306.8899999999999864 Td
+40. 250.8899999999999864 Td
 (5. AI Endpoint Prompt Injection & Resource Quota Bounds) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.2 0.255 0.333 rg
-40. 293.8899999999999864 Td
+40. 237.8899999999999864 Td
 (AI test generation and grading endpoints now enforce rigorous character bounds, delimiter encapsulation to prevent prompt injection,) Tj
 T* (question count limits, and per-user rolling request rate limiters to protect API key quotas and prevent financial denial-of-wallet.) Tj
 ET
@@ -2208,14 +2376,14 @@ BT
 /F2 10 Tf
 11.5 TL
 0.145 0.388 0.922 rg
-40. 257.8899999999999864 Td
+40. 201.8899999999999864 Td
 (6. Image Upload Flooding Mitigation & MIME Verification) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.2 0.255 0.333 rg
-40. 244.8899999999999864 Td
+40. 188.8899999999999864 Td
 (The Cloudinary upload route \(/api/upload\) enforces authenticated teacher/school roles, rolling rate limits \(max 30 requests/min\), a 5MB) Tj
 T* (payload ceiling, and explicit base64 MIME header checks \(JPEG, PNG, WebP, GIF\).) Tj
 ET
@@ -2223,32 +2391,16 @@ BT
 /F2 10 Tf
 11.5 TL
 0.145 0.388 0.922 rg
-40. 208.8899999999999864 Td
+40. 152.8899999999999864 Td
 (7. Denial of Service & Prototype Pollution Mitigation) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.2 0.255 0.333 rg
-40. 195.8899999999999864 Td
+40. 139.8899999999999864 Td
 (Excel parsing engines filter out __proto__, constructor, and prototype keys, utilizing Object.create\(null\) to prevent prototype pollution. File) Tj
 T* (uploads enforce strict 10MB caps, and exam submission payloads are capped at 500KB to safeguard memory.) Tj
-ET
-BT
-/F2 10 Tf
-11.5 TL
-0.145 0.388 0.922 rg
-40. 159.8899999999999864 Td
-(8. Secrets Hygiene & Cryptographic Timing Attack Defenses) Tj
-ET
-BT
-/F1 8.5 Tf
-9.7749999999999986 TL
-0.2 0.255 0.333 rg
-40. 146.8899999999999864 Td
-(.gitignore strictly locks out all .env variants. Admin authentication now executes constant-time buffer comparisons) Tj
-T* (\(crypto.timingSafeEqual\), and security headers \(X-Frame-Options, X-Content-Type-Options\) block clickjacking. Unused legacy JWT files) Tj
-T* (have been removed.) Tj
 ET
 0.86 G
 40. 35. m
@@ -2280,7 +2432,7 @@ endobj
 endobj
 8 0 obj
 <<
-/Length 929
+/Length 1444
 >>
 stream
 0.200025 w
@@ -2296,25 +2448,41 @@ ET
 40. 796.8899999999999864 m
 555.2799999999999727 796.8899999999999864 l
 S
+BT
+/F2 10 Tf
+11.5 TL
+0.145 0.388 0.922 rg
+40. 776.8899999999999864 Td
+(8. Secrets Hygiene & Cryptographic Timing Attack Defenses) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.2 0.255 0.333 rg
+40. 763.8899999999999864 Td
+(.gitignore strictly locks out all .env variants. Admin authentication now executes constant-time buffer comparisons) Tj
+T* (\(crypto.timingSafeEqual\), and security headers \(X-Frame-Options, X-Content-Type-Options\) block clickjacking. Unused legacy JWT files) Tj
+T* (have been removed.) Tj
+ET
 0.97 0.98 0.99 rg
-40. 768.8899999999999864 515.2799999999999727 -50. re
+40. 707.8899999999999864 515.2799999999999727 -50. re
 f
 0.8 0.84 0.88 RG
-40. 768.8899999999999864 515.2799999999999727 -50. re
+40. 707.8899999999999864 515.2799999999999727 -50. re
 S
 BT
 /F2 9.5 Tf
 10.9249999999999989 TL
 0.059 0.09 0.165 rg
-55. 750.8899999999999864 Td
+55. 689.8899999999999864 Td
 (Audit Verification & Sign-Off) Tj
 ET
 BT
 /F1 8.5 Tf
 9.7749999999999986 TL
 0.392 0.455 0.545 rg
-55. 734.8899999999999864 Td
-(All 46 security controls have been validated. Zero known vulnerabilities remain in the codebase.) Tj
+55. 673.8899999999999864 Td
+(All 50 security controls have been validated. Zero known vulnerabilities remain in the codebase.) Tj
 ET
 0.86 G
 40. 35. m
@@ -2506,7 +2674,7 @@ endobj
 23 0 obj
 <<
 /Producer (jsPDF 4.2.1)
-/CreationDate (D:20260905221313+05'00')
+/CreationDate (D:20260905221957+05'00')
 >>
 endobj
 24 0 obj
@@ -2520,37 +2688,37 @@ endobj
 xref
 0 25
 0000000000 65535 f 
-0000041793 00000 n 
-0000043626 00000 n 
+0000044601 00000 n 
+0000046434 00000 n 
 0000000015 00000 n 
 0000000152 00000 n 
 0000024741 00000 n 
 0000024878 00000 n 
-0000040676 00000 n 
-0000040813 00000 n 
-0000041862 00000 n 
-0000041987 00000 n 
-0000042118 00000 n 
-0000042252 00000 n 
-0000042390 00000 n 
-0000042514 00000 n 
-0000042643 00000 n 
-0000042775 00000 n 
-0000042911 00000 n 
-0000043039 00000 n 
-0000043166 00000 n 
-0000043295 00000 n 
-0000043428 00000 n 
-0000043530 00000 n 
-0000043878 00000 n 
-0000043964 00000 n 
+0000042968 00000 n 
+0000043105 00000 n 
+0000044670 00000 n 
+0000044795 00000 n 
+0000044926 00000 n 
+0000045060 00000 n 
+0000045198 00000 n 
+0000045322 00000 n 
+0000045451 00000 n 
+0000045583 00000 n 
+0000045719 00000 n 
+0000045847 00000 n 
+0000045974 00000 n 
+0000046103 00000 n 
+0000046236 00000 n 
+0000046338 00000 n 
+0000046686 00000 n 
+0000046772 00000 n 
 trailer
 <<
 /Size 25
 /Root 24 0 R
 /Info 23 0 R
-/ID [ <5DEAF72665EBD7E1E4606E40BBC3FD17> <5DEAF72665EBD7E1E4606E40BBC3FD17> ]
+/ID [ <3F3297C02E8284B939E9AFCF541B8C42> <3F3297C02E8284B939E9AFCF541B8C42> ]
 >>
 startxref
-44068
+46876
 %%EOF

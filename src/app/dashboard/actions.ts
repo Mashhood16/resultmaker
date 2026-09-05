@@ -204,7 +204,9 @@ export async function uploadMarksAction(formData: FormData) {
     return { success: true, message: `Successfully processed ${validatedData.length} records.` }
   } catch (error: any) {
     console.error('Upload Error:', error)
-    return { success: false, error: error.message || 'An error occurred during upload' }
+    const isPrisma = error?.name?.includes('Prisma') || error?.code?.startsWith('P')
+    const safeError = isPrisma ? 'Database error occurred while processing marks.' : (error.message || 'An error occurred during upload')
+    return { success: false, error: safeError }
   }
 }
 
@@ -244,7 +246,8 @@ export async function deleteUploadedMarksAction(className: string, subjectName: 
     revalidatePath('/dashboard')
     return { success: true, message: `Deleted all scores for ${subjectName}.` }
   } catch (error: any) {
-    return { success: false, error: error.message || 'An error occurred while deleting' }
+    console.error('Delete Error:', error)
+    return { success: false, error: 'An error occurred while deleting' }
   }
 }
 
@@ -452,7 +455,9 @@ export async function uploadMasterMarksAction(formData: FormData) {
     return { success: true, message: `Successfully processed ${validatedData.length} students across all subjects.` }
   } catch (error: any) {
     console.error('Master Upload Error:', error)
-    return { success: false, error: error.message || 'An error occurred during master upload' }
+    const isPrisma = error?.name?.includes('Prisma') || error?.code?.startsWith('P')
+    const safeError = isPrisma ? 'Database error occurred while processing master marks.' : (error.message || 'An error occurred during master upload')
+    return { success: false, error: safeError }
   }
 }
 

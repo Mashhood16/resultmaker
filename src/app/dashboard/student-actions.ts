@@ -182,7 +182,9 @@ export async function uploadStudentRosterAction(formData: FormData) {
     return { success: true, message: `Successfully registered ${validatedData.length} students.` }
   } catch (error: any) {
     console.error('Upload Roster Error:', error)
-    return { success: false, error: error.message || 'An error occurred during upload' }
+    const isPrisma = error?.name?.includes('Prisma') || error?.code?.startsWith('P')
+    const safeError = isPrisma ? 'Database error occurred while processing roster.' : (error.message || 'An error occurred during upload')
+    return { success: false, error: safeError }
   }
 }
 

@@ -55,7 +55,7 @@ doc.text('Full Codebase Security Audit & Remediation Report', margin, 72);
 doc.setFont('helvetica', 'normal');
 doc.setFontSize(9);
 doc.setTextColor(203, 213, 225);
-doc.text('Date: September 5, 2026  |  Scope: 100% Platform Audited  |  Status: ALL 46 VULNERABILITIES REMEDIATED', margin, 96);
+doc.text('Date: September 5, 2026  |  Scope: 100% Platform Audited  |  Status: ALL 50 VULNERABILITIES REMEDIATED', margin, 96);
 
 y = 150;
 
@@ -69,7 +69,7 @@ y += 18;
 doc.setFont('helvetica', 'normal');
 doc.setFontSize(9);
 doc.setTextColor(51, 65, 85);
-const summary = 'An exhaustive, multi-phase architectural and source code security audit of the CendroClass platform was completed across four exhaustive audit passes. Every server action, API route, authentication flow, database query, AI integration, online test engine, file upload mechanism, and client view was systematically reviewed for vulnerabilities. A total of 46 security vulnerabilities across critical, high, and medium severity tiers were identified and permanently remediated. Multi-tenant isolation is strictly verified down to the teacher-subject assignment level, brute-force rate limiters protect login and examination PINs, prompt injection bounds defend AI models, prototype pollution vectors have been neutralized, and safe URI schemes prevent XSS.';
+const summary = 'An exhaustive, multi-phase architectural and source code security audit of the CendroClass platform was completed across four exhaustive audit passes. Every server action, API route, authentication flow, database query, AI integration, online test engine, file upload mechanism, and client view was systematically reviewed for vulnerabilities. A total of 50 security vulnerabilities across critical, high, and medium severity tiers were identified and permanently remediated. Multi-tenant isolation is strictly verified down to the teacher-subject assignment level, brute-force rate limiters protect login and examination PINs, prompt injection bounds defend AI models, prototype pollution vectors have been neutralized, and safe URI schemes prevent XSS.';
 const splitSummary = doc.splitTextToSize(summary, contentWidth);
 doc.text(splitSummary, margin, y);
 y += splitSummary.length * 13 + 12;
@@ -85,7 +85,7 @@ doc.text('Final Remediation Status Dashboard', margin + 15, y + 18);
 doc.setFont('helvetica', 'normal');
 doc.setFontSize(8.5);
 doc.setTextColor(16, 185, 129); // Green
-doc.text('Total Audited & Patched: 46 Controls', margin + 15, y + 35);
+doc.text('Total Audited & Patched: 50 Controls', margin + 15, y + 35);
 doc.text('Remediation Rate: 100% Resolved', margin + 180, y + 35);
 doc.text('Production Build: PASSED (18/18 Routes)', margin + 340, y + 35);
 y += 65;
@@ -144,6 +144,10 @@ const findings = [
   { id: 'SEC-44', title: 'DoS Array Bounds in Comprehensive Score Fetching', sev: 'MEDIUM', file: 'result-card-actions.ts', status: 'FIXED' },
   { id: 'SEC-45', title: 'Admin Route Redirection & Multi-Tenant State Isolation', sev: 'LOW', file: 'dashboard & leaderboard', status: 'FIXED' },
   { id: 'SEC-46', title: 'Stored XSS Protocol Hardening on Graded Image Rendering', sev: 'MEDIUM', file: 'take/[variantId]/page.tsx', status: 'FIXED' },
+  { id: 'SEC-47', title: 'Missing HSTS, XSS-Protection & DNS Prefetch Headers', sev: 'MEDIUM', file: 'next.config.mjs', status: 'FIXED' },
+  { id: 'SEC-48', title: 'Unbounded Test Query Array & Parameter DoS in PDF', sev: 'MEDIUM', file: 'pdf/term-result/page.tsx', status: 'FIXED' },
+  { id: 'SEC-49', title: 'Session Strategy & Explicit 30-Day JWT Lifetime', sev: 'LOW', file: 'src/auth.config.ts', status: 'FIXED' },
+  { id: 'SEC-50', title: 'Database Schema Information Disclosure in Catch Blocks', sev: 'MEDIUM', file: 'actions & student-actions', status: 'FIXED' },
 ];
 
 // Table Header
@@ -265,7 +269,7 @@ doc.text('Audit Verification & Sign-Off', margin + 15, y + 18);
 doc.setFont('helvetica', 'normal');
 doc.setFontSize(8.5);
 doc.setTextColor(100, 116, 139);
-doc.text('All 46 security controls have been validated. Zero known vulnerabilities remain in the codebase.', margin + 15, y + 34);
+doc.text('All 50 security controls have been validated. Zero known vulnerabilities remain in the codebase.', margin + 15, y + 34);
 
 addFooter();
 
