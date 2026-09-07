@@ -121,7 +121,7 @@ export async function uploadMarksAction(formData: FormData) {
       return { success: false, error: 'No valid data found in the uploaded file' }
     }
 
-    await prisma.$transaction(async (tx) => {
+    const { absentCount, classRecordId, classRecordName, subjectRecordName } = await prisma.$transaction(async (tx) => {
       const classRecord = await tx.class.upsert({
         where: { name_schoolId: { name: className, schoolId } },
         update: {},
@@ -133,6 +133,8 @@ export async function uploadMarksAction(formData: FormData) {
         update: {},
         create: { name: subjectName, schoolId }
       })
+
+      const processedStudentIds = new Set<string>()
 
       for (const data of validatedData) {
         // Attempt to intelligently map to an existing student from the master roster
@@ -169,6 +171,8 @@ export async function uploadMarksAction(formData: FormData) {
           })
         }
 
+        processedStudentIds.add(student.id)
+
         await tx.score.upsert({
           where: {
             studentId_subjectId_testName: {
@@ -194,6 +198,51 @@ export async function uploadMarksAction(formData: FormData) {
           }
         })
       }
+
+      // Automatically mark students not in excel sheet but in the student roster for this class as absent
+      const rosterStudents = await tx.student.findMany({
+        where: { classId: classRecord.id }
+      })
+
+      const testTotalMarks = validatedData[0]?.totalMarks || defaultTotalMarks || 100
+
+      let absentCount = 0
+      for (const rosterStudent of rosterStudents) {
+        if (!processedStudentIds.has(rosterStudent.id)) {
+          await tx.score.upsert({
+            where: {
+              studentId_subjectId_testName: {
+                studentId: rosterStudent.id,
+                subjectId: subjectRecord.id,
+                testName: testName
+              }
+            },
+            update: {
+              marksObtained: 0,
+              totalMarks: testTotalMarks,
+              percentage: 0,
+              isAbsent: true
+            },
+            create: {
+              studentId: rosterStudent.id,
+              subjectId: subjectRecord.id,
+              testName: testName,
+              marksObtained: 0,
+              totalMarks: testTotalMarks,
+              percentage: 0,
+              isAbsent: true
+            }
+          })
+          absentCount++
+        }
+      }
+
+      return {
+        absentCount,
+        classRecordId: classRecord.id,
+        classRecordName: classRecord.name,
+        subjectRecordName: subjectRecord.name
+      }
     }, {
       maxWait: 10000,
       timeout: 60000 // 60 seconds
@@ -201,7 +250,9 @@ export async function uploadMarksAction(formData: FormData) {
 
     revalidatePath('/')
     revalidatePath('/dashboard')
-    return { success: true, message: `Successfully processed ${validatedData.length} records.` }
+    revalidatePath(`/${classRecordId}`)
+    revalidatePath(`/leaderboard/${encodeURIComponent(classRecordName)}/${encodeURIComponent(subjectRecordName)}`)
+    return { success: true, message: `Successfully processed ${validatedData.length} records${absentCount > 0 ? ` (${absentCount} roster students marked absent)` : ''}.` }
   } catch (error: any) {
     console.error('Upload Error:', error)
     const isPrisma = error?.name?.includes('Prisma') || error?.code?.startsWith('P')
@@ -374,7 +425,7 @@ export async function uploadMasterMarksAction(formData: FormData) {
       return { success: false, error: 'No valid data found in the uploaded file' }
     }
 
-    await prisma.$transaction(async (tx) => {
+    const { absentStudentsCount, classRecordId } = await prisma.$transaction(async (tx) => {
       const classRecord = await tx.class.upsert({
         where: { name_schoolId: { name: className, schoolId } },
         update: {},
@@ -391,6 +442,8 @@ export async function uploadMasterMarksAction(formData: FormData) {
         })
         subjectRecords[sub] = rec.id
       }
+
+      const processedStudentIds = new Set<string>()
 
       for (const data of validatedData) {
         let student = null;
@@ -410,10 +463,13 @@ export async function uploadMasterMarksAction(formData: FormData) {
               name: data.name,
               classId: classRecord.id,
               section: data.section,
-              rollNumber: data.rollNumber
+              rollNumber: data.rollNumber,
+              showInLeaderboard: true
             }
           })
         }
+
+        processedStudentIds.add(student.id)
 
         for (const sub of data.subjects) {
           const subjectId = subjectRecords[sub.subjectName]
@@ -445,6 +501,50 @@ export async function uploadMasterMarksAction(formData: FormData) {
           })
         }
       }
+
+      // Automatically mark students not in excel sheet but in the student roster for this class as absent
+      const rosterStudents = await tx.student.findMany({
+        where: { classId: classRecord.id }
+      })
+
+      let absentStudentsCount = 0
+      for (const rosterStudent of rosterStudents) {
+        if (!processedStudentIds.has(rosterStudent.id)) {
+          absentStudentsCount++
+          for (const sub of expectedSubjects) {
+            const subjectId = subjectRecords[sub]
+            if (!subjectId) continue
+            const totalMks = Number(subjectTotalMarks[sub]) || 100
+
+            await tx.score.upsert({
+              where: {
+                studentId_subjectId_testName: {
+                  studentId: rosterStudent.id,
+                  subjectId: subjectId,
+                  testName: testName
+                }
+              },
+              update: {
+                marksObtained: 0,
+                totalMarks: totalMks,
+                percentage: 0,
+                isAbsent: true
+              },
+              create: {
+                studentId: rosterStudent.id,
+                subjectId: subjectId,
+                testName: testName,
+                marksObtained: 0,
+                totalMarks: totalMks,
+                percentage: 0,
+                isAbsent: true
+              }
+            })
+          }
+        }
+      }
+
+      return { absentStudentsCount, classRecordId: classRecord.id }
     }, {
       maxWait: 10000,
       timeout: 60000 // 60 seconds
@@ -452,7 +552,8 @@ export async function uploadMasterMarksAction(formData: FormData) {
 
     revalidatePath('/')
     revalidatePath('/dashboard')
-    return { success: true, message: `Successfully processed ${validatedData.length} students across all subjects.` }
+    revalidatePath(`/${classRecordId}`)
+    return { success: true, message: `Successfully processed ${validatedData.length} students across all subjects${absentStudentsCount > 0 ? ` (${absentStudentsCount} roster students marked absent)` : ''}.` }
   } catch (error: any) {
     console.error('Master Upload Error:', error)
     const isPrisma = error?.name?.includes('Prisma') || error?.code?.startsWith('P')

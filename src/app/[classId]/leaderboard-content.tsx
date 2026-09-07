@@ -218,22 +218,71 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
     return student
   })
 
+  // Determine chronological test order and identify the last test added
+  const testOrder: string[] = []
+  scores.forEach(s => {
+    if (!testOrder.includes(s.testName)) {
+      testOrder.push(s.testName)
+    }
+  })
+  const lastTestName = testOrder.length > 0 ? testOrder[testOrder.length - 1] : null
+
+  // If there are at least 2 tests, calculate rank before the last test was added
+  const prevRankMap = new Map<string, number>()
+  if (testOrder.length >= 2 && lastTestName) {
+    const prevPerformance = aggregatedData.map(student => {
+      const priorTests = student.breakdown.filter(b => b.testName !== lastTestName)
+      let priorObtained = 0
+      let priorTotal = 0
+      priorTests.forEach(b => {
+        if (!b.isAbsent) priorObtained += b.obtained
+        priorTotal += b.total
+      })
+      const priorPercentage = priorTotal > 0 ? Number(((priorObtained / priorTotal) * 100).toFixed(2)) : 0
+      return {
+        id: student.id,
+        priorPercentage,
+        hasPrior: priorTests.length > 0
+      }
+    })
+
+    prevPerformance.sort((a, b) => b.priorPercentage - a.priorPercentage)
+    let pRank = 1
+    prevPerformance.forEach((p, idx) => {
+      if (!p.hasPrior) return
+      if (idx > 0 && p.priorPercentage < prevPerformance[idx - 1].priorPercentage) {
+        pRank = idx + 1
+      }
+      prevRankMap.set(p.id, pRank)
+    })
+  }
+
   // Sort by percentage descending
   aggregatedData.sort((a, b) => b.percentage - a.percentage)
 
-  // Assign ranks
+  // Assign ranks and calculate rank change
   let currentRank = 1;
   const rankedData = aggregatedData.map((student, index) => {
     if (index > 0 && student.percentage < aggregatedData[index - 1].percentage) {
       currentRank = index + 1;
     }
+    const previousRank = prevRankMap.get(student.id) ?? null
+    const rankChange = previousRank !== null ? previousRank - currentRank : null
+
     return {
       ...student,
-      rank: currentRank
+      rank: currentRank,
+      previousRank,
+      rankChange
     }
   })
 
   return (
-    <LeaderboardView initialData={rankedData} classId={classId} availableSubjects={availableSubjects} />
+    <LeaderboardView 
+      initialData={rankedData} 
+      classId={classId} 
+      availableSubjects={availableSubjects} 
+      lastTestName={lastTestName}
+    />
   )
 }

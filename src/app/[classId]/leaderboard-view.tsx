@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Search, Medal, Trophy, Star, ChevronDown, ChevronRight, Printer, ScrollText } from 'lucide-react'
+import { Search, Medal, Trophy, Star, ChevronDown, ChevronRight, Printer, ScrollText, ArrowUp, ArrowDown, Minus, Filter } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from '@/components/ui/dialog'
@@ -22,6 +22,8 @@ import DOMPurify from 'isomorphic-dompurify'
 type StudentScore = {
   id: string
   rank: number
+  previousRank?: number | null
+  rankChange?: number | null
   name: string
   rollNumber: string | null
   section: string | null
@@ -38,6 +40,9 @@ type StudentScore = {
     isAbsent: boolean
     classAverage?: number
     annotatedImage?: string | null
+    feedback?: string | null
+    answers?: string | null
+    questionMarks?: string[] | null
   }>
 }
 
@@ -45,10 +50,12 @@ interface LeaderboardViewProps {
   initialData: StudentScore[]
   classId: string
   availableSubjects: { id: string, name: string }[]
+  lastTestName?: string | null
 }
 
-export function LeaderboardView({ initialData, classId, availableSubjects }: LeaderboardViewProps) {
+export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
+  const [selectedTestFilter, setSelectedTestFilter] = useState<string>('all')
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
   const [isExporting, setIsExporting] = useState(false)
@@ -216,18 +223,70 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
 
   // Confetti removed per user request
 
+  // Calculate active dataset based on selected test filter
+  const activeData = useMemo(() => {
+    if (selectedTestFilter === 'all') {
+      return initialData
+    }
+
+    // Filter and recalculate ranks and scores for the selected test
+    const testStudents = initialData.map(student => {
+      const testScore = student.breakdown.find(b => b.testName === selectedTestFilter)
+      const obtained = testScore && !testScore.isAbsent ? testScore.obtained : 0
+      const total = testScore ? testScore.total : 0
+      const percentage = testScore && !testScore.isAbsent ? testScore.percentage : 0
+      const isAbsent = !testScore || testScore.isAbsent
+
+      return {
+        ...student,
+        obtained,
+        total,
+        percentage,
+        isAbsent,
+        overallRank: student.rank,
+        rank: 0,
+        previousRank: student.rank, // Compare against overall standing
+        rankChange: 0
+      }
+    })
+
+    // Sort: present students first by percentage descending, then absent students
+    testStudents.sort((a, b) => {
+      if (a.isAbsent && !b.isAbsent) return 1
+      if (!a.isAbsent && b.isAbsent) return -1
+      return b.percentage - a.percentage
+    })
+
+    let tRank = 1
+    testStudents.forEach((student, idx) => {
+      if (idx > 0) {
+        const prev = testStudents[idx - 1]
+        if (student.isAbsent && prev.isAbsent) {
+          // Both absent: share same rank
+        } else if (student.percentage < prev.percentage || (student.isAbsent && !prev.isAbsent)) {
+          tRank = idx + 1
+        }
+      }
+      student.rank = tRank
+      // rankChange: positive if test rank is better than overall rank (e.g. overall #5, test #2 -> +3)
+      student.rankChange = student.overallRank - tRank
+    })
+
+    return testStudents
+  }, [initialData, selectedTestFilter])
+
   const filteredData = useMemo(() => {
-    if (!search) return initialData
+    if (!search) return activeData
     const lowerSearch = search.toLowerCase()
-    return initialData.filter(
+    return activeData.filter(
       (student) =>
         student.name.toLowerCase().includes(lowerSearch) ||
         (student.section && student.section.toLowerCase().includes(lowerSearch))
     )
-  }, [initialData, search])
+  }, [activeData, search])
 
   // Get Top 3
-  const top3 = initialData.slice(0, 3)
+  const top3 = activeData.slice(0, 3)
   const [first, second, third] = top3
 
   const getTierBadge = (percentage: number, isAbsent: boolean) => {
@@ -240,6 +299,25 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
 
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
+      {/* Test Filter Info Banner */}
+      {selectedTestFilter !== 'all' && (
+        <div className="flex justify-center pt-2">
+          <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary px-4 py-1.5 text-xs font-bold flex items-center gap-2 shadow-sm">
+            <Filter className="w-3.5 h-3.5" />
+            Filtered to Test: <span className="underline">{selectedTestFilter}</span>
+          </Badge>
+        </div>
+      )}
+      {selectedTestFilter === 'all' && lastTestName && (
+        <div className="flex justify-center pt-2">
+          <Badge variant="outline" className="bg-card/70 border-border text-muted-foreground px-3.5 py-1 text-xs font-medium flex items-center gap-2">
+            <span>Overall Leaderboard</span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-primary font-semibold">Rank movement shows change after adding {lastTestName}</span>
+          </Badge>
+        </div>
+      )}
+
       {/* Podium Display - Glassmorphism & Metallic Aesthetic */}
       {top3.length > 0 && (
         <div className="flex flex-row justify-center items-end gap-2 sm:gap-4 md:gap-12 pt-12 pb-8 px-2 sm:px-4">
@@ -302,18 +380,56 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
       {/* Leaderboard Table */}
       <Card className="bg-card border-border max-w-6xl mx-auto overflow-hidden shadow-2xl backdrop-blur-2xl rounded-3xl">
         <CardContent className="p-0">
-          <div className="p-6 border-b border-border bg-background/20 flex items-center justify-between">
-            <div className="flex-1 max-w-md relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <div className="p-6 border-b border-border bg-background/20 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex-1 max-w-md relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                </div>
+                <Input 
+                  placeholder="Search by student name or section..." 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="bg-transparent border-border text-foreground pl-12 h-11 rounded-xl focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-zinc-600 shadow-inner"
+                />
               </div>
-              <Input 
-                placeholder="Search by student name or section..." 
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="bg-transparent border-border text-foreground pl-12 h-12 rounded-2xl focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-zinc-600 shadow-inner"
-              />
+
+              {/* Test Filter Pills */}
+              {uniqueTests.length > 0 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                  <div className="flex items-center gap-1 p-1 bg-card/80 border border-border rounded-xl shadow-inner">
+                    <Button
+                      size="sm"
+                      variant={selectedTestFilter === 'all' ? 'default' : 'ghost'}
+                      onClick={() => setSelectedTestFilter('all')}
+                      className={`h-8 px-3 rounded-lg text-xs font-bold transition-all ${
+                        selectedTestFilter === 'all'
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      All Tests
+                    </Button>
+                    {uniqueTests.map((test) => (
+                      <Button
+                        key={test}
+                        size="sm"
+                        variant={selectedTestFilter === test ? 'default' : 'ghost'}
+                        onClick={() => setSelectedTestFilter(test)}
+                        className={`h-8 px-3 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                          selectedTestFilter === test
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {test}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
             {selectedStudents.size > 0 && (
               <div className="flex gap-2">
                 <Button onClick={openReportModal} disabled={isExporting} className="bg-emerald-600 hover:bg-primary text-foreground rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50">
@@ -330,12 +446,18 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                   <TableHead className="w-12 pl-6">
                     <input type="checkbox" checked={filteredData.length > 0 && selectedStudents.size === filteredData.length} onChange={toggleAll} className="w-4 h-4 rounded border-zinc-500 bg-accent accent-primary cursor-pointer" />
                   </TableHead>
-                  <TableHead className="w-20 font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Rank</TableHead>
+                  <TableHead className="w-28 font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
+                    {selectedTestFilter === 'all' ? 'Rank & Movement' : 'Test Rank'}
+                  </TableHead>
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Student Name</TableHead>
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Roll No.</TableHead>
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Section</TableHead>
-                  <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Marks</TableHead>
-                  <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Score</TableHead>
+                  <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
+                    {selectedTestFilter === 'all' ? 'Total Marks' : 'Test Marks'}
+                  </TableHead>
+                  <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
+                    {selectedTestFilter === 'all' ? 'Overall %' : 'Test %'}
+                  </TableHead>
                   <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px] pr-6">Tier</TableHead>
                 </TableRow>
               </TableHeader>
@@ -357,10 +479,50 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                           <input type="checkbox" checked={selectedStudents.has(student.id)} readOnly className="w-4 h-4 rounded border-zinc-500 bg-accent accent-primary cursor-pointer pointer-events-none" />
                         </TableCell>
                         <TableCell className="font-medium py-5">
-                          {student.rank === 1 && <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center font-bold border border-yellow-500/30 shadow-[0_0_15px_rgba(250,204,21,0.3)]">1</div>}
-                          {student.rank === 2 && <div className="w-8 h-8 rounded-full bg-zinc-300/20 text-muted-foreground flex items-center justify-center font-bold border border-zinc-300/30">2</div>}
-                          {student.rank === 3 && <div className="w-8 h-8 rounded-full bg-amber-600/20 text-amber-500 flex items-center justify-center font-bold border border-amber-600/30">3</div>}
-                          {student.rank > 3 && <div className="w-8 h-8 rounded-full bg-background/40 text-muted-foreground flex items-center justify-center font-semibold">{student.rank}</div>}
+                          <div className="flex items-center gap-3">
+                            {student.rank === 1 && <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center font-bold border border-yellow-500/30 shadow-[0_0_15px_rgba(250,204,21,0.3)] shrink-0">1</div>}
+                            {student.rank === 2 && <div className="w-8 h-8 rounded-full bg-zinc-300/20 text-muted-foreground flex items-center justify-center font-bold border border-zinc-300/30 shrink-0">2</div>}
+                            {student.rank === 3 && <div className="w-8 h-8 rounded-full bg-amber-600/20 text-amber-500 flex items-center justify-center font-bold border border-amber-600/30 shrink-0">3</div>}
+                            {student.rank > 3 && <div className="w-8 h-8 rounded-full bg-background/40 text-muted-foreground flex items-center justify-center font-semibold shrink-0">{student.rank}</div>}
+
+                            {/* Rank Change Indicator: Showing position before adding the last test and after */}
+                            {student.previousRank !== null && student.previousRank !== undefined ? (
+                              <div 
+                                className="flex flex-col justify-center min-w-[50px]"
+                                title={
+                                  selectedTestFilter === 'all'
+                                    ? `Before ${lastTestName || 'last test'}: #${student.previousRank} → Current: #${student.rank} (${student.rankChange! > 0 ? `+${student.rankChange}` : student.rankChange})`
+                                    : `Overall: #${student.previousRank} → In ${selectedTestFilter}: #${student.rank} (${student.rankChange! > 0 ? `+${student.rankChange}` : student.rankChange})`
+                                }
+                              >
+                                {student.rankChange! > 0 && (
+                                  <div className="flex items-center gap-0.5 text-emerald-400 font-black text-xs">
+                                    <ArrowUp className="w-3.5 h-3.5 stroke-[3]" />
+                                    <span>+{student.rankChange}</span>
+                                  </div>
+                                )}
+                                {student.rankChange! < 0 && (
+                                  <div className="flex items-center gap-0.5 text-rose-500 font-black text-xs">
+                                    <ArrowDown className="w-3.5 h-3.5 stroke-[3]" />
+                                    <span>{student.rankChange}</span>
+                                  </div>
+                                )}
+                                {student.rankChange === 0 && (
+                                  <div className="flex items-center gap-0.5 text-zinc-500 font-bold text-xs">
+                                    <Minus className="w-3.5 h-3.5" />
+                                    <span>0</span>
+                                  </div>
+                                )}
+                                <span className="text-[10px] text-muted-foreground/80 whitespace-nowrap leading-tight mt-0.5">
+                                  {selectedTestFilter === 'all' ? `was #${student.previousRank}` : `ovr #${student.previousRank}`}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-zinc-500 font-mono px-1.5 py-0.5 rounded bg-zinc-800/40">
+                                New
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="py-5">
                           <div className="flex items-center gap-4">
@@ -392,10 +554,18 @@ export function LeaderboardView({ initialData, classId, availableSubjects }: Lea
                         </TableCell>
                         <TableCell className="text-muted-foreground font-medium py-5">{student.section || '-'}</TableCell>
                         <TableCell className="text-right text-muted-foreground font-medium py-5 tracking-wide">
-                          {student.isAbsent ? <span className="text-red-500">Absent</span> : <><span className="text-foreground">{student.obtained}</span> <span className="text-zinc-700">/</span> {student.total}</>}
+                          {student.isAbsent ? (
+                            <span className="text-red-500 font-bold text-xs uppercase bg-red-500/10 px-2 py-1 rounded">Absent</span>
+                          ) : (
+                            <><span className="text-foreground">{student.obtained}</span> <span className="text-zinc-700">/</span> {student.total}</>
+                          )}
                         </TableCell>
                         <TableCell className="text-right py-5">
-                          {student.isAbsent ? '-' : <span className="text-primary font-black text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{student.percentage}%</span>}
+                          {student.isAbsent ? (
+                            <span className="text-red-500 font-bold text-sm">0%</span>
+                          ) : (
+                            <span className="text-primary font-black text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{student.percentage}%</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right py-5 pr-6">
                           {getTierBadge(student.percentage, student.isAbsent)}
