@@ -46,6 +46,9 @@ export function ConsolidatedReport({
           dataPoint[student.id] = testRecord.percentage
           dataPoint[`${student.id}_isAbsent`] = false
         }
+      } else {
+        dataPoint[student.id] = null
+        dataPoint[`${student.id}_isAbsent`] = false
       }
     })
     return dataPoint
@@ -171,6 +174,7 @@ export function ConsolidatedReport({
                     dataKey="score" 
                     radius={[8, 8, 0, 0]}
                     barSize={Math.max(14, Math.min(48, Math.floor(700 / Math.max(students.length, 1))))}
+                    isAnimationActive={false}
                   >
                     <LabelList 
                       dataKey="score" 
@@ -217,6 +221,7 @@ export function ConsolidatedReport({
                     tick={{ fill: '#a1a1aa', fontSize: 14, fontWeight: 'bold' }} 
                     axisLine={false} 
                     tickLine={false} 
+                    interval={0}
                   />
                   <YAxis 
                     stroke="#71717a" 
@@ -251,6 +256,7 @@ export function ConsolidatedReport({
                         dot={{ fill: '#09090b', r: 6, strokeWidth: 3, stroke: color }} 
                         activeDot={{ r: 10, fill: color, stroke: '#fff', strokeWidth: 3 }} 
                         connectNulls
+                        isAnimationActive={false}
                       />
                     )
                   })}

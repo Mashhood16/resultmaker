@@ -277,12 +277,28 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
     }
   })
 
+  // Find all distinct tests for this class across all subjects in chronological order
+  const allClassScores = await prisma.score.findMany({
+    where: {
+      student: { classId, showInLeaderboard: true }
+    },
+    select: { testName: true, createdAt: true },
+    orderBy: { createdAt: 'asc' }
+  })
+  const allClassTests: string[] = []
+  allClassScores.forEach(s => {
+    if (!allClassTests.includes(s.testName)) {
+      allClassTests.push(s.testName)
+    }
+  })
+
   return (
     <LeaderboardView 
       initialData={rankedData} 
       classId={classId} 
       availableSubjects={availableSubjects} 
       lastTestName={lastTestName}
+      allClassTests={allClassTests}
     />
   )
 }

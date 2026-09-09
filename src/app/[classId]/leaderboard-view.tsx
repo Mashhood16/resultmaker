@@ -51,9 +51,10 @@ interface LeaderboardViewProps {
   classId: string
   availableSubjects: { id: string, name: string }[]
   lastTestName?: string | null
+  allClassTests?: string[]
 }
 
-export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName }: LeaderboardViewProps) {
+export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
   const [selectedTestFilter, setSelectedTestFilter] = useState<string>('all')
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
@@ -64,7 +65,11 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [reportSelectedTests, setReportSelectedTests] = useState<Set<string>>(new Set())
   const [reportSelectedSubjects, setReportSelectedSubjects] = useState<Set<string>>(new Set())
-  const [crossSubjectReportData, setCrossSubjectReportData] = useState<any[] | null>(null)
+  const [reportData, setReportData] = useState<{
+    students: any[]
+    tableColumns: string[]
+    selectedTests: string[]
+  } | null>(null)
 
   const uniqueTests = useMemo(() => {
     const tests = new Set<string>()
@@ -74,8 +79,13 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
     return Array.from(tests)
   }, [initialData])
 
+  const modalTests = useMemo(() => {
+    if (allClassTests && allClassTests.length > 0) return allClassTests
+    return uniqueTests
+  }, [allClassTests, uniqueTests])
+
   const openReportModal = () => {
-    setReportSelectedTests(new Set(uniqueTests))
+    setReportSelectedTests(new Set(modalTests))
     setReportSelectedSubjects(new Set(availableSubjects.map(s => s.name)))
     setIsReportModalOpen(true)
   }
@@ -88,13 +98,14 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       if (selectedStudents.size === 0) throw new Error('No students selected')
       if (reportSelectedSubjects.size === 0) throw new Error('No subjects selected')
       
-      const orderedSelectedTests = uniqueTests.filter(t => reportSelectedTests.has(t))
+      const orderedSelectedTests = modalTests.filter(t => reportSelectedTests.has(t))
+      const orderedSelectedSubjects = availableSubjects.map(s => s.name).filter(s => reportSelectedSubjects.has(s))
       
       const data = await fetchComprehensiveScores(
         classId,
         Array.from(selectedStudents),
         orderedSelectedTests,
-        Array.from(reportSelectedSubjects)
+        orderedSelectedSubjects
       )
 
       // Map the multi-subject data to the structure ConsolidatedReport expects,
@@ -131,10 +142,14 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       mappedStudents.sort((a, b) => b.percentage - a.percentage)
       mappedStudents.forEach((s, idx) => s.rank = idx + 1)
 
-      setCrossSubjectReportData(mappedStudents)
+      setReportData({
+        students: mappedStudents,
+        tableColumns: orderedSelectedSubjects,
+        selectedTests: orderedSelectedTests
+      })
       
-      // Give the DOM a tiny bit of time to render the updated ConsolidatedReport 
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Give the DOM a moment to render the updated ConsolidatedReport 
+      await new Promise(resolve => setTimeout(resolve, 600))
 
       const JsPDFConstructor = typeof jsPDF === 'function' ? jsPDF : (window as any).jspdf?.jsPDF || (jsPDF as any).jsPDF
       if (!JsPDFConstructor) throw new Error('jsPDF is not loaded correctly')
@@ -200,7 +215,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       toast.error(`Export failed: ${e.message}`, { id: toastId, duration: 5000 })
     } finally {
       setIsExporting(false)
-      setCrossSubjectReportData(null)
+      setReportData(null)
     }
   }
 
@@ -708,11 +723,11 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
 
       {/* Hidden Consolidated Report for PDF Export */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', zIndex: -1 }}>
-        {crossSubjectReportData && (
+        {reportData && (
           <ConsolidatedReport 
-            students={crossSubjectReportData}
-            uniqueTests={Array.from(reportSelectedSubjects)}
-            selectedTests={uniqueTests.filter(t => reportSelectedTests.has(t))}
+            students={reportData.students}
+            uniqueTests={reportData.tableColumns}
+            selectedTests={reportData.selectedTests}
             reportType="tests"
           />
         )}
@@ -733,11 +748,11 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-2">
             <div className="space-y-3">
               <h4 className="text-sm font-black tracking-widest text-muted-foreground uppercase">Include Tests</h4>
-              {uniqueTests.length === 0 ? (
+              {modalTests.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No tests available.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  {uniqueTests.map(test => (
+                  {modalTests.map(test => (
                     <div key={test} className="flex items-center space-x-2 bg-card border border-border p-3 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => toggleTestForReport(test)}>
                       <Checkbox id={`rep-test-${test}`} checked={reportSelectedTests.has(test)} onCheckedChange={() => toggleTestForReport(test)} />
                       <Label htmlFor={`rep-test-${test}`} className="flex-1 cursor-pointer font-medium text-muted-foreground text-sm">{test}</Label>
