@@ -1,18 +1,51 @@
 import React from 'react'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
+import { LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
 import { ReportCardStudent } from './report-card'
 
-export function ConsolidatedReport({ students: initialStudents, uniqueTests, reportType = 'tests' }: { students: ReportCardStudent[], uniqueTests: string[], reportType?: 'tests' | 'subjects' }) {
+export function ConsolidatedReport({ 
+  students: initialStudents, 
+  uniqueTests, 
+  selectedTests,
+  reportType = 'tests' 
+}: { 
+  students: ReportCardStudent[], 
+  uniqueTests: string[], 
+  selectedTests?: string[],
+  reportType?: 'tests' | 'subjects' 
+}) {
   // Ensure students are strictly sorted by overall percentage (highest to lowest) 
   // so the Legend and color mappings match the exact rank order.
-  const students = [...initialStudents].sort((a, b) => b.percentage - a.percentage)
+  const students = [...initialStudents].sort((a, b) => {
+    if (a.rank && b.rank && a.rank !== b.rank) return a.rank - b.rank
+    return b.percentage - a.percentage
+  })
 
-  const chartData = uniqueTests.map(testName => {
+  // Graph 1 Data: Total Scores Comparison across all tests
+  const totalScoreChartData = students.map((student, idx) => ({
+    id: student.id,
+    name: student.name,
+    score: student.percentage,
+    obtained: student.obtained,
+    total: student.total,
+    rank: student.rank || idx + 1,
+    isAbsent: student.isAbsent
+  }))
+
+  // Graph 2 Data: Comparative trend between all tests selected
+  const testsForTrend = (selectedTests && selectedTests.length > 0) ? selectedTests : uniqueTests
+
+  const trendChartData = testsForTrend.map(testName => {
     const dataPoint: any = { name: testName }
     students.forEach(student => {
-      const test = student.breakdown.find(t => t.testName === testName)
-      if (test && !test.isAbsent) {
-        dataPoint[student.id] = test.percentage
+      const testRecord = (student.testBreakdown || student.breakdown).find(t => t.testName === testName)
+      if (testRecord) {
+        if (testRecord.isAbsent) {
+          dataPoint[student.id] = 0
+          dataPoint[`${student.id}_isAbsent`] = true
+        } else {
+          dataPoint[student.id] = testRecord.percentage
+          dataPoint[`${student.id}_isAbsent`] = false
+        }
       }
     })
     return dataPoint
@@ -91,149 +124,147 @@ export function ConsolidatedReport({ students: initialStudents, uniqueTests, rep
         </div>
       </div>
 
-      {/* Chart Section */}
-      {students.length > 1 && uniqueTests.length > 0 && (
+      {/* Chart Section: 2 Graphs */}
+      {students.length > 0 && (
         <div className="flex flex-col gap-8">
-          {/* Grouped Bar Chart (Individual Test Comparison) */}
+          {/* Graph 1: Total Scores Comparison in All Tests */}
           <div id="report-bar-chart" className="relative z-10 bg-background/40 backdrop-blur-2xl border border-border rounded-xl p-6 shadow-2xl">
             <h3 className="text-xl font-black text-muted-foreground uppercase tracking-widest mb-6 text-center flex items-center justify-center gap-4">
               <span className="w-12 h-1 bg-gradient-to-r from-transparent to-purple-500/50 rounded-full"></span>
-              {reportType === 'subjects' ? 'Subject Breakdown' : 'Individual Test Breakdown'}
+              Total Score Comparison (All Tests)
               <span className="w-12 h-1 bg-gradient-to-l from-transparent to-emerald-500/50 rounded-full"></span>
             </h3>
             <div className="w-full h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 40, bottom: 20, left: 0 }}>
+                <BarChart data={totalScoreChartData} margin={{ top: 25, right: 30, bottom: 50, left: 10 }}>
                   <CartesianGrid stroke="#ffffff10" strokeDasharray="5 5" vertical={false} />
-                  <XAxis dataKey="name" stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                  <Tooltip 
-                    cursor={{ fill: '#ffffff05' }}
-                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '20px' }}
-                    itemStyle={{ fontWeight: 'black', fontSize: '18px', padding: '6px 0' }}
-                    formatter={(val: number) => [`${val}%`, 'Score']}
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#71717a" 
+                    tick={{ fill: '#a1a1aa', fontSize: students.length > 15 ? 10 : 12, fontWeight: 'bold' }} 
+                    angle={-35}
+                    textAnchor="end"
+                    interval={0}
+                    height={60}
+                    axisLine={false} 
+                    tickLine={false} 
                   />
-                  {students.map((student, idx) => {
-                    const color = getStudentColor(idx, students.length)
-                    const barWidth = Math.max(8, 40 - students.length * 2)
-                    return (
-                      <Bar 
-                        key={student.id}
-                        dataKey={student.id} 
-                        name={student.name}
-                        fill={color} 
-                        barSize={barWidth}
-                        shape={(props: any) => {
-                          const { x, y, width, height, fill } = props;
-                          if (height == null || isNaN(height)) return null;
-                          const isTall = height > 60;
-                          return (
-                            <g>
-                              {/* The Bar */}
-                              <path d={`M${x},${y + height} L${x},${y + 4} Q${x},${y} ${x + 4},${y} L${x + width - 4},${y} Q${x + width},${y} ${x + width},${y + 4} L${x + width},${y + height} Z`} fill={fill} />
-                              
-                              {/* The Name Label (only if wide enough!) */}
-                              {width > 16 && (
-                                <text 
-                                  x={x + width / 2} 
-                                  y={isTall ? y + height - 10 : y - 10} 
-                                  fill={isTall ? "#09090b" : fill} 
-                                  textAnchor="start" 
-                                  transform={`rotate(-90, ${x + width / 2}, ${isTall ? y + height - 10 : y - 10})`}
-                                  style={{ fontSize: `${Math.max(10, Math.min(14, width - 2))}px`, fontWeight: 'black', pointerEvents: 'none', filter: !isTall ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.8))' : 'none' }}
-                                >
-                                  {student.name}
-                                </text>
-                              )}
-                            </g>
-                          )
-                        }}
-                      />
-                    )
-                  })}
+                  <YAxis 
+                    stroke="#71717a" 
+                    tick={{ fill: '#a1a1aa', fontSize: 14, fontWeight: 'bold' }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    domain={[0, 100]} 
+                    tickFormatter={(val) => `${val}%`}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#ffffff08' }}
+                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '16px' }}
+                    formatter={(val: number, name: string, item: any) => [
+                      item.payload.total > 0
+                        ? `${val}% (${item.payload.obtained} / ${item.payload.total} marks)`
+                        : `${val}%`,
+                      `Total Score (#${item.payload.rank})`
+                    ]}
+                  />
+                  <Bar 
+                    dataKey="score" 
+                    radius={[8, 8, 0, 0]}
+                    barSize={Math.max(14, Math.min(48, Math.floor(700 / Math.max(students.length, 1))))}
+                  >
+                    <LabelList 
+                      dataKey="score" 
+                      position="top" 
+                      formatter={(val: number) => `${val}%`} 
+                      fill="#e4e4e7" 
+                      fontSize={students.length > 15 ? 9 : 11} 
+                      fontWeight="black" 
+                    />
+                    {totalScoreChartData.map((entry, index) => (
+                      <Cell key={`cell-${entry.id}`} fill={getStudentColor(index, students.length)} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            {/* Custom HTML Legend to Guarantee Order */}
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-4 mt-6 px-4">
+            {/* Legend showing students in rank order with their total scores */}
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 mt-4 px-4">
               {students.map((student, idx) => (
                 <div key={student.id} className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: getStudentColor(idx, students.length) }}></div>
-                  <span className="text-muted-foreground font-bold text-sm tracking-wide">{student.name} <span className="text-muted-foreground">({student.percentage}%)</span></span>
+                  <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: getStudentColor(idx, students.length) }}></div>
+                  <span className="text-muted-foreground font-bold text-xs tracking-wide">
+                    #{student.rank} {student.name} <span className="text-primary font-black">({student.percentage}%)</span>
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Secondary Chart (Line for Time Series, Radar for Cross-Subject) */}
+          {/* Graph 2: Comparative Trend Across All Tests Selected */}
           <div id="report-line-chart" className="relative z-10 bg-background/40 backdrop-blur-2xl border border-border rounded-xl p-6 shadow-2xl mt-4">
             <h3 className="text-xl font-black text-muted-foreground uppercase tracking-widest mb-6 text-center flex items-center justify-center gap-4">
               <span className="w-12 h-1 bg-gradient-to-r from-transparent to-amber-500/50 rounded-full"></span>
-              {reportType === 'subjects' ? 'Skill Profile Comparison' : 'Performance Trajectory'}
+              Comparative Performance Trend (All Tests)
               <span className="w-12 h-1 bg-gradient-to-l from-transparent to-rose-500/50 rounded-full"></span>
             </h3>
             <div className="w-full h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                {reportType === 'subjects' ? (
-                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-                    <PolarGrid stroke="#ffffff20" />
-                    <PolarAngleAxis dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 14, fontWeight: 'bold' }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#71717a' }} stroke="#71717a" />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '20px' }}
-                      itemStyle={{ fontWeight: 'black', fontSize: '18px', padding: '6px 0' }}
-                      formatter={(val: number) => [`${val}%`, 'Score']}
-                    />
-                    {students.map((student, idx) => {
-                      const color = getStudentColor(idx, students.length)
-                      return (
-                        <Radar 
-                          key={student.id}
-                          name={student.name} 
-                          dataKey={student.id} 
-                          stroke={color} 
-                          fill={color} 
-                          fillOpacity={0.3} 
-                        />
-                      )
-                    })}
-                  </RadarChart>
-                ) : (
-                  <LineChart data={chartData} margin={{ top: 20, right: 40, bottom: 20, left: 0 }}>
-                    <CartesianGrid stroke="#ffffff10" strokeDasharray="5 5" vertical={false} />
-                    <XAxis dataKey="name" stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 16, fontWeight: 'bold' }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '20px' }}
-                      itemStyle={{ fontWeight: 'black', fontSize: '18px', padding: '6px 0' }}
-                      formatter={(val: number) => [`${val}%`, 'Score']}
-                    />
-                    {students.map((student, idx) => {
-                      const color = getStudentColor(idx, students.length)
-                      return (
-                        <Line 
-                          key={student.id}
-                          type="monotone" 
-                          dataKey={student.id} 
-                          name={student.name}
-                          stroke={color} 
-                          strokeWidth={5} 
-                          dot={{ fill: '#09090b', r: 8, strokeWidth: 4, stroke: color }} 
-                          activeDot={{ r: 12, fill: color, stroke: '#fff', strokeWidth: 4 }} 
-                          connectNulls
-                        />
-                      )
-                    })}
-                  </LineChart>
-                )}
+                <LineChart data={trendChartData} margin={{ top: 25, right: 30, bottom: 20, left: 10 }}>
+                  <CartesianGrid stroke="#ffffff10" strokeDasharray="5 5" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#71717a" 
+                    tick={{ fill: '#a1a1aa', fontSize: 14, fontWeight: 'bold' }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                  />
+                  <YAxis 
+                    stroke="#71717a" 
+                    tick={{ fill: '#a1a1aa', fontSize: 14, fontWeight: 'bold' }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    domain={[0, 100]} 
+                    tickFormatter={(val) => `${val}%`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '16px' }}
+                    itemStyle={{ fontWeight: 'bold', fontSize: '14px', padding: '4px 0' }}
+                    formatter={(val: number, name: string, item: any) => {
+                      const studentId = item.dataKey
+                      const isAbsent = item.payload?.[`${studentId}_isAbsent`]
+                      if (isAbsent) {
+                        return ['Absent (0%)', name]
+                      }
+                      return [`${val}%`, name]
+                    }}
+                  />
+                  {students.map((student, idx) => {
+                    const color = getStudentColor(idx, students.length)
+                    return (
+                      <Line 
+                        key={student.id}
+                        type="monotone" 
+                        dataKey={student.id} 
+                        name={student.name} 
+                        stroke={color} 
+                        strokeWidth={4} 
+                        dot={{ fill: '#09090b', r: 6, strokeWidth: 3, stroke: color }} 
+                        activeDot={{ r: 10, fill: color, stroke: '#fff', strokeWidth: 3 }} 
+                        connectNulls
+                      />
+                    )
+                  })}
+                </LineChart>
               </ResponsiveContainer>
             </div>
-            {/* Custom HTML Legend to Guarantee Order */}
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-4 mt-6 px-4">
+            {/* Custom Legend to Match Lines */}
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 mt-4 px-4">
               {students.map((student, idx) => (
                 <div key={student.id} className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: getStudentColor(idx, students.length) }}></div>
-                  <span className="text-muted-foreground font-bold text-sm tracking-wide">{student.name} <span className="text-muted-foreground">({student.percentage}%)</span></span>
+                  <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: getStudentColor(idx, students.length) }}></div>
+                  <span className="text-muted-foreground font-bold text-xs tracking-wide">
+                    #{student.rank} {student.name} <span className="text-muted-foreground">({student.percentage}%)</span>
+                  </span>
                 </div>
               ))}
             </div>

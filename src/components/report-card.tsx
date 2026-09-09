@@ -18,6 +18,14 @@ export type ReportCardStudent = {
     isAbsent: boolean
     classAverage?: number
   }>
+  testBreakdown?: Array<{
+    testName: string
+    obtained: number
+    total: number
+    percentage: number
+    isAbsent: boolean
+    classAverage?: number
+  }>
 }
 
 export function ReportCard({ student }: { student: ReportCardStudent }) {

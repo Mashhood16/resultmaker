@@ -88,10 +88,12 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       if (selectedStudents.size === 0) throw new Error('No students selected')
       if (reportSelectedSubjects.size === 0) throw new Error('No subjects selected')
       
+      const orderedSelectedTests = uniqueTests.filter(t => reportSelectedTests.has(t))
+      
       const data = await fetchComprehensiveScores(
         classId,
         Array.from(selectedStudents),
-        Array.from(reportSelectedTests),
+        orderedSelectedTests,
         Array.from(reportSelectedSubjects)
       )
 
@@ -106,11 +108,22 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           id: s.studentId,
           name: s.name,
           rank: 0,
+          obtained: totalObtained,
+          total: totalTotal,
           percentage: Number(percentage.toFixed(2)),
           breakdown: s.subjects.map(subj => ({
             testName: subj.subjectName,
+            obtained: subj.rawObtained,
+            total: subj.rawTotal,
             percentage: subj.rawTotal > 0 ? Number(((subj.rawObtained / subj.rawTotal) * 100).toFixed(2)) : 0,
             isAbsent: subj.isAbsent
+          })),
+          testBreakdown: s.tests.map(t => ({
+            testName: t.testName,
+            obtained: t.rawObtained,
+            total: t.rawTotal,
+            percentage: t.percentage,
+            isAbsent: t.isAbsent
           }))
         }
       })
@@ -699,7 +712,8 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           <ConsolidatedReport 
             students={crossSubjectReportData}
             uniqueTests={Array.from(reportSelectedSubjects)}
-            reportType="subjects"
+            selectedTests={uniqueTests.filter(t => reportSelectedTests.has(t))}
+            reportType="tests"
           />
         )}
       </div>

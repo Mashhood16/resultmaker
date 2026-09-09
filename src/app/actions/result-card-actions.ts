@@ -11,6 +11,14 @@ export type ComprehensiveSubjectScore = {
   isAbsent: boolean
 }
 
+export type ComprehensiveTestScore = {
+  testName: string
+  rawObtained: number
+  rawTotal: number
+  percentage: number
+  isAbsent: boolean
+}
+
 export type ComprehensiveStudentScore = {
   studentId: string
   rollNumber: string | null
@@ -19,6 +27,7 @@ export type ComprehensiveStudentScore = {
   classId: string
   className: string
   subjects: ComprehensiveSubjectScore[]
+  tests: ComprehensiveTestScore[]
 }
 
 export async function fetchComprehensiveScores(
@@ -84,7 +93,11 @@ export async function fetchComprehensiveScores(
     // Group scores by subject
     const subjectMap = new Map<string, { subjectName: string, obtained: number, total: number, absences: number, totalTests: number }>()
 
+    // Group scores by testName
+    const testMap = new Map<string, { testName: string, obtained: number, total: number, absences: number, count: number }>()
+
     student.scores.forEach(score => {
+      // Subject-level aggregation
       if (!subjectMap.has(score.subjectId)) {
         subjectMap.set(score.subjectId, {
           subjectName: score.subject.name,
@@ -100,6 +113,23 @@ export async function fetchComprehensiveScores(
       subj.obtained += score.marksObtained
       subj.total += score.totalMarks
       if (score.isAbsent) subj.absences += 1
+
+      // Test-level aggregation across selected subjects
+      if (!testMap.has(score.testName)) {
+        testMap.set(score.testName, {
+          testName: score.testName,
+          obtained: 0,
+          total: 0,
+          absences: 0,
+          count: 0
+        })
+      }
+
+      const t = testMap.get(score.testName)!
+      t.count += 1
+      t.obtained += score.marksObtained
+      t.total += score.totalMarks
+      if (score.isAbsent) t.absences += 1
     })
 
     const subjects = Array.from(subjectMap.entries()).map(([subjectId, data]) => ({
@@ -110,6 +140,27 @@ export async function fetchComprehensiveScores(
       isAbsent: data.totalTests > 0 && data.absences === data.totalTests 
     }))
 
+    // Build test scores matching the exact ordering of selectedTests
+    const tests = selectedTests.map(testName => {
+      const data = testMap.get(testName)
+      if (!data) {
+        return {
+          testName,
+          rawObtained: 0,
+          rawTotal: 0,
+          percentage: 0,
+          isAbsent: true
+        }
+      }
+      return {
+        testName,
+        rawObtained: data.obtained,
+        rawTotal: data.total,
+        percentage: data.total > 0 ? Number(((data.obtained / data.total) * 100).toFixed(2)) : 0,
+        isAbsent: data.count > 0 && data.absences === data.count
+      }
+    })
+
     return {
       studentId: student.id,
       rollNumber: student.rollNumber,
@@ -117,7 +168,8 @@ export async function fetchComprehensiveScores(
       section: student.section,
       classId: student.classId,
       className: student.class.name,
-      subjects
+      subjects,
+      tests
     }
   }).sort((a, b) => {
     const aRoll = parseInt(a.rollNumber || '0') || 0
