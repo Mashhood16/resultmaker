@@ -2,11 +2,122 @@ import React from 'react'
 import { LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
 import { ReportCardStudent } from './report-card'
 
+// High-resolution inline SVG sparkline for individual student trends in the table
+function StudentSparkline({
+  student,
+  tests
+}: {
+  student: ReportCardStudent
+  tests: string[]
+}) {
+  const records = tests.map(testName => {
+    const rec = (student.testBreakdown && student.testBreakdown.length > 0)
+      ? student.testBreakdown.find(t => t.testName === testName)
+      : student.breakdown.find(t => t.testName === testName)
+    return {
+      testName,
+      percentage: rec && !rec.isAbsent ? rec.percentage : 0,
+      isAbsent: rec ? rec.isAbsent : false,
+      hasData: Boolean(rec)
+    }
+  })
+
+  const width = 96
+  const height = 28
+  const padX = 6
+  const padY = 5
+  const usableW = width - padX * 2
+  const usableH = height - padY * 2
+
+  const validScores = records.filter(r => r.hasData && !r.isAbsent).map(r => r.percentage)
+  const isUp = validScores.length >= 2 && validScores[validScores.length - 1] > validScores[0]
+  const isDown = validScores.length >= 2 && validScores[validScores.length - 1] < validScores[0]
+  const strokeColor = isUp ? '#10b981' : isDown ? '#f43f5e' : '#38bdf8'
+
+  if (records.length < 2) {
+    const singlePct = validScores.length > 0 ? validScores[0] : 0
+    const cy = (height - padY) - (singlePct / 100) * usableH
+    return (
+      <div className="w-[96px] h-[28px] flex items-center justify-center mx-auto">
+        <svg width={width} height={height} className="overflow-visible">
+          <line x1={padX} y1={height / 2} x2={width - padX} y2={height / 2} stroke="#27272a" strokeDasharray="3 3" strokeWidth="1" />
+          <circle cx={width / 2} cy={cy} r="3.5" fill={strokeColor} stroke="#09090b" strokeWidth="1.5" />
+        </svg>
+      </div>
+    )
+  }
+
+  const points = records.map((r, i) => {
+    const x = padX + (i / (records.length - 1)) * usableW
+    const clampedScore = Math.max(0, Math.min(100, r.percentage))
+    const y = (height - padY) - (clampedScore / 100) * usableH
+    return { x, y, isAbsent: r.isAbsent, hasData: r.hasData, score: r.percentage }
+  })
+
+  const pathD = points.reduce((acc, pt, i) => {
+    return i === 0 ? `M ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}` : `${acc} L ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`
+  }, '')
+
+  const areaD = `${pathD} L ${points[points.length - 1].x.toFixed(1)} ${height} L ${points[0].x.toFixed(1)} ${height} Z`
+  const gradientId = `sparkline-grad-${student.id.replace(/[^a-zA-Z0-9]/g, '_')}`
+
+  return (
+    <div className="w-[96px] h-[28px] flex items-center justify-center mx-auto shrink-0">
+      <svg width={width} height={height} className="overflow-visible">
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={strokeColor} stopOpacity="0.35" />
+            <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+
+        {/* 50% dashed baseline reference */}
+        <line 
+          x1={padX} 
+          y1={height / 2} 
+          x2={width - padX} 
+          y2={height / 2} 
+          stroke="#27272a" 
+          strokeDasharray="2 2" 
+          strokeWidth="1" 
+        />
+
+        {/* Gradient fill under line */}
+        <path d={areaD} fill={`url(#${gradientId})`} />
+
+        {/* Trend line */}
+        <path 
+          d={pathD} 
+          fill="none" 
+          stroke={strokeColor} 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+        />
+
+        {/* Points */}
+        {points.map((pt, i) => (
+          <circle 
+            key={i} 
+            cx={pt.x.toFixed(1)} 
+            cy={pt.y.toFixed(1)} 
+            r={pt.isAbsent ? 2.5 : 3} 
+            fill={pt.isAbsent ? '#ef4444' : strokeColor} 
+            stroke="#09090b" 
+            strokeWidth="1.5" 
+          />
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 export function ConsolidatedReport({ 
   students: initialStudents, 
   uniqueTests, 
   selectedTests,
   reportType = 'tests',
+  initialBand = 'all'
 }: { 
   students: ReportCardStudent[], 
   uniqueTests: string[], 
@@ -70,7 +181,7 @@ export function ConsolidatedReport({
     return students
   }, [students, selectedPerformanceBand])
 
-  // Graph 2 Data: Comparative trend between all tests selected + Class Average Benchmark
+  // Graph 2 Data: Comparative trend between all tests selected + Class Average & Tier Benchmarks
   const testsForTrend = (selectedTests && selectedTests.length > 0) ? selectedTests : uniqueTests
 
   const trendChartData = testsForTrend.map(testName => {
@@ -89,6 +200,42 @@ export function ConsolidatedReport({
       : null
 
     dataPoint['class_average'] = classAverage
+
+    // Top Tier Average (overall percentage >= 70%)
+    const topScores = students
+      .filter(s => s.percentage >= 70)
+      .map(s => {
+        const rec = (s.testBreakdown || s.breakdown).find(t => t.testName === testName)
+        return rec && !rec.isAbsent ? rec.percentage : null
+      })
+      .filter((p): p is number => p !== null)
+    dataPoint['top_tier_avg'] = topScores.length > 0
+      ? Number((topScores.reduce((a, b) => a + b, 0) / topScores.length).toFixed(1))
+      : null
+
+    // Middle Tier Average (overall percentage 40-69%)
+    const midScores = students
+      .filter(s => s.percentage >= 40 && s.percentage < 70)
+      .map(s => {
+        const rec = (s.testBreakdown || s.breakdown).find(t => t.testName === testName)
+        return rec && !rec.isAbsent ? rec.percentage : null
+      })
+      .filter((p): p is number => p !== null)
+    dataPoint['mid_tier_avg'] = midScores.length > 0
+      ? Number((midScores.reduce((a, b) => a + b, 0) / midScores.length).toFixed(1))
+      : null
+
+    // Needs Support Average (< 40%)
+    const lowScores = students
+      .filter(s => s.percentage < 40)
+      .map(s => {
+        const rec = (s.testBreakdown || s.breakdown).find(t => t.testName === testName)
+        return rec && !rec.isAbsent ? rec.percentage : null
+      })
+      .filter((p): p is number => p !== null)
+    dataPoint['low_tier_avg'] = lowScores.length > 0
+      ? Number((lowScores.reduce((a, b) => a + b, 0) / lowScores.length).toFixed(1))
+      : null
 
     students.forEach(student => {
       const testRecord = (student.testBreakdown || student.breakdown).find(t => t.testName === testName)
@@ -133,9 +280,11 @@ export function ConsolidatedReport({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-card border-b border-border">
-                <th className="py-4 px-2 font-black text-muted-foreground uppercase tracking-widest text-xs text-center">Rank</th>
-                <th className="py-4 px-4 font-black text-muted-foreground uppercase tracking-widest text-xs">Student Name</th>
-                <th className="py-4 px-4 font-black text-muted-foreground uppercase tracking-widest text-xs text-center border-r border-border">Score</th>
+                <th className="py-4 px-2 font-black text-muted-foreground uppercase tracking-widest text-xs text-center w-[45px]">Rank</th>
+                <th className="py-4 px-3 font-black text-muted-foreground uppercase tracking-widest text-xs">Student Name</th>
+                <th className="py-4 px-2 font-black text-muted-foreground uppercase tracking-widest text-xs text-center whitespace-nowrap min-w-[65px]">Roll No.</th>
+                <th className="py-4 px-2 font-black text-muted-foreground uppercase tracking-widest text-xs text-center whitespace-nowrap min-w-[100px]">Trend</th>
+                <th className="py-4 px-3 font-black text-muted-foreground uppercase tracking-widest text-xs text-center border-r border-border">Score</th>
                 {uniqueTests.map(test => (
                   <th key={test} className="py-4 px-2 font-black text-muted-foreground uppercase tracking-widest text-xs text-center">{test}</th>
                 ))}
@@ -151,10 +300,18 @@ export function ConsolidatedReport({
                     {student.rank === 3 && <span className="text-amber-600 drop-shadow-[0_0_8px_rgba(217,119,6,0.5)]">3</span>}
                     {student.rank > 3 && student.rank}
                   </td>
-                  <td className="py-3 px-4 font-bold text-foreground text-sm">
+                  <td className="py-3 px-3 font-bold text-foreground text-sm">
                     {student.name}
                   </td>
-                  <td className="py-3 px-4 text-center border-r border-border">
+                  <td className="py-3 px-2 text-center whitespace-nowrap min-w-[65px]">
+                    <span className="font-bold text-xs text-muted-foreground bg-card/80 border border-border px-2 py-0.5 rounded">
+                      {student.rollNumber || '—'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-2 text-center whitespace-nowrap min-w-[100px]">
+                    <StudentSparkline student={student} tests={testsForTrend} />
+                  </td>
+                  <td className="py-3 px-3 text-center border-r border-border">
                     {student.percentage > 0 ? (
                       <span className="font-black text-primary text-sm">{student.percentage}%</span>
                     ) : (
@@ -341,6 +498,15 @@ export function ConsolidatedReport({
                       if (name === 'Class Average') {
                         return [`${val}% (Benchmark)`, 'Class Average']
                       }
+                      if (name === 'Top Tier (≥ 70%)') {
+                        return [`${val}%`, 'Top Tier Average']
+                      }
+                      if (name === 'Middle Range (40-69%)') {
+                        return [`${val}%`, 'Middle Range Average']
+                      }
+                      if (name === 'Needs Support (< 40%)') {
+                        return [`${val}%`, 'Needs Support Average']
+                      }
                       const studentId = item.dataKey
                       const isAbsent = item.payload?.[`${studentId}_isAbsent`]
                       if (isAbsent) {
@@ -365,37 +531,76 @@ export function ConsolidatedReport({
                     isAnimationActive={false}
                   />
 
-                  {/* Individual Student Lines */}
-                  {visibleStudents.map((student) => {
-                    const originalIdx = students.findIndex(s => s.id === student.id)
-                    const color = getStudentColor(originalIdx, students.length)
-
-                    return (
+                  {/* Macro Tier Lines if All Students (eliminates 25 overlapping spaghetti lines) */}
+                  {selectedPerformanceBand === 'all' ? (
+                    <>
                       <Line 
-                        key={student.id}
+                        key="top_tier_avg"
                         type="monotone" 
-                        dataKey={student.id} 
-                        name={student.name} 
-                        stroke={color} 
+                        dataKey="top_tier_avg" 
+                        name="Top Tier (≥ 70%)" 
+                        stroke="#10b981" 
                         strokeWidth={2.5} 
-                        strokeOpacity={0.85}
-                        dot={{ 
-                          fill: color, 
-                          r: 4, 
-                          strokeWidth: 1.5, 
-                          stroke: '#09090b'
-                        }} 
-                        activeDot={{ r: 8, fill: color, stroke: '#fff', strokeWidth: 2 }} 
+                        dot={{ fill: '#10b981', r: 4, strokeWidth: 1.5, stroke: '#09090b' }} 
                         connectNulls
                         isAnimationActive={false}
                       />
-                    )
-                  })}
+                      <Line 
+                        key="mid_tier_avg"
+                        type="monotone" 
+                        dataKey="mid_tier_avg" 
+                        name="Middle Range (40-69%)" 
+                        stroke="#38bdf8" 
+                        strokeWidth={2.5} 
+                        dot={{ fill: '#38bdf8', r: 4, strokeWidth: 1.5, stroke: '#09090b' }} 
+                        connectNulls
+                        isAnimationActive={false}
+                      />
+                      <Line 
+                        key="low_tier_avg"
+                        type="monotone" 
+                        dataKey="low_tier_avg" 
+                        name="Needs Support (< 40%)" 
+                        stroke="#f43f5e" 
+                        strokeWidth={2.5} 
+                        dot={{ fill: '#f43f5e', r: 4, strokeWidth: 1.5, stroke: '#09090b' }} 
+                        connectNulls
+                        isAnimationActive={false}
+                      />
+                    </>
+                  ) : (
+                    /* Cohort-filtered: render individual student lines for this cohort (only 5-8 lines, very clean) */
+                    visibleStudents.map((student) => {
+                      const originalIdx = students.findIndex(s => s.id === student.id)
+                      const color = getStudentColor(originalIdx, students.length)
+
+                      return (
+                        <Line 
+                          key={student.id}
+                          type="monotone" 
+                          dataKey={student.id} 
+                          name={student.name} 
+                          stroke={color} 
+                          strokeWidth={2.5} 
+                          strokeOpacity={0.85}
+                          dot={{ 
+                            fill: color, 
+                            r: 4, 
+                            strokeWidth: 1.5, 
+                            stroke: '#09090b'
+                          }} 
+                          activeDot={{ r: 8, fill: color, stroke: '#fff', strokeWidth: 2 }} 
+                          connectNulls
+                          isAnimationActive={false}
+                        />
+                      )
+                    })
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Publication-Grade Static Legend with Trajectory Chips */}
+            {/* Publication-Grade Static Legend */}
             <div className="flex flex-wrap justify-center items-center gap-2.5 mt-5 px-4">
               {/* Class Average Legend Chip */}
               <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-lg shadow-sm">
@@ -405,41 +610,77 @@ export function ConsolidatedReport({
                 </span>
               </div>
 
-              {/* Student Legend Chips */}
-              {visibleStudents.map((student) => {
-                const originalIdx = students.findIndex(s => s.id === student.id)
-                const color = getStudentColor(originalIdx, students.length)
-                const diff = getStudentTrajectory(student)
-
-                return (
-                  <div 
-                    key={student.id} 
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/60 border border-border shadow-sm"
-                  >
-                    <div 
-                      className="w-3 h-3 rounded-full shrink-0" 
-                      style={{ backgroundColor: color }}
-                    ></div>
+              {selectedPerformanceBand === 'all' ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/60 border border-border shadow-sm">
+                    <div className="w-3 h-3 rounded-full shrink-0 bg-emerald-500"></div>
                     <span className="font-bold text-xs tracking-wide text-foreground">
-                      #{student.rank} {student.name}
+                      Top Tier (≥ 70%)
                     </span>
-                    <span className="text-primary font-black text-xs">
-                      ({student.percentage}%)
+                    <span className="text-emerald-400 font-black text-xs">
+                      • {bandCounts.top} Students
                     </span>
-                    {diff !== null && (
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded whitespace-nowrap ${
-                        diff > 0 
-                          ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
-                          : diff < 0 
-                          ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' 
-                          : 'text-zinc-400 bg-card border border-border'
-                      }`}>
-                        {diff > 0 ? `▲\u00A0+${diff}%` : diff < 0 ? `▼\u00A0${diff}%` : `●\u00A00.0%`}
-                      </span>
-                    )}
                   </div>
-                )
-              })}
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/60 border border-border shadow-sm">
+                    <div className="w-3 h-3 rounded-full shrink-0 bg-sky-400"></div>
+                    <span className="font-bold text-xs tracking-wide text-foreground">
+                      Middle Range (40-69%)
+                    </span>
+                    <span className="text-sky-400 font-black text-xs">
+                      • {bandCounts.mid} Students
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/60 border border-border shadow-sm">
+                    <div className="w-3 h-3 rounded-full shrink-0 bg-rose-500"></div>
+                    <span className="font-bold text-xs tracking-wide text-foreground">
+                      Needs Support (&lt; 40%)
+                    </span>
+                    <span className="text-rose-400 font-black text-xs">
+                      • {bandCounts.low} Students
+                    </span>
+                  </div>
+                </>
+              ) : (
+                visibleStudents.map((student) => {
+                  const originalIdx = students.findIndex(s => s.id === student.id)
+                  const color = getStudentColor(originalIdx, students.length)
+                  const diff = getStudentTrajectory(student)
+
+                  return (
+                    <div 
+                      key={student.id} 
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/60 border border-border shadow-sm"
+                    >
+                      <div 
+                        className="w-3 h-3 rounded-full shrink-0" 
+                        style={{ backgroundColor: color }}
+                      ></div>
+                      <span className="font-bold text-xs tracking-wide text-foreground">
+                        #{student.rank} {student.name}
+                      </span>
+                      {student.rollNumber && (
+                        <span className="text-muted-foreground text-[11px] font-bold">
+                          ({student.rollNumber})
+                        </span>
+                      )}
+                      <span className="text-primary font-black text-xs">
+                        ({student.percentage}%)
+                      </span>
+                      {diff !== null && (
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded whitespace-nowrap ${
+                          diff > 0 
+                            ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
+                            : diff < 0 
+                            ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' 
+                            : 'text-zinc-400 bg-card border border-border'
+                        }`}>
+                          {diff > 0 ? `▲\u00A0+${diff}%` : diff < 0 ? `▼\u00A0${diff}%` : `●\u00A00.0%`}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
         </div>

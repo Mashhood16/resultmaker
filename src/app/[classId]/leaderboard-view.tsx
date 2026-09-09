@@ -121,6 +121,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
         return {
           id: s.studentId,
           name: s.name,
+          rollNumber: s.rollNumber,
           rank: 0,
           obtained: totalObtained,
           total: totalTotal,
