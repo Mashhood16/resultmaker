@@ -65,10 +65,12 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [reportSelectedTests, setReportSelectedTests] = useState<Set<string>>(new Set())
   const [reportSelectedSubjects, setReportSelectedSubjects] = useState<Set<string>>(new Set())
+  const [reportPerformanceBand, setReportPerformanceBand] = useState<'all' | 'top' | 'mid' | 'low'>('all')
   const [reportData, setReportData] = useState<{
     students: any[]
     tableColumns: string[]
     selectedTests: string[]
+    performanceBand: 'all' | 'top' | 'mid' | 'low'
   } | null>(null)
 
   const uniqueTests = useMemo(() => {
@@ -87,6 +89,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
   const openReportModal = () => {
     setReportSelectedTests(new Set(modalTests))
     setReportSelectedSubjects(new Set(availableSubjects.map(s => s.name)))
+    setReportPerformanceBand('all')
     setIsReportModalOpen(true)
   }
 
@@ -145,7 +148,8 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       setReportData({
         students: mappedStudents,
         tableColumns: orderedSelectedSubjects,
-        selectedTests: orderedSelectedTests
+        selectedTests: orderedSelectedTests,
+        performanceBand: reportPerformanceBand
       })
       
       // Give the DOM a moment to render the updated ConsolidatedReport 
@@ -728,6 +732,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
             students={reportData.students}
             uniqueTests={reportData.tableColumns}
             selectedTests={reportData.selectedTests}
+            initialBand={reportData.performanceBand}
             reportType="tests"
           />
         )}
@@ -776,6 +781,48 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-black tracking-widest text-muted-foreground uppercase">Performance Band (Trend Graph)</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={reportPerformanceBand === 'all' ? 'default' : 'outline'}
+                  onClick={() => setReportPerformanceBand('all')}
+                  className="h-9 justify-start font-bold text-xs"
+                >
+                  All Students ({selectedStudents.size})
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={reportPerformanceBand === 'top' ? 'default' : 'outline'}
+                  onClick={() => setReportPerformanceBand('top')}
+                  className="h-9 justify-start font-bold text-xs"
+                >
+                  Top Tier (≥ 70%)
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={reportPerformanceBand === 'mid' ? 'default' : 'outline'}
+                  onClick={() => setReportPerformanceBand('mid')}
+                  className="h-9 justify-start font-bold text-xs"
+                >
+                  Middle Tier (40-69%)
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={reportPerformanceBand === 'low' ? 'default' : 'outline'}
+                  onClick={() => setReportPerformanceBand('low')}
+                  className="h-9 justify-start font-bold text-xs"
+                >
+                  Needs Support (&lt; 40%)
+                </Button>
+              </div>
             </div>
           </div>
 

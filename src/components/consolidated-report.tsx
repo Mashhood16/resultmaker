@@ -6,13 +6,19 @@ export function ConsolidatedReport({
   students: initialStudents, 
   uniqueTests, 
   selectedTests,
-  reportType = 'tests' 
+  reportType = 'tests',
+  initialBand = 'all'
 }: { 
   students: ReportCardStudent[], 
   uniqueTests: string[], 
   selectedTests?: string[],
-  reportType?: 'tests' | 'subjects' 
+  reportType?: 'tests' | 'subjects',
+  initialBand?: 'all' | 'top' | 'mid' | 'low'
 }) {
+  const [hoveredStudentId, setHoveredStudentId] = React.useState<string | null>(null)
+  const [lockedStudentId, setLockedStudentId] = React.useState<string | null>(null)
+  const [selectedPerformanceBand, setSelectedPerformanceBand] = React.useState<'all' | 'top' | 'mid' | 'low'>(initialBand)
+
   // Ensure students are strictly sorted by overall percentage (highest to lowest) 
   // so the Legend and color mappings match the exact rank order.
   const students = [...initialStudents].sort((a, b) => {
@@ -31,11 +37,64 @@ export function ConsolidatedReport({
     isAbsent: student.isAbsent
   }))
 
-  // Graph 2 Data: Comparative trend between all tests selected
+  // Helper to calculate student trajectory from first test to last test
+  const getStudentTrajectory = (student: ReportCardStudent) => {
+    const list = (student.testBreakdown && student.testBreakdown.length > 0)
+      ? student.testBreakdown
+      : student.breakdown
+    
+    const validScores = list.filter(t => !t.isAbsent)
+    if (validScores.length < 2) return null
+    
+    const firstScore = validScores[0].percentage
+    const lastScore = validScores[validScores.length - 1].percentage
+    const diff = Number((lastScore - firstScore).toFixed(1))
+    return diff
+  }
+
+  // Performance Band Counts & Filter
+  const bandCounts = React.useMemo(() => ({
+    all: students.length,
+    top: students.filter(s => s.percentage >= 70).length,
+    mid: students.filter(s => s.percentage >= 40 && s.percentage < 70).length,
+    low: students.filter(s => s.percentage < 40).length,
+  }), [students])
+
+  const visibleStudents = React.useMemo(() => {
+    if (selectedPerformanceBand === 'top') {
+      return students.filter(s => s.percentage >= 70)
+    }
+    if (selectedPerformanceBand === 'mid') {
+      return students.filter(s => s.percentage >= 40 && s.percentage < 70)
+    }
+    if (selectedPerformanceBand === 'low') {
+      return students.filter(s => s.percentage < 40)
+    }
+    return students
+  }, [students, selectedPerformanceBand])
+
+  const activeFocusId = lockedStudentId || hoveredStudentId
+
+  // Graph 2 Data: Comparative trend between all tests selected + Class Average Benchmark
   const testsForTrend = (selectedTests && selectedTests.length > 0) ? selectedTests : uniqueTests
 
   const trendChartData = testsForTrend.map(testName => {
     const dataPoint: any = { name: testName }
+
+    // Calculate Class Average across all present students in the entire class for this test
+    const presentScores = students
+      .map(s => {
+        const rec = (s.testBreakdown || s.breakdown).find(t => t.testName === testName)
+        return rec && !rec.isAbsent ? rec.percentage : null
+      })
+      .filter((p): p is number => p !== null)
+
+    const classAverage = presentScores.length > 0
+      ? Number((presentScores.reduce((a, b) => a + b, 0) / presentScores.length).toFixed(1))
+      : null
+
+    dataPoint['class_average'] = classAverage
+
     students.forEach(student => {
       const testRecord = (student.testBreakdown || student.breakdown).find(t => t.testName === testName)
       if (testRecord) {
@@ -85,6 +144,7 @@ export function ConsolidatedReport({
                 {uniqueTests.map(test => (
                   <th key={test} className="py-4 px-2 font-black text-muted-foreground uppercase tracking-widest text-xs text-center">{test}</th>
                 ))}
+                <th className="py-4 px-3 font-black text-muted-foreground uppercase tracking-widest text-xs text-center border-l border-border">Trajectory</th>
               </tr>
             </thead>
             <tbody>
@@ -120,6 +180,33 @@ export function ConsolidatedReport({
                       </td>
                     )
                   })}
+                  <td className="py-3 px-3 text-center border-l border-border">
+                    {(() => {
+                      const diff = getStudentTrajectory(student)
+                      if (diff === null) {
+                        return <span className="text-zinc-600 font-medium text-xs">—</span>
+                      }
+                      if (diff > 0) {
+                        return (
+                          <span className="inline-flex items-center gap-0.5 text-emerald-400 font-black text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shadow-sm">
+                            ▲ +{diff}%
+                          </span>
+                        )
+                      }
+                      if (diff < 0) {
+                        return (
+                          <span className="inline-flex items-center gap-0.5 text-rose-400 font-black text-xs bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full shadow-sm">
+                            ▼ {diff}%
+                          </span>
+                        )
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-0.5 text-zinc-400 font-bold text-xs bg-zinc-500/10 border border-zinc-500/20 px-2 py-0.5 rounded-full">
+                          ━ 0.0%
+                        </span>
+                      )
+                    })()}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -206,11 +293,60 @@ export function ConsolidatedReport({
 
           {/* Graph 2: Comparative Trend Across All Tests Selected */}
           <div id="report-line-chart" className="relative z-10 bg-background/40 backdrop-blur-2xl border border-border rounded-xl p-6 shadow-2xl mt-4">
-            <h3 className="text-xl font-black text-muted-foreground uppercase tracking-widest mb-6 text-center flex items-center justify-center gap-4">
+            <h3 className="text-xl font-black text-muted-foreground uppercase tracking-widest mb-3 text-center flex items-center justify-center gap-4">
               <span className="w-12 h-1 bg-gradient-to-r from-transparent to-amber-500/50 rounded-full"></span>
               Comparative Performance Trend (All Tests)
               <span className="w-12 h-1 bg-gradient-to-l from-transparent to-rose-500/50 rounded-full"></span>
             </h3>
+
+            {/* Performance Band Quick Filters */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => setSelectedPerformanceBand('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedPerformanceBand === 'all'
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                All Students ({bandCounts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedPerformanceBand('top')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedPerformanceBand === 'top'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : 'bg-card border border-border text-muted-foreground hover:text-emerald-400'
+                }`}
+              >
+                Top Tier ≥70% ({bandCounts.top})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedPerformanceBand('mid')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedPerformanceBand === 'mid'
+                    ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
+                    : 'bg-card border border-border text-muted-foreground hover:text-amber-400'
+                }`}
+              >
+                Middle 40-69% ({bandCounts.mid})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedPerformanceBand('low')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedPerformanceBand === 'low'
+                    ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+                    : 'bg-card border border-border text-muted-foreground hover:text-rose-400'
+                }`}
+              >
+                Needs Support &lt;40% ({bandCounts.low})
+              </button>
+            </div>
+
             <div className="w-full h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendChartData} margin={{ top: 25, right: 30, bottom: 20, left: 10 }}>
@@ -235,6 +371,9 @@ export function ConsolidatedReport({
                     contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '16px', color: '#fff', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)', padding: '16px' }}
                     itemStyle={{ fontWeight: 'bold', fontSize: '14px', padding: '4px 0' }}
                     formatter={(val: number, name: string, item: any) => {
+                      if (name === 'Class Average') {
+                        return [`${val}% (Benchmark)`, 'Class Average']
+                      }
                       const studentId = item.dataKey
                       const isAbsent = item.payload?.[`${studentId}_isAbsent`]
                       if (isAbsent) {
@@ -243,8 +382,30 @@ export function ConsolidatedReport({
                       return [`${val}%`, name]
                     }}
                   />
-                  {students.map((student, idx) => {
-                    const color = getStudentColor(idx, students.length)
+
+                  {/* Feature 1: Class Average Benchmark Line */}
+                  <Line 
+                    key="class_average"
+                    type="monotone" 
+                    dataKey="class_average" 
+                    name="Class Average" 
+                    stroke="#f59e0b" 
+                    strokeWidth={3.5} 
+                    strokeDasharray="6 6"
+                    dot={{ fill: '#f59e0b', r: 5, strokeWidth: 2, stroke: '#ffffff' }} 
+                    activeDot={{ r: 8, fill: '#f59e0b', stroke: '#ffffff', strokeWidth: 2 }} 
+                    connectNulls
+                    isAnimationActive={false}
+                    strokeOpacity={activeFocusId ? 0.35 : 1}
+                  />
+
+                  {/* Feature 2: Individual Student Lines with Focus Highlighting */}
+                  {visibleStudents.map((student) => {
+                    const originalIdx = students.findIndex(s => s.id === student.id)
+                    const color = getStudentColor(originalIdx, students.length)
+                    const isFocused = activeFocusId === student.id
+                    const isAnyFocused = activeFocusId !== null
+
                     return (
                       <Line 
                         key={student.id}
@@ -252,8 +413,15 @@ export function ConsolidatedReport({
                         dataKey={student.id} 
                         name={student.name} 
                         stroke={color} 
-                        strokeWidth={4} 
-                        dot={{ fill: '#09090b', r: 6, strokeWidth: 3, stroke: color }} 
+                        strokeWidth={isFocused ? 5 : isAnyFocused ? 1.5 : 3.5} 
+                        strokeOpacity={isFocused ? 1 : isAnyFocused ? 0.15 : 0.85}
+                        dot={{ 
+                          fill: isFocused ? color : '#09090b', 
+                          r: isFocused ? 7 : 5, 
+                          strokeWidth: isFocused ? 3 : 2, 
+                          stroke: color,
+                          opacity: isFocused ? 1 : isAnyFocused ? 0.2 : 0.9
+                        }} 
                         activeDot={{ r: 10, fill: color, stroke: '#fff', strokeWidth: 3 }} 
                         connectNulls
                         isAnimationActive={false}
@@ -263,16 +431,53 @@ export function ConsolidatedReport({
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            {/* Custom Legend to Match Lines */}
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 mt-4 px-4">
-              {students.map((student, idx) => (
-                <div key={student.id} className="flex items-center gap-2">
-                  <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: getStudentColor(idx, students.length) }}></div>
-                  <span className="text-muted-foreground font-bold text-xs tracking-wide">
-                    #{student.rank} {student.name} <span className="text-muted-foreground">({student.percentage}%)</span>
-                  </span>
-                </div>
-              ))}
+
+            {/* Custom Legend to Match Lines with Class Average & Focus Interaction */}
+            <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-3 mt-5 px-4">
+              {/* Class Average Legend Chip */}
+              <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full shadow-sm">
+                <div className="w-5 h-0 border-t-2 border-dashed border-amber-400 shrink-0"></div>
+                <span className="text-amber-300 font-black text-xs tracking-wide">
+                  Class Average (Benchmark)
+                </span>
+              </div>
+
+              {/* Student Legend Chips */}
+              {visibleStudents.map((student) => {
+                const originalIdx = students.findIndex(s => s.id === student.id)
+                const color = getStudentColor(originalIdx, students.length)
+                const isFocused = activeFocusId === student.id
+                const isLocked = lockedStudentId === student.id
+
+                return (
+                  <div 
+                    key={student.id} 
+                    className={`flex items-center gap-2 px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-200 select-none ${
+                      isFocused 
+                        ? 'bg-card border border-primary/50 shadow-md scale-105' 
+                        : activeFocusId 
+                        ? 'opacity-30 hover:opacity-100 hover:bg-card/50' 
+                        : 'hover:bg-card/50'
+                    }`}
+                    onMouseEnter={() => setHoveredStudentId(student.id)}
+                    onMouseLeave={() => setHoveredStudentId(null)}
+                    onClick={() => setLockedStudentId(prev => prev === student.id ? null : student.id)}
+                    title={isLocked ? 'Click to unlock' : 'Click to lock focus'}
+                  >
+                    <div 
+                      className="w-3.5 h-3.5 rounded-full shrink-0 transition-transform" 
+                      style={{ 
+                        backgroundColor: color,
+                        boxShadow: isFocused ? `0 0 10px ${color}` : 'none'
+                      }}
+                    ></div>
+                    <span className={`font-bold text-xs tracking-wide ${isFocused ? 'text-foreground font-black' : 'text-muted-foreground'}`}>
+                      #{student.rank} {student.name} <span className={isFocused ? 'text-primary font-black' : 'text-muted-foreground'}>({student.percentage}%)</span>
+                    </span>
+                    {isLocked && <span className="text-[10px] text-primary">📌</span>}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
