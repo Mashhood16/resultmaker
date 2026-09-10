@@ -52,9 +52,10 @@ interface LeaderboardViewProps {
   availableSubjects: { id: string, name: string }[]
   lastTestName?: string | null
   allClassTests?: string[]
+  isReadOnly?: boolean
 }
 
-export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests }: LeaderboardViewProps) {
+export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests, isReadOnly = false }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
   const [selectedTestFilter, setSelectedTestFilter] = useState<string>('all')
   const [expandedRow, setExpandedRow] = useState<string | null>(null)

@@ -36,14 +36,6 @@ export async function fetchComprehensiveScores(
   selectedTests: string[],
   selectedSubjects?: string[]
 ): Promise<ComprehensiveStudentScore[]> {
-  const session = await auth()
-  if (!session?.user) throw new Error('Unauthorized')
-  const role = session.user.role
-  if (role === 'student' || role === 'admin') throw new Error('Forbidden: Access denied')
-
-  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
-  if (!schoolId) throw new Error('Unauthorized')
-
   if (!classId || typeof classId !== 'string' || classId.length > 100) {
     throw new Error('Invalid class ID')
   }
@@ -60,16 +52,41 @@ export async function fetchComprehensiveScores(
     throw new Error('Invalid subject filter list.')
   }
 
-  if (role === 'teacher' && !session.user.classIds?.includes(classId)) {
-    throw new Error('Forbidden: You do not have access to this class')
+  const session = await auth()
+  let schoolId: string | undefined
+
+  if (session?.user) {
+    const role = session.user.role
+    if (role === 'admin') throw new Error('Forbidden: Access denied')
+
+    if (role === 'school') {
+      schoolId = session.user.id
+    } else if (role === 'teacher' || role === 'student') {
+      schoolId = session.user.schoolId
+      if (!session.user.classIds?.includes(classId)) {
+        throw new Error('Forbidden: You do not have access to this class')
+      }
+    }
+  } else {
+    // Public unauthenticated access for shared public leaderboard
+    const classRecord = await prisma.class.findUnique({
+      where: { id: classId },
+      select: { id: true, schoolId: true }
+    })
+    if (!classRecord) throw new Error('Class not found')
+    schoolId = classRecord.schoolId
   }
+
+  if (!schoolId) throw new Error('School context not found')
 
   // Fetch the students with their scores for the selected tests and subjects
   const students = await prisma.student.findMany({
     where: {
       id: { in: studentIds },
       classId: classId,
-      class: { schoolId }
+      class: { schoolId },
+      // For public unauthenticated requests or students, only include students visible in leaderboard
+      ...(!session?.user || session.user.role === 'student' ? { showInLeaderboard: true } : {})
     },
     include: {
       class: true,

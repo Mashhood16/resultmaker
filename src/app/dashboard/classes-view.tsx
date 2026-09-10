@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Users, Trophy, ArrowRight, BookOpen } from 'lucide-react'
+import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
 
 type ClassData = {
   id: string
@@ -31,11 +32,18 @@ export function ClassesView({ classes }: { classes: ClassData[] }) {
               {/* Border highlight */}
               <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
               
-              <CardHeader className="relative z-10 pb-2">
+              <CardHeader className="relative z-10 pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-4xl font-black text-foreground group-hover:text-primary transition-all duration-500 flex items-center gap-3">
                   <BookOpen className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors duration-500" />
                   {c.name}
                 </CardTitle>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ShareLeaderboardModal 
+                    classId={c.id} 
+                    className={c.name}
+                    variant="icon"
+                  />
+                </div>
               </CardHeader>
               <CardContent className="relative z-10 pt-2">
                 <div className="flex items-center text-muted-foreground mb-6 bg-background w-fit px-3 py-1.5 rounded-full border border-border shadow-inner">

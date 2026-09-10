@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LeaderboardContent } from '../../../[classId]/leaderboard-content'
+import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
 import { Suspense } from 'react'
 import { auth } from '@/auth'
 
@@ -94,12 +95,19 @@ export default async function ClassLeaderboardPage({
             </h1>
             <p className="text-muted-foreground">Real-time academic performance rankings</p>
           </div>
-          <Link href="/dashboard">
-            <Button variant="outline" className="border-border bg-card text-foreground hover:bg-accent">
-              <Home className="w-4 h-4 mr-2" />
-              Dashboard
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <ShareLeaderboardModal
+              classId={classData.id}
+              className={classData.name}
+              buttonText="Share Public Link"
+            />
+            <Link href="/dashboard">
+              <Button variant="outline" className="border-border bg-card text-foreground hover:bg-accent">
+                <Home className="w-4 h-4 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
+          </div>
         </header>
 
         {/* Live Tests Banner */}
