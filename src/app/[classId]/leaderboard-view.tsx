@@ -692,7 +692,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
         }}
       >
         {selectedStudentForModal && (
-          <DialogContent className="w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-8 bg-card border-border text-foreground rounded-2xl shadow-2xl space-y-6">
+          <DialogContent className="sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-card border-border text-foreground rounded-2xl shadow-2xl space-y-6">
             <DialogHeader className="space-y-3 pb-4 border-b border-border">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
