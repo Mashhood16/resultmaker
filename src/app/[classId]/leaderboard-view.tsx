@@ -55,6 +55,68 @@ interface LeaderboardViewProps {
   isReadOnly?: boolean
 }
 
+function StudentPerformanceChart({ breakdown }: { breakdown: Array<{ testName: string, percentage: number }> }) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    // Wait for row expand animation to settle so ResponsiveContainer measures correct container dimensions
+    const timer = setTimeout(() => setMounted(true), 60)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (breakdown.length <= 1) {
+    return (
+      <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm text-center px-4">
+        Need at least 2 tests to show progress trend.
+      </div>
+    )
+  }
+
+  if (!mounted) {
+    return <div className="w-full h-[220px] sm:h-[240px] animate-pulse bg-card/40 rounded-xl" />
+  }
+
+  return (
+    <div className="w-full h-[220px] sm:h-[240px] min-w-0">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={180}>
+        <LineChart data={breakdown} margin={{ top: 10, right: 10, bottom: 5, left: -20 }}>
+          <CartesianGrid stroke="#333" strokeDasharray="5 5" vertical={false} />
+          <XAxis 
+            dataKey="testName" 
+            stroke="#666" 
+            tick={{ fill: '#888', fontSize: 10 }} 
+            axisLine={false} 
+            tickLine={false}
+            tickFormatter={(val) => typeof val === 'string' && val.length > 8 ? `${val.slice(0, 7)}…` : val}
+          />
+          <YAxis 
+            stroke="#666" 
+            tick={{ fill: '#888', fontSize: 10 }} 
+            axisLine={false} 
+            tickLine={false} 
+            domain={[0, 100]}
+            tickFormatter={(val) => `${val}%`}
+          />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
+            itemStyle={{ color: '#34d399', fontWeight: 'bold' }}
+            formatter={(val: any) => [`${val}%`, 'Score']}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="percentage" 
+            stroke="#34d399" 
+            strokeWidth={3} 
+            dot={{ fill: '#34d399', r: 4 }} 
+            activeDot={{ r: 6, fill: '#fff' }} 
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
 export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests, isReadOnly = false }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
   const [selectedTestFilter, setSelectedTestFilter] = useState<string>('all')
@@ -608,8 +670,8 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                       {expandedRow === student.id && (
                         <TableRow className="bg-background/60 border-border">
                           <TableCell colSpan={8} className="p-0 border-b-0">
-                            <div className="px-6 md:px-16 py-8 animate-in slide-in-from-top-4 fade-in duration-300 flex flex-col lg:flex-row gap-8">
-                              <div className="flex-1">
+                            <div className="px-3 sm:px-8 md:px-12 py-5 sm:py-8 animate-in slide-in-from-top-4 fade-in duration-300 flex flex-col lg:flex-row gap-6 lg:gap-8 w-full min-w-0">
+                              <div className="w-full lg:flex-1 min-w-0">
                                 <h4 className="text-xs font-black text-primary/70 mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
                                   <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                                   Test Breakdown
@@ -694,25 +756,9 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                                 )}
                                 </div>
                               </div>
-                              <div className="flex-1 min-w-[300px] h-[300px] bg-background/40 rounded-2xl p-6 border border-border">
-                                <h4 className="text-xs font-black text-blue-500/70 mb-6 uppercase tracking-[0.2em]">Performance Trend</h4>
-                                {student.breakdown.length > 1 ? (
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={student.breakdown} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                      <Line type="monotone" dataKey="percentage" stroke="#34d399" strokeWidth={3} dot={{ fill: '#34d399', r: 4 }} activeDot={{ r: 6, fill: '#fff' }} />
-                                      <CartesianGrid stroke="#333" strokeDasharray="5 5" vertical={false} />
-                                      <XAxis dataKey="testName" stroke="#666" tick={{ fill: '#888', fontSize: 12 }} axisLine={false} tickLine={false} />
-                                      <YAxis stroke="#666" tick={{ fill: '#888', fontSize: 12 }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                                      <Tooltip 
-                                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
-                                        itemStyle={{ color: '#34d399', fontWeight: 'bold' }}
-                                        formatter={(val: any) => [`${val}%`, 'Score']}
-                                      />
-                                    </LineChart>
-                                  </ResponsiveContainer>
-                                ) : (
-                                  <div className="h-full flex items-center justify-center text-muted-foreground text-sm text-center px-8">Need at least 2 tests to show progress trend.</div>
-                                )}
+                              <div className="w-full lg:flex-1 min-w-0 bg-background/40 rounded-2xl p-4 sm:p-6 border border-border flex flex-col">
+                                <h4 className="text-xs font-black text-blue-500/70 mb-4 uppercase tracking-[0.2em]">Performance Trend</h4>
+                                <StudentPerformanceChart breakdown={student.breakdown} />
                               </div>
                             </div>
                           </TableCell>
