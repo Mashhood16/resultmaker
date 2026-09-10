@@ -405,15 +405,6 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           </Badge>
         </div>
       )}
-      {selectedTestFilter === 'all' && lastTestName && (
-        <div className="flex justify-center pt-2">
-          <Badge variant="outline" className="bg-card/70 border-border text-muted-foreground px-3.5 py-1 text-xs font-medium flex items-center gap-2">
-            <span>Overall Leaderboard</span>
-            <span className="text-zinc-600">•</span>
-            <span className="text-primary font-semibold">Rank movement shows change after adding {lastTestName}</span>
-          </Badge>
-        </div>
-      )}
 
       {/* Podium Display - Glassmorphism & Metallic Aesthetic */}
       {top3.length > 0 && (
