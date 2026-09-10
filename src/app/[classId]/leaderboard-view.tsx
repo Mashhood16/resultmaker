@@ -120,7 +120,8 @@ function StudentPerformanceChart({ breakdown }: { breakdown: Array<{ testName: s
 export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests, isReadOnly = false }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
   const [selectedTestFilter, setSelectedTestFilter] = useState<string>('all')
-  const [expandedRow, setExpandedRow] = useState<string | null>(null)
+  const [selectedStudentForModal, setSelectedStudentForModal] = useState<StudentScore | null>(null)
+  const [expandedTestDetail, setExpandedTestDetail] = useState<string | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
   const [isExporting, setIsExporting] = useState(false)
   
@@ -569,7 +570,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                     <React.Fragment key={student.id}>
                       <TableRow 
                         className="border-border hover:bg-card transition-all cursor-pointer group"
-                        onClick={() => setExpandedRow(expandedRow === student.id ? null : student.id)}
+                        onClick={() => { setSelectedStudentForModal(student); setExpandedTestDetail(null); }}
                       >
                         <TableCell className="pl-6" onClick={(e) => toggleStudent(student.id, e)}>
                           <input type="checkbox" checked={selectedStudents.has(student.id)} readOnly className="w-4 h-4 rounded border-zinc-500 bg-accent accent-primary cursor-pointer pointer-events-none" />
@@ -667,103 +668,6 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                           {getTierBadge(student.percentage, student.isAbsent)}
                         </TableCell>
                       </TableRow>
-                      {expandedRow === student.id && (
-                        <TableRow className="bg-background/60 border-border">
-                          <TableCell colSpan={8} className="p-0 border-b-0">
-                            <div className="px-3 sm:px-8 md:px-12 py-5 sm:py-8 animate-in slide-in-from-top-4 fade-in duration-300 flex flex-col lg:flex-row gap-6 lg:gap-8 w-full min-w-0">
-                              <div className="w-full lg:flex-1 min-w-0">
-                                <h4 className="text-xs font-black text-primary/70 mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                                  Test Breakdown
-                                </h4>
-                                <div className="grid gap-3">
-                                  {student.breakdown.map((test, idx) => {
-                                    const hasDetails = test.annotatedImage || test.feedback || test.answers || (test.questionMarks && test.questionMarks.length > 0);
-                                    const rowContent = (
-                                      <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 bg-card p-4 rounded-xl border border-border hover:border-primary hover:bg-card transition-all group/test shadow-sm ${hasDetails ? 'cursor-pointer' : ''}`}>
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-bold text-foreground group-hover/test:text-foreground transition-colors">{test.testName}</span>
-                                          {hasDetails && (
-                                            <Badge variant="outline" className="text-xs ml-2 text-primary border-primary/30">View Details</Badge>
-                                          )}
-                                        </div>
-                                        <div className="flex w-full sm:w-auto justify-between sm:justify-end gap-4 md:gap-8 text-sm items-center">
-                                          <span className="text-muted-foreground font-medium w-24 text-right tracking-wide">
-                                            {test.isAbsent ? <Badge variant="outline" className="text-destructive border-red-900/50 bg-red-950/40">Absent</Badge> : <><span className="text-foreground">{test.obtained}</span> <span className="text-zinc-700">/</span> {test.total}</>}
-                                          </span>
-                                          <span className="font-black text-blue-400 w-16 text-right text-base drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]">
-                                            {test.isAbsent ? '0%' : `${test.percentage}%`}
-                                          </span>
-                                          <div className="w-20 text-right hidden sm:block">
-                                            <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-card/50 text-muted-foreground border-border">Avg {test.classAverage}%</Badge>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    );
-
-                                    return (
-                                      <React.Fragment key={idx}>
-                                        {hasDetails ? (
-                                          <Dialog>
-                                            <DialogTrigger asChild>
-                                              {rowContent}
-                                            </DialogTrigger>
-                                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                              <DialogHeader>
-                                                <DialogTitle>{test.testName} - Submission Details</DialogTitle>
-                                              </DialogHeader>
-                                              <div className="mt-4 space-y-6">
-                                                {test.feedback && (
-                                                  <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
-                                                    <h5 className="font-semibold text-primary mb-2">Teacher's Feedback</h5>
-                                                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{test.feedback}</p>
-                                                  </div>
-                                                )}
-                                                
-                                                {test.questionMarks && test.questionMarks.length > 0 && (
-                                                  <div className="bg-card rounded-xl p-4 border border-border">
-                                                    <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Marks Breakdown</h5>
-                                                    <div className="flex flex-wrap gap-2">
-                                                      {test.questionMarks.map((qm: string, i: number) => (
-                                                        <Badge key={i} variant="secondary" className="px-3 py-1 bg-secondary/50 text-sm">
-                                                          Q{i + 1}: <span className="ml-2 font-bold text-primary">{qm || '0'}</span>
-                                                        </Badge>
-                                                      ))}
-                                                    </div>
-                                                  </div>
-                                                )}
-
-                                                {test.annotatedImage ? (
-                                                  <div className="flex justify-center bg-zinc-900 rounded-xl p-4 overflow-hidden border border-border">
-                                                    <img src={test.annotatedImage} alt="Graded Test" className="max-w-full h-auto object-contain rounded-lg shadow-xl" />
-                                                  </div>
-                                                ) : test.answers ? (
-                                                  <div className="bg-card rounded-xl p-6 border border-border overflow-hidden prose prose-invert max-w-none text-foreground">
-                                                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(test.answers) }} />
-                                                  </div>
-                                                ) : (
-                                                  <div className="text-muted-foreground text-sm italic text-center p-8 bg-muted/50 rounded-xl">No test submission found.</div>
-                                                )}
-                                              </div>
-                                            </DialogContent>
-                                          </Dialog>
-                                        ) : rowContent}
-                                      </React.Fragment>
-                                    )
-                                  })}
-                                {student.breakdown.length === 0 && (
-                                  <div className="text-muted-foreground text-sm italic p-4 bg-card rounded-xl border border-border text-center">No tests recorded yet.</div>
-                                )}
-                                </div>
-                              </div>
-                              <div className="w-full lg:flex-1 min-w-0 bg-background/40 rounded-2xl p-4 sm:p-6 border border-border flex flex-col">
-                                <h4 className="text-xs font-black text-blue-500/70 mb-4 uppercase tracking-[0.2em]">Performance Trend</h4>
-                                <StudentPerformanceChart breakdown={student.breakdown} />
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
                     </React.Fragment>
                   ))
                 )}
@@ -772,6 +676,203 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           </div>
         </CardContent>
       </Card>
+
+      {/* Student Details Popup Modal */}
+      <Dialog 
+        open={!!selectedStudentForModal} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedStudentForModal(null)
+            setExpandedTestDetail(null)
+          }
+        }}
+      >
+        {selectedStudentForModal && (
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-card border-border text-foreground rounded-2xl shadow-2xl space-y-6">
+            <DialogHeader className="space-y-3 pb-4 border-b border-border">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {selectedStudentForModal.rank === 1 && (
+                    <div className="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center font-black border border-yellow-500/40 shadow-[0_0_15px_rgba(250,204,21,0.3)] text-lg shrink-0">
+                      1
+                    </div>
+                  )}
+                  {selectedStudentForModal.rank === 2 && (
+                    <div className="w-10 h-10 rounded-full bg-zinc-300/20 text-muted-foreground flex items-center justify-center font-black border border-zinc-300/40 text-lg shrink-0">
+                      2
+                    </div>
+                  )}
+                  {selectedStudentForModal.rank === 3 && (
+                    <div className="w-10 h-10 rounded-full bg-amber-600/20 text-amber-500 flex items-center justify-center font-black border border-amber-600/40 text-lg shrink-0">
+                      3
+                    </div>
+                  )}
+                  {selectedStudentForModal.rank > 3 && (
+                    <div className="w-10 h-10 rounded-full bg-background/60 text-muted-foreground flex items-center justify-center font-bold text-sm border border-border shrink-0">
+                      #{selectedStudentForModal.rank}
+                    </div>
+                  )}
+                  <div>
+                    <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+                      {selectedStudentForModal.name}
+                    </DialogTitle>
+                    <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      {selectedStudentForModal.rollNumber && (
+                        <span>Roll No: <strong className="text-foreground">{selectedStudentForModal.rollNumber}</strong></span>
+                      )}
+                      {selectedStudentForModal.section && (
+                        <>
+                          <span>•</span>
+                          <span>Section: <strong className="text-foreground">{selectedStudentForModal.section}</strong></span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">Overall Score</div>
+                    <div className="text-xl sm:text-2xl font-black text-primary">
+                      {selectedStudentForModal.isAbsent ? '0%' : `${selectedStudentForModal.percentage}%`}
+                    </div>
+                  </div>
+                  <div>
+                    {getTierBadge(selectedStudentForModal.percentage, selectedStudentForModal.isAbsent)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Badges List */}
+              {selectedStudentForModal.badges && selectedStudentForModal.badges.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  {selectedStudentForModal.badges.map((b, idx) => (
+                    <span 
+                      key={idx} 
+                      title={b.description} 
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary font-medium"
+                    >
+                      <span>{b.icon}</span>
+                      <span>{b.name}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </DialogHeader>
+
+            {/* SECTION 1: Test Breakdown UP */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  Test Breakdown
+                </h4>
+                <span className="text-xs text-muted-foreground">
+                  {selectedStudentForModal.breakdown.length} {selectedStudentForModal.breakdown.length === 1 ? 'Test' : 'Tests'}
+                </span>
+              </div>
+
+              <div className="grid gap-2.5">
+                {selectedStudentForModal.breakdown.map((test, idx) => {
+                  const hasDetails = Boolean(test.annotatedImage || test.feedback || test.answers || (test.questionMarks && test.questionMarks.length > 0));
+                  const isExpanded = expandedTestDetail === test.testName;
+
+                  return (
+                    <div 
+                      key={idx} 
+                      className="bg-card/70 border border-border rounded-xl p-3 sm:p-4 transition-all hover:border-primary/40 shadow-sm space-y-3"
+                    >
+                      <div 
+                        className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 ${hasDetails ? 'cursor-pointer select-none' : ''}`}
+                        onClick={() => hasDetails && setExpandedTestDetail(isExpanded ? null : test.testName)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-foreground text-sm sm:text-base">{test.testName}</span>
+                          {hasDetails && (
+                            <Badge variant="outline" className="text-[10px] text-primary border-primary/30 py-0 px-1.5">
+                              {isExpanded ? 'Hide Details' : 'View Details'}
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex w-full sm:w-auto justify-between sm:justify-end gap-3 sm:gap-6 text-sm items-center">
+                          <span className="text-muted-foreground font-medium text-xs sm:text-sm">
+                            {test.isAbsent ? (
+                              <Badge variant="outline" className="text-destructive border-red-900/50 bg-red-950/40 text-xs">Absent</Badge>
+                            ) : (
+                              <><span className="text-foreground font-semibold">{test.obtained}</span> <span className="text-zinc-600">/</span> {test.total}</>
+                            )}
+                          </span>
+                          <span className="font-black text-blue-400 text-sm sm:text-base min-w-[50px] text-right">
+                            {test.isAbsent ? '0%' : `${test.percentage}%`}
+                          </span>
+                          {test.classAverage !== undefined && (
+                            <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-muted/40 text-muted-foreground border-border">
+                              Avg {test.classAverage}%
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Inline Submission Details for this test */}
+                      {hasDetails && isExpanded && (
+                        <div className="pt-3 border-t border-border/60 space-y-4 animate-in fade-in duration-200">
+                          {test.feedback && (
+                            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3.5">
+                              <h5 className="text-xs font-bold text-primary mb-1.5">Teacher's Feedback</h5>
+                              <p className="text-xs sm:text-sm text-foreground leading-relaxed whitespace-pre-wrap">{test.feedback}</p>
+                            </div>
+                          )}
+
+                          {test.questionMarks && test.questionMarks.length > 0 && (
+                            <div className="bg-muted/30 rounded-xl p-3.5 border border-border">
+                              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Marks Breakdown</h5>
+                              <div className="flex flex-wrap gap-1.5">
+                                {test.questionMarks.map((qm: string, qIdx: number) => (
+                                  <Badge key={qIdx} variant="secondary" className="px-2.5 py-0.5 text-xs">
+                                    Q{qIdx + 1}: <span className="ml-1 font-bold text-primary">{qm || '0'}</span>
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {test.annotatedImage ? (
+                            <div className="flex justify-center bg-zinc-950 rounded-xl p-3 border border-border overflow-hidden">
+                              <img src={test.annotatedImage} alt="Graded Test" className="max-w-full h-auto object-contain rounded-lg shadow-lg" />
+                            </div>
+                          ) : test.answers ? (
+                            <div className="bg-muted/20 rounded-xl p-4 border border-border overflow-hidden prose prose-invert max-w-none text-xs sm:text-sm text-foreground">
+                              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(test.answers) }} />
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {selectedStudentForModal.breakdown.length === 0 && (
+                  <div className="text-muted-foreground text-sm italic p-4 bg-muted/20 rounded-xl border border-border text-center">
+                    No tests recorded yet.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* SECTION 2: Performance Trend DOWN */}
+            <div className="space-y-3 pt-2">
+              <h4 className="text-xs font-black text-blue-500/80 uppercase tracking-[0.2em] flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                Performance Trend
+              </h4>
+              <div className="bg-background/50 rounded-2xl p-4 sm:p-5 border border-border">
+                <StudentPerformanceChart breakdown={selectedStudentForModal.breakdown} />
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
 
       {/* Hidden Consolidated Report for PDF Export */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', zIndex: -1 }}>
