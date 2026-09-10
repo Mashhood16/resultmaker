@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/navbar";
 import { auth } from "@/auth";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -41,6 +42,7 @@ export default async function RootLayout({
           <Navbar session={session} />
           {children}
           <Toaster theme="system" />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
