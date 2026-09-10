@@ -623,8 +623,12 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                         </TableCell>
                         <TableCell className="py-5">
                           <div className="flex items-center gap-4">
-                            <div className="w-6 h-6 rounded-full bg-accent/50 flex items-center justify-center group-hover:bg-zinc-700 transition-colors border border-border shrink-0">
-                              {expandedRow === student.id ? <ChevronDown className="w-4 h-4 text-primary" /> : <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground" />}
+                            <div className="w-6 h-6 rounded-full bg-accent/50 flex items-center justify-center group-hover:bg-primary/20 transition-colors border border-border shrink-0">
+                              {selectedStudentForModal?.id === student.id ? (
+                                <ChevronDown className="w-4 h-4 text-primary" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                              )}
                             </div>
                             <div className="flex flex-col gap-1">
                               <span className="font-bold text-foreground text-base tracking-wide">{student.name}</span>
