@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { UploadCloud, Trash2, Search, Loader2, Users, Pencil, Layers, X, Eye, EyeOff, Download } from 'lucide-react'
-import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction, toggleStudentVisibilityAction, bulkToggleVisibilityAction, deleteAllStudentsInClassAction } from './student-actions'
+import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction, toggleStudentVisibilityAction, bulkToggleVisibilityAction, deleteAllStudentsInClassAction, uploadSpecificClassRosterAction } from './student-actions'
 import { toast } from 'sonner'
 import { Student, Class } from '@prisma/client'
 import * as xlsx from 'xlsx'
@@ -93,6 +93,38 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const fastAppendInputRef = useRef<HTMLInputElement>(null)
+  const [isFastAppending, setIsFastAppending] = useState(false)
+
+  async function handleFastAppend(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!selectedClass || selectedClass.trim() === '') {
+      toast.error('Please specify a class name first (e.g., Class 6)')
+      return
+    }
+
+    setIsFastAppending(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('className', selectedClass)
+
+      const result = await uploadSpecificClassRosterAction(formData)
+      if (result.success) {
+        toast.success(result.message)
+        window.location.reload()
+      } else {
+        toast.error(result.error)
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+    } finally {
+      setIsFastAppending(false)
+      if (fastAppendInputRef.current) fastAppendInputRef.current.value = ''
     }
   }
 
@@ -298,7 +330,15 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
             ref={fileInputRef}
             className="hidden"
             onChange={handleFileUpload}
-            disabled={isUploading}
+            disabled={isUploading || isFastAppending}
+          />
+          <input
+            type="file"
+            accept=".xlsx, .xls, .csv"
+            ref={fastAppendInputRef}
+            className="hidden"
+            onChange={handleFastAppend}
+            disabled={isUploading || isFastAppending}
           />
           <Button 
             variant="outline"
@@ -309,12 +349,22 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
             Template
           </Button>
           <Button 
+            onClick={() => fastAppendInputRef.current?.click()}
+            disabled={isFastAppending || !selectedClass.trim()}
+            variant="secondary"
+            className="font-bold whitespace-nowrap h-10"
+            title="Fast append requires only Name and Roll Number columns. Ideal for avoiding timeouts on large uploads."
+          >
+            {isFastAppending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
+            Fast Append to Class
+          </Button>
+          <Button 
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold whitespace-nowrap h-10"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold whitespace-nowrap h-10 hidden lg:flex"
           >
             {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
-            Upload Master Roster
+            Upload Master
           </Button>
         </div>
       </div>

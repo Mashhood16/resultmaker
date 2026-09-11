@@ -475,3 +475,77 @@ export async function deleteAllStudentsInClassAction(className: string) {
     return { success: false, error: e.message }
   }
 }
+
+export async function uploadSpecificClassRosterAction(formData: FormData) {
+  const file = formData.get('file') as File | null;
+  const className = formData.get('className') as string | null;
+
+  if (!file || !className || className.trim() === '') {
+    return { success: false, error: 'File and valid class name are required.' };
+  }
+
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(className.trim());
+    const schoolId = authRes.schoolId;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const workbook = xlsx.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    const rawData = xlsx.utils.sheet_to_json(worksheet, { blankrows: false });
+    const studentsToCreate = [];
+    const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype'];
+
+    const targetClass = await prisma.class.upsert({
+      where: { name_schoolId: { name: className.trim(), schoolId } },
+      update: {},
+      create: { name: className.trim(), schoolId }
+    });
+
+    for (const rawRow of rawData as any[]) {
+      const row: Record<string, any> = Object.create(null);
+      for (const [key, value] of Object.entries(rawRow)) {
+        const cleanKey = key.toLowerCase().trim();
+        if (DANGEROUS_KEYS.includes(cleanKey)) continue;
+        row[cleanKey] = value;
+      }
+
+      function findKey(r: Record<string, any>, possibleKeys: string[]) {
+        const keys = Object.keys(r);
+        return keys.find(k => possibleKeys.some(pk => k.includes(pk)));
+      }
+
+      const nameKey = findKey(row, ['name', 'student']);
+      const rollNoKey = findKey(row, ['roll', 'r.no', 'registration', 'reg']);
+      
+      const name = nameKey ? String(row[nameKey]).trim() : '';
+      const rollNumber = rollNoKey ? String(row[rollNoKey]).trim() : '';
+
+      if (name) {
+        studentsToCreate.push({
+          name,
+          rollNumber: rollNumber || null,
+          classId: targetClass.id
+        });
+      }
+    }
+
+    if (studentsToCreate.length === 0) {
+      return { success: false, error: 'No valid students found. Make sure your Excel sheet has a "Name" column.' };
+    }
+
+    await prisma.student.createMany({
+      data: studentsToCreate,
+      skipDuplicates: true
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true, message: `Successfully appended ${studentsToCreate.length} students to ${className}.` };
+
+  } catch (error: any) {
+    console.error('Fast Upload Error:', error);
+    return { success: false, error: error.message || 'Failed to process the Excel file.' };
+  }
+}
