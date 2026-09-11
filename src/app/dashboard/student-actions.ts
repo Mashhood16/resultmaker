@@ -439,3 +439,39 @@ export async function bulkToggleVisibilityAction(studentIds: string[], isVisible
     return { success: false, error: e.message }
   }
 }
+
+export async function deleteAllStudentsInClassAction(className: string) {
+  try {
+    if (!className || typeof className !== 'string' || className.trim().length === 0 || className.length > 100) {
+      return { success: false, error: 'Invalid class name.' }
+    }
+
+    const authRes = await requireSchoolOrTeacherAccess(className.trim())
+    const schoolId = authRes.schoolId
+
+    const targetClass = await prisma.class.findUnique({
+      where: { name_schoolId: { name: className.trim(), schoolId } }
+    })
+
+    if (!targetClass) {
+      return { success: false, error: 'Class not found.' }
+    }
+
+    if (authRes.isTeacher) {
+      if (!authRes.classIds.includes(targetClass.id)) {
+        return { success: false, error: 'Forbidden: You cannot delete students from a class you are not assigned to.' }
+      }
+    }
+
+    await prisma.student.deleteMany({
+      where: {
+        classId: targetClass.id
+      }
+    })
+
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}

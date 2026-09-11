@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { UploadCloud, Trash2, Search, Loader2, Users, Pencil, Layers, X, Eye, EyeOff, Download } from 'lucide-react'
-import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction, toggleStudentVisibilityAction, bulkToggleVisibilityAction } from './student-actions'
+import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulkMoveStudentsAction, toggleStudentVisibilityAction, bulkToggleVisibilityAction, deleteAllStudentsInClassAction } from './student-actions'
 import { toast } from 'sonner'
 import { Student, Class } from '@prisma/client'
 import * as xlsx from 'xlsx'
@@ -39,6 +39,7 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
     name: '', registrationNumber: '', rollNumber: '', section: '', fatherName: '', fatherPhone: '', fatherCnic: ''
   })
   const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [isDeletingAll, setIsDeletingAll] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -118,6 +119,30 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
       }
     } catch (e) {
       toast.error('Failed to delete student')
+    }
+  }
+
+  async function handleDeleteAllInClass() {
+    if (filterClass === 'all') return
+    const confirmation = prompt(`Type "DELETE" to confirm the deletion of ALL students in class "${filterClass}". All their scores will be permanently lost.`)
+    if (confirmation !== 'DELETE') {
+      if (confirmation !== null) toast.error("Confirmation text did not match. Action cancelled.")
+      return
+    }
+    
+    setIsDeletingAll(true)
+    try {
+      const result = await deleteAllStudentsInClassAction(filterClass)
+      if (result.success) {
+        toast.success(`Successfully deleted all students in class ${filterClass}`)
+        window.location.reload()
+      } else {
+        toast.error(result.error)
+      }
+    } catch (e) {
+      toast.error('Failed to delete all students')
+    } finally {
+      setIsDeletingAll(false)
     }
   }
 
@@ -247,6 +272,17 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
               </SelectContent>
             </Select>
           </div>
+          {filterClass !== 'all' && (
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteAllInClass}
+              disabled={isDeletingAll}
+              className="h-10"
+            >
+              {isDeletingAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete All
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-stretch sm:items-center">
