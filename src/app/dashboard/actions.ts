@@ -67,8 +67,12 @@ export async function uploadMarksAction(formData: FormData) {
       const nameKey = findKey(row, ['name of student', 'student name', 'name', 'student'])
       const sectionKey = findKey(row, ['section', 'sec', 'class section'])
       const rollNoKey = findKey(row, ['roll no.', 'roll no', 'r.no', 's.no', 'roll number'])
-      const obtainedKey = findKey(row, ['obtained marks', 'marks obtained', 'obtained', 'score', 'marks'])
       const totalKey = findKey(row, ['total marks', 'total', 'out of'])
+      
+      // Exclude totalKey from the row before searching for obtained marks to prevent 'total marks' matching 'marks'
+      const rowWithoutTotal = { ...row }
+      if (totalKey) delete rowWithoutTotal[totalKey]
+      const obtainedKey = findKey(rowWithoutTotal, ['obtained marks', 'marks obtained', 'obtained', 'score', 'marks', 'obt'])
 
       const parsedRow = rowSchema.safeParse({
         Name: nameKey ? String(row[nameKey]) : undefined,
