@@ -1,11 +1,12 @@
 import { UploadForm } from '../upload-form'
+import { UploadContactsForm } from '../upload-contacts-form'
 import { ManageDataView } from '../manage-data-view'
 import { TestManagementView } from '../test-management-view'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UploadCloud, Database, Calendar } from 'lucide-react'
+import { UploadCloud, Database, Calendar, Phone } from 'lucide-react'
 
 export default async function UploadsPage() {
   const session = await auth()
@@ -42,6 +43,10 @@ export default async function UploadsPage() {
               <UploadCloud className="w-4 h-4 mr-2" />
               Upload Data
             </TabsTrigger>
+            <TabsTrigger value="contacts" className="rounded-none border-b-2 border-transparent data-active:border-green-500 data-active:!bg-transparent data-active:!text-green-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none">
+              <Phone className="w-4 h-4 mr-2" />
+              Upload Contacts
+            </TabsTrigger>
             <TabsTrigger value="manage" className="rounded-none border-b-2 border-transparent data-active:border-primary data-active:!bg-transparent data-active:!text-primary hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none">
               <Database className="w-4 h-4 mr-2" />
               Manage Scores
@@ -54,6 +59,10 @@ export default async function UploadsPage() {
           
           <TabsContent value="upload" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
             <UploadForm />
+          </TabsContent>
+          
+          <TabsContent value="contacts" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
+            <UploadContactsForm classes={rawClasses} />
           </TabsContent>
           
           <TabsContent value="manage" className="mt-0 focus-visible:ring-0 w-full flex justify-center">

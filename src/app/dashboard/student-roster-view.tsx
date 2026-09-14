@@ -370,15 +370,7 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
             ref={fastAppendInputRef}
             className="hidden"
             onChange={handleFastAppend}
-            disabled={isUploading || isFastAppending || isUploadingContacts}
-          />
-          <input
-            type="file"
-            accept=".xlsx, .xls, .csv"
-            ref={contactInputRef}
-            className="hidden"
-            onChange={handleContactUpload}
-            disabled={isUploading || isFastAppending || isUploadingContacts}
+            disabled={isUploading || isFastAppending}
           />
           <Button 
             variant="outline"
@@ -387,15 +379,6 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
           >
             <Download className="w-4 h-4 mr-2" />
             Template
-          </Button>
-          <Button 
-            onClick={() => contactInputRef.current?.click()}
-            disabled={isUploadingContacts || !selectedClass.trim()}
-            variant="outline"
-            className="font-bold whitespace-nowrap h-10 border-green-500 text-green-500 hover:bg-green-500/10"
-          >
-            {isUploadingContacts ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
-            Upload Contacts
           </Button>
           <Button 
             onClick={() => fastAppendInputRef.current?.click()}
