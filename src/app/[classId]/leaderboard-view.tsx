@@ -34,6 +34,7 @@ type StudentScore = {
   isAbsent: boolean
   breakdown: Array<{
     testName: string
+    testDate?: string | Date | null
     obtained: number
     total: number
     percentage: number
@@ -781,12 +782,22 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                         className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 ${hasDetails ? 'cursor-pointer select-none' : ''}`}
                         onClick={() => hasDetails && setExpandedTestDetail(isExpanded ? null : test.testName)}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                           <span className="font-bold text-foreground text-sm sm:text-base">{test.testName}</span>
+                          {test.testDate && (
+                            <span className="text-xs text-muted-foreground font-medium hidden sm:inline">
+                              • {new Date(test.testDate).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          )}
                           {hasDetails && (
-                            <Badge variant="outline" className="text-[10px] text-primary border-primary/30 py-0 px-1.5">
+                            <Badge variant="outline" className="text-[10px] text-primary border-primary/30 py-0 px-1.5 mt-1 sm:mt-0 w-fit">
                               {isExpanded ? 'Hide Details' : 'View Details'}
                             </Badge>
+                          )}
+                          {test.testDate && (
+                            <span className="text-xs text-muted-foreground font-medium sm:hidden mt-0.5">
+                              {new Date(test.testDate).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
                           )}
                         </div>
 

@@ -76,6 +76,7 @@ model Score {
   studentId     String
   subjectId     String
   testName      String
+  testDate      DateTime?
   marksObtained Float
   totalMarks    Float
   percentage    Float

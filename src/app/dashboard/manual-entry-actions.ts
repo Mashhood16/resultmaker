@@ -58,12 +58,14 @@ export async function uploadManualMarksAction(data: {
           marksObtained: studentData.isAbsent ? 0 : studentData.marksObtained,
           totalMarks: data.totalMarks,
           percentage: Number(percentage.toFixed(2)),
-          isAbsent: studentData.isAbsent
+          isAbsent: studentData.isAbsent,
+          testDate: new Date(data.testDate)
         },
         create: {
           studentId: studentData.id,
           subjectId: subjectRecord.id,
           testName: data.testName,
+          testDate: new Date(data.testDate),
           marksObtained: studentData.isAbsent ? 0 : studentData.marksObtained,
           totalMarks: data.totalMarks,
           percentage: Number(percentage.toFixed(2)),

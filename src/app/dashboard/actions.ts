@@ -190,12 +190,14 @@ export async function uploadMarksAction(formData: FormData) {
             marksObtained: data.marksObtained,
             totalMarks: data.totalMarks,
             percentage: data.percentage,
-            isAbsent: data.isAbsent
+            isAbsent: data.isAbsent,
+            testDate: new Date(testDate)
           },
           create: {
             studentId: student.id,
             subjectId: subjectRecord.id,
             testName: testName,
+            testDate: new Date(testDate),
             marksObtained: data.marksObtained,
             totalMarks: data.totalMarks,
             percentage: data.percentage,

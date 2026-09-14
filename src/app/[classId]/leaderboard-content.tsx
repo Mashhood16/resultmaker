@@ -57,6 +57,7 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
     isAbsent: boolean
     breakdown: Array<{
       testName: string
+      testDate?: Date | null
       obtained: number
       total: number
       percentage: number
@@ -105,6 +106,7 @@ export async function LeaderboardContent({ classId, subjectId, availableSubjects
       // Add to breakdown
       sData.breakdown.push({
         testName: score.testName,
+        testDate: score.testDate,
         obtained: score.marksObtained,
         total: score.totalMarks,
         percentage: Number(score.percentage.toFixed(2)),
