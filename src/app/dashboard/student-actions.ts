@@ -575,7 +575,15 @@ export async function uploadContactsAction(formData: FormData, className: string
         create: { name: className.trim(), schoolId: authRes.schoolId }
       })
 
-      for (const row of rawData as any[]) {
+      const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype']
+      for (const rawRow of rawData as any[]) {
+        const row: Record<string, any> = Object.create(null)
+        for (const [key, value] of Object.entries(rawRow)) {
+          const cleanKey = key.toLowerCase().trim()
+          if (DANGEROUS_KEYS.includes(cleanKey)) continue
+          row[cleanKey] = value
+        }
+
         const nameKey = findKey(row, ['name', 'student name', 'name of student'])
         const rollNoKey = findKey(row, ['roll no', 'roll number', 'r.no', 's.no'])
         const phoneKey = findKey(row, ['contact', 'phone', 'mobile', 'whatsapp', 'father phone', 'number'])
