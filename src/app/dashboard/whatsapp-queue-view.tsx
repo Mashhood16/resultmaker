@@ -71,7 +71,7 @@ export async function WhatsAppQueueView() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end items-center">
-                          <WhatsAppQueueEditButton id={msg.id} currentMessage={msg.message} disabled={msg.status !== 'PENDING'} />
+                          <WhatsAppQueueEditButton id={msg.id} currentMessage={msg.message} currentPhone={msg.phone} disabled={msg.status !== 'PENDING'} />
                           <WhatsAppQueueDeleteButton id={msg.id} />
                         </div>
                       </TableCell>

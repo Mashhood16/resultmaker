@@ -42,7 +42,7 @@ export async function clearQueue(status?: 'PENDING' | 'SENT' | 'FAILED') {
   }
 }
 
-export async function updateQueueMessage(id: string, message: string) {
+export async function updateQueueMessage(id: string, message: string, phone: string) {
   const session = await auth()
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' }
@@ -51,7 +51,7 @@ export async function updateQueueMessage(id: string, message: string) {
   try {
     await prisma.whatsAppQueue.update({
       where: { id },
-      data: { message }
+      data: { message, phone }
     })
     revalidatePath('/dashboard/uploads')
     return { success: true }
