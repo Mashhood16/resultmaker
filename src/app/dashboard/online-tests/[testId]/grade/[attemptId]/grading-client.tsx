@@ -11,7 +11,7 @@ import { ArrowLeft, Save, Loader2, Square, Circle, Type, Undo2, Trash2, Pen } fr
 import { submitGrade } from '../grade-actions'
 import { toast } from 'sonner'
 import { toJpeg } from 'html-to-image'
-import DOMPurify from 'isomorphic-dompurify'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 type Point = { x: number, y: number }
 type Annotation = 
@@ -346,7 +346,7 @@ export default function GradingClient({ attempt, test, variant, student }: any) 
                   <img src={attempt.annotatedImage} alt="Graded Snapshot" className="w-full h-auto block pointer-events-none" crossOrigin="anonymous" />
                 ) : (
                   <div className="p-8 prose prose-sm md:prose-base max-w-none text-black pointer-events-none">
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(attempt.answers || '<p>No answers provided.</p>') }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(attempt.answers || '<p>No answers provided.</p>') }} />
                   </div>
                 )}
                 
