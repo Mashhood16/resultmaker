@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import { WhatsAppQueueDeleteButton } from './whatsapp-queue-delete-button'
 import { WhatsAppQueueClearButton } from './whatsapp-queue-clear-button'
+import { WhatsAppQueueEditButton } from './whatsapp-queue-edit-button'
 
 export async function WhatsAppQueueView() {
   const queue = await prisma.whatsAppQueue.findMany({
@@ -44,7 +45,7 @@ export async function WhatsAppQueueView() {
                   <TableHead className="text-muted-foreground">Phone</TableHead>
                   <TableHead className="text-muted-foreground w-1/2">Message</TableHead>
                   <TableHead className="text-muted-foreground text-right">Queued At</TableHead>
-                  <TableHead className="text-muted-foreground text-right w-[60px]"></TableHead>
+                  <TableHead className="text-muted-foreground text-right w-[90px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -64,12 +65,15 @@ export async function WhatsAppQueueView() {
                       </TableCell>
                       <TableCell className="font-medium text-foreground">{msg.student?.name || '-'}</TableCell>
                       <TableCell className="text-muted-foreground font-mono text-xs">{msg.phone}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs">{msg.message}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs whitespace-pre-wrap">{msg.message}</TableCell>
                       <TableCell className="text-right text-muted-foreground text-xs">
                         {new Date(msg.createdAt).toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <WhatsAppQueueDeleteButton id={msg.id} />
+                        <div className="flex justify-end items-center">
+                          <WhatsAppQueueEditButton id={msg.id} currentMessage={msg.message} disabled={msg.status !== 'PENDING'} />
+                          <WhatsAppQueueDeleteButton id={msg.id} />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
