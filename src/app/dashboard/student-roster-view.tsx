@@ -128,6 +128,38 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
     }
   }
 
+  const contactInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingContacts, setIsUploadingContacts] = useState(false)
+
+  async function handleContactUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!selectedClass || selectedClass.trim() === '') {
+      toast.error('Please specify a class name first (e.g., Class 6)')
+      return
+    }
+
+    setIsUploadingContacts(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { uploadContactsAction } = await import('./student-actions')
+      const result = await uploadContactsAction(formData, selectedClass)
+      
+      if (result.success) {
+        toast.success(result.message)
+        window.location.reload()
+      } else {
+        toast.error(result.error)
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+    } finally {
+      setIsUploadingContacts(false)
+      if (contactInputRef.current) contactInputRef.current.value = ''
+    }
+  }
+
   function downloadTemplate() {
     const ws = xlsx.utils.json_to_sheet([
       { 'Name': '', 'Class': '', 'Section': '', 'Registration Number': '', 'Roll Number': '', 'Father Name': '', 'Father Phone': '', 'Father CNIC': '' }
@@ -338,7 +370,15 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
             ref={fastAppendInputRef}
             className="hidden"
             onChange={handleFastAppend}
-            disabled={isUploading || isFastAppending}
+            disabled={isUploading || isFastAppending || isUploadingContacts}
+          />
+          <input
+            type="file"
+            accept=".xlsx, .xls, .csv"
+            ref={contactInputRef}
+            className="hidden"
+            onChange={handleContactUpload}
+            disabled={isUploading || isFastAppending || isUploadingContacts}
           />
           <Button 
             variant="outline"
@@ -347,6 +387,15 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
           >
             <Download className="w-4 h-4 mr-2" />
             Template
+          </Button>
+          <Button 
+            onClick={() => contactInputRef.current?.click()}
+            disabled={isUploadingContacts || !selectedClass.trim()}
+            variant="outline"
+            className="font-bold whitespace-nowrap h-10 border-green-500 text-green-500 hover:bg-green-500/10"
+          >
+            {isUploadingContacts ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
+            Upload Contacts
           </Button>
           <Button 
             onClick={() => fastAppendInputRef.current?.click()}

@@ -64,6 +64,7 @@ model Student {
   scores             Score[]
   testAttempts       TestAttempt[]
   badges             Badge[]
+  whatsappMessages   WhatsAppQueue[]
   
   @@unique([classId, rollNumber]) // Prevent duplicate roll numbers in the same class
   createdAt          DateTime     @default(now())
@@ -199,5 +200,22 @@ model Badge {
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   awardedAt   DateTime @default(now())
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model WhatsAppQueue {
+  id        String        @id @default(cuid())
+  studentId String?
+  phone     String
+  message   String
+  status    MessageStatus @default(PENDING)
+  student   Student?      @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 

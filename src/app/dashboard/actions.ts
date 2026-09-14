@@ -201,6 +201,21 @@ export async function uploadMarksAction(formData: FormData) {
             isAbsent: data.isAbsent
           }
         })
+
+        if (student.fatherPhone) {
+          const formattedDate = new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
+          const marks = data.isAbsent ? 'Absent' : data.marksObtained;
+          const urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale test mein ${data.totalMarks} mein se ${marks} marks haasil kiye hain.`;
+          
+          await tx.whatsAppQueue.create({
+            data: {
+              studentId: student.id,
+              phone: student.fatherPhone,
+              message: urduMessage,
+              status: 'PENDING'
+            }
+          });
+        }
       }
 
       // Automatically mark students not in excel sheet but in the student roster for this class as absent

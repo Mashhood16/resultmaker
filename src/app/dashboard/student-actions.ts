@@ -549,3 +549,88 @@ export async function uploadSpecificClassRosterAction(formData: FormData) {
     return { success: false, error: error.message || 'Failed to process the Excel file.' };
   }
 }
+
+export async function uploadContactsAction(formData: FormData, className: string) {
+  try {
+    const authRes = await requireSchoolOrTeacherAccess(className)
+    if (!authRes) return { success: false, error: 'Unauthorized' }
+    
+    const file = formData.get('file') as File | null
+    if (!file) return { success: false, error: 'No file provided' }
+    if (file.size > 10 * 1024 * 1024) return { success: false, error: 'File size exceeds 10MB' }
+
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const workbook = xlsx.read(buffer, { type: 'buffer' })
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+    const rawData = xlsx.utils.sheet_to_json(worksheet, { blankrows: false })
+    
+    let processed = 0
+    let failed = 0
+    
+    await prisma.$transaction(async (tx) => {
+      const classRecord = await tx.class.upsert({
+        where: { name_schoolId: { name: className.trim(), schoolId: authRes.schoolId } },
+        update: {},
+        create: { name: className.trim(), schoolId: authRes.schoolId }
+      })
+
+      for (const row of rawData as any[]) {
+        const nameKey = findKey(row, ['name', 'student name', 'name of student'])
+        const rollNoKey = findKey(row, ['roll no', 'roll number', 'r.no', 's.no'])
+        const phoneKey = findKey(row, ['contact', 'phone', 'mobile', 'whatsapp', 'father phone', 'number'])
+        
+        if (!nameKey || !rollNoKey || !phoneKey) {
+          failed++
+          continue
+        }
+        
+        const rawPhone = row[phoneKey]
+        if (!rawPhone) {
+          failed++
+          continue
+        }
+        
+        // Format phone: remove non-digits, adjust prefix
+        let phone = String(rawPhone).replace(/\D/g, '')
+        if (phone.startsWith('03')) phone = '923' + phone.substring(2)
+        else if (phone.startsWith('3')) phone = '92' + phone
+        else if (phone.startsWith('0092')) phone = '92' + phone.substring(4)
+        else if (phone.startsWith('+92')) phone = '92' + phone.substring(3)
+        
+        const rollNumber = String(row[rollNoKey]).trim()
+        const name = String(row[nameKey]).trim()
+        
+        if (!rollNumber || !name) {
+          failed++
+          continue
+        }
+
+        const existing = await tx.student.findFirst({
+          where: { classId: classRecord.id, rollNumber }
+        })
+        
+        if (existing) {
+          await tx.student.update({
+            where: { id: existing.id },
+            data: { fatherPhone: phone }
+          })
+        } else {
+          await tx.student.create({
+            data: {
+              classId: classRecord.id,
+              rollNumber,
+              name,
+              fatherPhone: phone
+            }
+          })
+        }
+        processed++
+      }
+    })
+    
+    return { success: true, message: `Successfully processed ${processed} contacts. Failed rows: ${failed}` }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
