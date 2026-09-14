@@ -474,13 +474,14 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
                   <TableHead className="text-muted-foreground">Class</TableHead>
                   <TableHead className="text-muted-foreground text-center">Leaderboard</TableHead>
                   <TableHead className="text-muted-foreground">Father's Name</TableHead>
+                  <TableHead className="text-muted-foreground">Contact</TableHead>
                   <TableHead className="text-right text-muted-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       No students found.
                     </TableCell>
                   </TableRow>
@@ -513,6 +514,7 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
                         </Button>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{student.fatherName || '-'}</TableCell>
+                      <TableCell className="text-muted-foreground font-mono text-xs">{student.fatherPhone || '-'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button 
