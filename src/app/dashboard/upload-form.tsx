@@ -70,6 +70,10 @@ export function UploadForm() {
               <Label htmlFor="testName" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Test Name</Label>
               <Input id="testName" name="testName" placeholder="e.g. Week 1, Midterms" required className="bg-transparent border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="testDate" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Test Date</Label>
+              <Input id="testDate" name="testDate" type="date" required className="bg-transparent border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" />
+            </div>
             
             <div>
               <div className="flex justify-between items-end mb-2 mt-6">

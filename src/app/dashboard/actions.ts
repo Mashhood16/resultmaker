@@ -34,10 +34,11 @@ export async function uploadMarksAction(formData: FormData) {
 
   const file = formData.get('file') as File | null
   const testName = formData.get('testName') as string | null
+  const testDate = formData.get('testDate') as string | null
   const defaultTotalMarks = Number(formData.get('totalMarks')) || 100
 
-  if (!file || !className || !subjectName || !testName) {
-    return { success: false, error: 'Missing required fields' }
+  if (!file || !className || !subjectName || !testName || !testDate) {
+    return { success: false, error: 'Missing required fields including test date' }
   }
 
   if (file.size > 10 * 1024 * 1024) {
@@ -203,9 +204,19 @@ export async function uploadMarksAction(formData: FormData) {
         })
 
         if (student.fatherPhone) {
-          const formattedDate = new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
-          const marks = data.isAbsent ? 'Absent' : data.marksObtained;
-          const urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale test mein ${data.totalMarks} mein se ${marks} marks haasil kiye hain.`;
+          const formattedDate = new Date(testDate).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
+          
+          let urduMessage = '';
+          if (data.isAbsent) {
+            urduMessage = `Assalam o Alaikum. Aap ka bacha ${student.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.`;
+          } else {
+            const isGoodMarks = data.percentage >= 50;
+            if (isGoodMarks) {
+              urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${data.marksObtained} marks haasil kiye hain. Shabash!`;
+            } else {
+              urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${data.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.`;
+            }
+          }
           
           await tx.whatsAppQueue.create({
             data: {
@@ -252,6 +263,21 @@ export async function uploadMarksAction(formData: FormData) {
               isAbsent: true
             }
           })
+          
+          if (rosterStudent.fatherPhone) {
+            const formattedDate = new Date(testDate).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
+            const urduMessage = `Assalam o Alaikum. Aap ka bacha ${rosterStudent.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.`;
+            
+            await tx.whatsAppQueue.create({
+              data: {
+                studentId: rosterStudent.id,
+                phone: rosterStudent.fatherPhone,
+                message: urduMessage,
+                status: 'PENDING'
+              }
+            });
+          }
+          
           absentCount++
         }
       }
