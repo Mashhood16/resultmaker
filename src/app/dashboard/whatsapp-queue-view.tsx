@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Clock, CheckCircle2, XCircle } from 'lucide-react'
+import { WhatsAppQueueDeleteButton } from './whatsapp-queue-delete-button'
+import { WhatsAppQueueClearButton } from './whatsapp-queue-clear-button'
 
 export async function WhatsAppQueueView() {
   const queue = await prisma.whatsAppQueue.findMany({
@@ -16,16 +18,21 @@ export async function WhatsAppQueueView() {
       <Card className="w-full bg-card border-border shadow-2xl backdrop-blur-2xl overflow-hidden rounded-3xl relative">
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-green-500 via-emerald-400 to-teal-400" />
         
-        <CardHeader className="pb-4 pt-8 px-8">
-          <CardTitle className="flex items-center gap-3 text-2xl font-black tracking-tight text-foreground">
-            <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-              <MessageSquare className="w-6 h-6 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]"/> 
-            </div>
-            WhatsApp Message Queue
-          </CardTitle>
-          <CardDescription className="text-muted-foreground text-sm mt-2">
-            View the status of the last 100 messages sent to the local WhatsApp dispatcher.
-          </CardDescription>
+        <CardHeader className="pb-4 pt-8 px-8 flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-3 text-2xl font-black tracking-tight text-foreground">
+              <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                <MessageSquare className="w-6 h-6 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]"/> 
+              </div>
+              WhatsApp Message Queue
+            </CardTitle>
+            <CardDescription className="text-muted-foreground text-sm mt-2">
+              View the status of the last 100 messages sent to the local WhatsApp dispatcher.
+            </CardDescription>
+          </div>
+          <div>
+            {queue.length > 0 && <WhatsAppQueueClearButton />}
+          </div>
         </CardHeader>
         <CardContent className="px-8 pb-8">
           <div className="overflow-x-auto">
@@ -36,13 +43,14 @@ export async function WhatsAppQueueView() {
                   <TableHead className="text-muted-foreground">Student</TableHead>
                   <TableHead className="text-muted-foreground">Phone</TableHead>
                   <TableHead className="text-muted-foreground w-1/2">Message</TableHead>
-                  <TableHead className="text-right text-muted-foreground">Queued At</TableHead>
+                  <TableHead className="text-muted-foreground text-right">Queued At</TableHead>
+                  <TableHead className="text-muted-foreground text-right w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {queue.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No messages in the queue yet.
                     </TableCell>
                   </TableRow>
@@ -59,6 +67,9 @@ export async function WhatsAppQueueView() {
                       <TableCell className="text-muted-foreground text-xs">{msg.message}</TableCell>
                       <TableCell className="text-right text-muted-foreground text-xs">
                         {new Date(msg.createdAt).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <WhatsAppQueueDeleteButton id={msg.id} />
                       </TableCell>
                     </TableRow>
                   ))
