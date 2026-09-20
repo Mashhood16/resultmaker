@@ -220,6 +220,8 @@ export async function uploadMarksAction(formData: FormData) {
             }
           }
           
+          urduMessage += '\n\nRegards\nMuhammad Mashhood Tariq';
+          
           await tx.whatsAppQueue.create({
             data: {
               studentId: student.id,
@@ -268,7 +270,8 @@ export async function uploadMarksAction(formData: FormData) {
           
           if (rosterStudent.fatherPhone) {
             const formattedDate = new Date(testDate).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
-            const urduMessage = `Assalam o Alaikum. Aap ka bacha ${rosterStudent.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.`;
+            let urduMessage = `Assalam o Alaikum. Aap ka bacha ${rosterStudent.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.`;
+            urduMessage += '\n\nRegards\nMuhammad Mashhood Tariq';
             
             await tx.whatsAppQueue.create({
               data: {

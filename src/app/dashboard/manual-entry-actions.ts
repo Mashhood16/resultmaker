@@ -90,6 +90,8 @@ export async function uploadManualMarksAction(data: {
           }
         }
         
+        urduMessage += '\n\nRegards\nMuhammad Mashhood Tariq';
+        
         await prisma.whatsAppQueue.create({
           data: {
             studentId: student.id,
