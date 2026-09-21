@@ -51,7 +51,7 @@ export async function updateQueueMessage(id: string, message: string, phone: str
   try {
     await prisma.whatsAppQueue.update({
       where: { id },
-      data: { message, phone }
+      data: { message, phone, status: 'PENDING' }
     })
     revalidatePath('/dashboard/uploads')
     return { success: true }
