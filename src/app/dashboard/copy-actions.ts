@@ -107,9 +107,9 @@ export async function uploadCopyCheckingAction(formData: FormData) {
           let urduMessage = ''
           
           if (data.status === 'C') {
-            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy mukammal (complete) hai aur check kar li gayi hai. Shabash!`
+            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy mukammal (complete) hai aur check kar li gayi hai. Shabash!\n\nالسلام علیکم! آپ کے بچے ${student.name} (کلاس ${classRecord.name}) کی ${subjectName} کی کاپی مکمل ہے اور چیک کر لی گئی ہے۔ شاباش!`
           } else if (data.status === 'I') {
-            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy namukammal (incomplete) hai. Barae meharbani is par tawajah dein aur bache ka kaam mukammal karwayen.`
+            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy namukammal (incomplete) hai. Barae meharbani is par tawajah dein aur bache ka kaam mukammal karwayen.\n\nالسلام علیکم! آپ کے بچے ${student.name} (کلاس ${classRecord.name}) کی ${subjectName} کی کاپی نامکمل ہے۔ براہ مہربانی اس پر توجہ دیں اور بچے کا کام مکمل کروائیں۔`
           }
 
           urduMessage += '\n\nMuhammad Mashhood Tariq'

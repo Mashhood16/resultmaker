@@ -210,13 +210,13 @@ export async function uploadMarksAction(formData: FormData) {
           
           let urduMessage = '';
           if (data.isAbsent) {
-            urduMessage = `Assalam o Alaikum. Aap ka bacha ${student.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.`;
+            urduMessage = `Assalam o Alaikum. Aap ka bacha ${student.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.\n\nالسلام علیکم! آپ کا بچہ ${student.name} (کلاس ${classRecord.name}) ${formattedDate} کو ہونے والے ${subjectRecord.name} کے ٹیسٹ میں غیر حاضر تھا۔ براہ مہربانی اس بات کا خیال رکھیں کہ بچہ باقاعدگی سے ٹیسٹ دے۔`;
           } else {
             const isGoodMarks = data.percentage >= 50;
             if (isGoodMarks) {
-              urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${data.marksObtained} marks haasil kiye hain. Shabash!`;
+              urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${data.marksObtained} marks haasil kiye hain. Shabash!\n\nالسلام علیکم! آپ کے بچے ${student.name} (کلاس ${classRecord.name}) نے ${formattedDate} کو ہونے والے ${subjectRecord.name} کے ٹیسٹ میں بہت اچھی کارکردگی دکھائی ہے۔ اس نے ${data.totalMarks} میں سے ${data.marksObtained} نمبر حاصل کیے ہیں۔ شاباش!`;
             } else {
-              urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${data.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.`;
+              urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${data.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.\n\nالسلام علیکم! آپ کے بچے ${student.name} (کلاس ${classRecord.name}) نے ${formattedDate} کو ہونے والے ${subjectRecord.name} کے ٹیسٹ میں ${data.totalMarks} میں سے صرف ${data.marksObtained} نمبر حاصل کیے ہیں۔ براہ مہربانی بچے کی پڑھائی پر توجہ دیں۔`;
             }
           }
           
@@ -270,7 +270,7 @@ export async function uploadMarksAction(formData: FormData) {
           
           if (rosterStudent.fatherPhone) {
             const formattedDate = new Date(testDate).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
-            let urduMessage = `Assalam o Alaikum. Aap ka bacha ${rosterStudent.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.`;
+            let urduMessage = `Assalam o Alaikum. Aap ka bacha ${rosterStudent.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.\n\nالسلام علیکم! آپ کا بچہ ${rosterStudent.name} (کلاس ${classRecord.name}) ${formattedDate} کو ہونے والے ${subjectRecord.name} کے ٹیسٹ میں غیر حاضر تھا۔ براہ مہربانی اس بات کا خیال رکھیں کہ بچہ باقاعدگی سے ٹیسٹ دے۔`;
             urduMessage += '\n\nMuhammad Mashhood Tariq';
             
             await tx.whatsAppQueue.create({
