@@ -45,6 +45,7 @@ model Subject {
   onlineTests   OnlineTest[]
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
+  NotebookCheck NotebookCheck[]
 
   @@unique([name, schoolId])
 }
@@ -67,6 +68,7 @@ model Student {
   whatsappMessages   WhatsAppQueue[]
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
+  NotebookCheck      NotebookCheck[]
 
   @@unique([classId, rollNumber]) // Prevent duplicate roll numbers in the same class
 }
@@ -223,4 +225,19 @@ model WhatsAppQueue {
 model WhatsAppAuth {
   id   String @id
   data String
+}
+
+model NotebookCheck {
+  id        String   @id @default(cuid())
+  studentId String
+  subjectId String
+  status    String
+  checkDate DateTime
+
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, subjectId, checkDate])
 }
