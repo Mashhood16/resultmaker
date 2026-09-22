@@ -3,6 +3,7 @@
 import * as xlsx from 'xlsx'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
+import { translateToUrdu } from '@/lib/translate'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 import { requireSchoolOrTeacherAccess } from './auth-utils'
@@ -104,12 +105,23 @@ export async function uploadCopyCheckingAction(formData: FormData) {
         }
 
         if (student && student.fatherPhone) {
+          let studentUrduName = student.urduName;
+          if (!studentUrduName) {
+             studentUrduName = await translateToUrdu(student.name);
+             await tx.student.update({ where: { id: student.id }, data: { urduName: studentUrduName } })
+          }
+          let subjectUrduName = subjectRecord.urduName;
+          if (!subjectUrduName) {
+             subjectUrduName = await translateToUrdu(subjectRecord.name);
+             await tx.subject.update({ where: { id: subjectRecord.id }, data: { urduName: subjectUrduName } })
+          }
+
           let urduMessage = ''
           
           if (data.status === 'C') {
-            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy mukammal (complete) hai aur check kar li gayi hai. Shabash!\n\nالسلام علیکم! آپ کے بچے کی کاپی مکمل ہے اور چیک کر لی گئی ہے۔ شاباش!`
+            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy mukammal (complete) hai aur check kar li gayi hai. Shabash!\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} کی ${subjectUrduName} کی کاپی مکمل ہے اور چیک کر لی گئی ہے۔ شاباش!`
           } else if (data.status === 'I') {
-            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy namukammal (incomplete) hai. Barae meharbani is par tawajah dein aur bache ka kaam mukammal karwayen.\n\nالسلام علیکم! آپ کے بچے کی کاپی نامکمل ہے۔ براہ مہربانی اس پر توجہ دیں اور بچے کا کام مکمل کروائیں۔`
+            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy namukammal (incomplete) hai. Barae meharbani is par tawajah dein aur bache ka kaam mukammal karwayen.\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} کی ${subjectUrduName} کی کاپی نامکمل ہے۔ براہ مہربانی اس پر توجہ دیں اور بچے کا کام مکمل کروائیں۔`
           }
 
           urduMessage += '\n\nMuhammad Mashhood Tariq'

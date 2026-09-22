@@ -36,7 +36,7 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
   // Editing
   const [editingStudent, setEditingStudent] = useState<StudentWithClass | null>(null)
   const [editForm, setEditForm] = useState({
-    name: '', registrationNumber: '', rollNumber: '', section: '', fatherName: '', fatherPhone: '', fatherCnic: ''
+    name: '', urduName: '', registrationNumber: '', rollNumber: '', section: '', fatherName: '', fatherPhone: '', fatherCnic: ''
   })
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeletingAll, setIsDeletingAll] = useState(false)
@@ -252,6 +252,7 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
     setEditingStudent(student)
     setEditForm({
       name: student.name,
+      urduName: student.urduName || '',
       registrationNumber: student.registrationNumber || '',
       rollNumber: student.rollNumber || '',
       section: student.section || '',
@@ -471,6 +472,7 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
                   <TableHead className="text-muted-foreground">Reg No.</TableHead>
                   <TableHead className="text-muted-foreground">Roll No.</TableHead>
                   <TableHead className="text-muted-foreground font-bold">Name</TableHead>
+                  <TableHead className="text-muted-foreground font-bold">Urdu Name</TableHead>
                   <TableHead className="text-muted-foreground">Class</TableHead>
                   <TableHead className="text-muted-foreground text-center">Leaderboard</TableHead>
                   <TableHead className="text-muted-foreground">Father's Name</TableHead>
@@ -499,6 +501,7 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
                       <TableCell className="text-muted-foreground font-mono text-xs">{student.registrationNumber || '-'}</TableCell>
                       <TableCell className="text-muted-foreground font-mono">{student.rollNumber || '-'}</TableCell>
                       <TableCell className="font-semibold text-foreground">{student.name}</TableCell>
+                      <TableCell className="font-semibold text-foreground" dir="rtl">{student.urduName || '-'}</TableCell>
                       <TableCell className="text-muted-foreground">
                         <span className="bg-muted px-2 py-1 rounded text-xs">{student.class.name}</span>
                       </TableCell>
@@ -558,6 +561,10 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Student Name</Label>
                 <Input className="bg-background border-border text-foreground" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Urdu Name</Label>
+                <Input className="bg-background border-border text-foreground" value={editForm.urduName} onChange={e => setEditForm({...editForm, urduName: e.target.value})} dir="rtl" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

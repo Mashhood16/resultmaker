@@ -1,6 +1,7 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { translateToUrdu } from '@/lib/translate'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 
@@ -76,17 +77,30 @@ export async function uploadManualMarksAction(data: {
       // Generate WhatsApp messages
       const student = await prisma.student.findUnique({ where: { id: studentData.id } })
       if (student && student.fatherPhone) {
+        let studentUrduName = student.urduName;
+        if (!studentUrduName) {
+           studentUrduName = await translateToUrdu(student.name);
+           await prisma.student.update({ where: { id: student.id }, data: { urduName: studentUrduName } })
+        }
+        let subjectUrduName = subjectRecord.urduName;
+        if (!subjectUrduName) {
+           subjectUrduName = await translateToUrdu(subjectRecord.name);
+           await prisma.subject.update({ where: { id: subjectRecord.id }, data: { urduName: subjectUrduName } })
+        }
+
         const formattedDate = new Date(data.testDate).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })
+        const d = new Date(data.testDate);
+        const urduDate = `${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
         
         let urduMessage = '';
         if (studentData.isAbsent) {
-          urduMessage = `Assalam o Alaikum. Aap ka bacha ${student.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.\n\nالسلام علیکم! آپ کا بچہ مذکورہ امتحان میں غیر حاضر تھا۔ براہ مہربانی اس بات کا خیال رکھیں کہ بچہ باقاعدگی سے امتحان دے۔`;
+          urduMessage = `Assalam o Alaikum. Aap ka bacha ${student.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} تاریخ ${urduDate} کو ہونے والے ${subjectUrduName} کے امتحان میں غیر حاضر تھا۔ براہ مہربانی اس بات کا خیال رکھیں کہ بچہ باقاعدگی سے امتحان دے۔`;
         } else {
           const isGoodMarks = percentage >= 50;
           if (isGoodMarks) {
-            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${studentData.marksObtained} marks haasil kiye hain. Shabash!\n\nالسلام علیکم! آپ کے بچے نے مذکورہ امتحان میں بہت اچھی کارکردگی دکھائی ہے۔ اس نے ${data.totalMarks} میں سے ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ شاباش!`;
+            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${studentData.marksObtained} marks haasil kiye hain. Shabash!\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} نے تاریخ ${urduDate} کو ہونے والے ${subjectUrduName} کے امتحان میں بہت اچھی کارکردگی دکھائی ہے۔ اس نے ${data.totalMarks} میں سے ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ شاباش!`;
           } else {
-            urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${studentData.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.\n\nالسلام علیکم! آپ کے بچے نے مذکورہ امتحان میں ${data.totalMarks} میں سے صرف ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ براہ مہربانی بچے کی پڑھائی پر توجہ دیں۔`;
+            urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${studentData.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} نے تاریخ ${urduDate} کو ہونے والے ${subjectUrduName} کے امتحان میں ${data.totalMarks} میں سے صرف ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ براہ مہربانی بچے کی پڑھائی پر توجہ دیں۔`;
           }
         }
         

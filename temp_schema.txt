@@ -1,0 +1,39 @@
+﻿model Student {
+  id                 String          @id @default(cuid())
+  registrationNumber String?
+  rollNumber         String?
+  name               String
+  urduName           String?         // NEW FIELD
+  fatherName         String?
+  fatherPhone        String?
+  fatherCnic         String?
+  showInLeaderboard  Boolean         @default(false)
+  section            String? // e.g., "A", "B"
+  classId            String
+  class              Class           @relation(fields: [classId], references: [id])
+  scores             Score[]
+  testAttempts       TestAttempt[]
+  badges             Badge[]
+  whatsappMessages   WhatsAppQueue[]
+  notebookChecks     NotebookCheck[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([classId, rollNumber]) // Prevent duplicate roll numbers in the same class
+}
+
+model Subject {
+  id            String                 @id @default(cuid())
+  name          String // e.g., "Overall Cumulative", "English", "Science"
+  urduName      String?                // NEW FIELD
+  schoolId      String
+  school        School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  scores        Score[]
+  teacherAccess TeacherSubjectAccess[]
+  onlineTests   OnlineTest[]
+  notebookChecks NotebookCheck[]
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  @@unique([name, schoolId])
+}
