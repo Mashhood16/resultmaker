@@ -84,9 +84,9 @@ export async function uploadManualMarksAction(data: {
         } else {
           const isGoodMarks = percentage >= 50;
           if (isGoodMarks) {
-            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${studentData.marksObtained} marks haasil kiye hain. Shabash!\n\nالسلام علیکم! آپ کے بچے نے مذکورہ امتحان میں بہت اچھی کارکردگی دکھائی ہے۔ شاباش!`;
+            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${studentData.marksObtained} marks haasil kiye hain. Shabash!\n\nالسلام علیکم! آپ کے بچے نے مذکورہ امتحان میں بہت اچھی کارکردگی دکھائی ہے۔ اس نے ${data.totalMarks} میں سے ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ شاباش!`;
           } else {
-            urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${studentData.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.\n\nالسلام علیکم! آپ کے بچے نے مذکورہ امتحان میں کم نمبر حاصل کیے ہیں۔ براہ مہربانی بچے کی پڑھائی پر توجہ دیں۔`;
+            urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${studentData.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.\n\nالسلام علیکم! آپ کے بچے نے مذکورہ امتحان میں ${data.totalMarks} میں سے صرف ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ براہ مہربانی بچے کی پڑھائی پر توجہ دیں۔`;
           }
         }
         
