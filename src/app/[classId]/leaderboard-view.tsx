@@ -18,7 +18,6 @@ import jsPDF from 'jspdf'
 import { toast } from 'sonner'
 import { fetchComprehensiveScores } from '@/app/actions/result-card-actions'
 import { sanitizeHtml } from '@/lib/sanitize'
-import { ClassAnalyticsCharts } from '@/components/analytics/class-analytics-charts'
 import { MonthlyCertificate } from '@/components/monthly-certificate'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -526,13 +525,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
         </div>
       )}
 
-      {/* Analytics Charts */}
-      {selectedTestFilter === 'all' && (
-        <ClassAnalyticsCharts 
-          trendData={analyticsData.trendData} 
-          gradeDistributionData={analyticsData.gradeDistributionData} 
-        />
-      )}
+
 
 
       {/* Podium Display - Glassmorphism & Metallic Aesthetic */}
