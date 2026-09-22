@@ -1,4 +1,4 @@
-﻿'use server'
+'use server'
 
 import * as xlsx from 'xlsx'
 import { z } from 'zod'
@@ -124,6 +124,32 @@ export async function uploadCopyCheckingAction(formData: FormData) {
           })
           
           messagesQueued++
+        }
+
+        // Also save to NotebookCheck permanently!
+        if (student) {
+          const subject = await tx.subject.findUnique({
+            where: { name_schoolId: { name: subjectName, schoolId } }
+          })
+          
+          if (subject) {
+            await tx.notebookCheck.upsert({
+              where: {
+                studentId_subjectId_checkDate: {
+                  studentId: student.id,
+                  subjectId: subject.id,
+                  checkDate: new Date(checkDate)
+                }
+              },
+              update: { status: data.status },
+              create: {
+                studentId: student.id,
+                subjectId: subject.id,
+                status: data.status,
+                checkDate: new Date(checkDate)
+              }
+            })
+          }
         }
       }
     }, {

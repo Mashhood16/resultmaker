@@ -5,6 +5,7 @@ import { TestManagementView } from '../test-management-view'
 import { WhatsAppQueueView } from '../whatsapp-queue-view'
 import { ManualEntryForm } from '../manual-entry-form'
 import { CopyCheckingForm } from './copy-checking-form'
+import { NotebookLogView } from '../notebook-log-view'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
@@ -30,6 +31,22 @@ export default async function UploadsPage() {
     orderBy: { name: 'asc' }
   })
 
+  const rawSubjects = await prisma.subject.findMany({
+    where: { schoolId: schoolId },
+    orderBy: { name: 'asc' }
+  })
+
+  const rawChecks = await prisma.notebookCheck.findMany({
+    where: {
+      student: { class: { schoolId } }
+    },
+    include: {
+      student: { include: { class: true } },
+      subject: true
+    },
+    orderBy: { checkDate: 'desc' }
+  })
+
   return (
     <div className="p-4 md:p-8 w-full max-w-6xl mx-auto">
       <header className="mb-10">
@@ -53,6 +70,10 @@ export default async function UploadsPage() {
             <TabsTrigger value="copy" className="rounded-none border-b-2 border-transparent data-active:border-teal-500 data-active:!bg-transparent data-active:!text-teal-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
               <BookOpen className="w-4 h-4 mr-2" />
               Copy Checking
+            </TabsTrigger>
+            <TabsTrigger value="notebook-logs" className="rounded-none border-b-2 border-transparent data-active:border-teal-500 data-active:!bg-transparent data-active:!text-teal-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
+              <BookOpen className="w-4 h-4 mr-2" />
+              Notebook Logs
             </TabsTrigger>
             <TabsTrigger value="contacts" className="rounded-none border-b-2 border-transparent data-active:border-green-500 data-active:!bg-transparent data-active:!text-green-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
               <Phone className="w-4 h-4 mr-2" />
@@ -82,6 +103,10 @@ export default async function UploadsPage() {
           
           <TabsContent value="copy" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
             <CopyCheckingForm classes={rawClasses} />
+          </TabsContent>
+
+          <TabsContent value="notebook-logs" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
+            <NotebookLogView checks={rawChecks} classes={rawClasses} subjects={rawSubjects} />
           </TabsContent>
           
           <TabsContent value="contacts" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
