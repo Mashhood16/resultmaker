@@ -6,6 +6,7 @@ import { MessageSquare, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import { WhatsAppQueueDeleteButton } from './whatsapp-queue-delete-button'
 import { WhatsAppQueueClearButton } from './whatsapp-queue-clear-button'
 import { WhatsAppQueueEditButton } from './whatsapp-queue-edit-button'
+import { WhatsAppConnector } from './whatsapp-connector'
 
 export async function WhatsAppQueueView() {
   const queue = await prisma.whatsAppQueue.findMany({
@@ -16,6 +17,7 @@ export async function WhatsAppQueueView() {
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <WhatsAppConnector />
       <Card className="w-full bg-card border-border shadow-2xl backdrop-blur-2xl overflow-hidden rounded-3xl relative">
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-green-500 via-emerald-400 to-teal-400" />
         
