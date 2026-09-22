@@ -18,6 +18,9 @@ import jsPDF from 'jspdf'
 import { toast } from 'sonner'
 import { fetchComprehensiveScores } from '@/app/actions/result-card-actions'
 import { sanitizeHtml } from '@/lib/sanitize'
+import { ClassAnalyticsCharts } from '@/components/analytics/class-analytics-charts'
+import { MonthlyCertificate } from '@/components/monthly-certificate'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type StudentScore = {
   id: string
@@ -121,6 +124,7 @@ function StudentPerformanceChart({ breakdown }: { breakdown: Array<{ testName: s
 export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests, isReadOnly = false }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
   const [selectedTestFilter, setSelectedTestFilter] = useState<string>('all')
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>('all')
   const [selectedStudentForModal, setSelectedStudentForModal] = useState<StudentScore | null>(null)
   const [expandedTestDetail, setExpandedTestDetail] = useState<string | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
@@ -138,6 +142,23 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
     performanceBand: 'all' | 'top' | 'mid' | 'low'
   } | null>(null)
 
+  
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>()
+    initialData.forEach(student => {
+      student.breakdown.forEach(b => {
+        if (b.testDate) {
+          const d = new Date(b.testDate)
+          if (!isNaN(d.getTime())) {
+            const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+            months.add(monthYear)
+          }
+        }
+      })
+    })
+    return Array.from(months).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+  }, [initialData])
+  
   const uniqueTests = useMemo(() => {
     const tests = new Set<string>()
     initialData.forEach(student => {
@@ -323,9 +344,77 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
 
   // Calculate active dataset based on selected test filter
   const activeData = useMemo(() => {
-    if (selectedTestFilter === 'all') {
-      return initialData
+    let filteredStudents = initialData;
+
+    // Filter by Month first if selected
+    if (selectedMonthFilter !== 'all') {
+      filteredStudents = initialData.map(student => {
+        // Only keep breakdown items that match the month
+        const filteredBreakdown = student.breakdown.filter(b => {
+          if (!b.testDate) return false;
+          const d = new Date(b.testDate);
+          if (isNaN(d.getTime())) return false;
+          return d.toLocaleString('en-US', { month: 'long', year: 'numeric' }) === selectedMonthFilter;
+        });
+        
+        let newObtained = 0;
+        let newTotal = 0;
+        let isAbsent = true;
+        
+        filteredBreakdown.forEach(b => {
+          if (!b.isAbsent) {
+            newObtained += b.obtained;
+            isAbsent = false;
+          }
+          newTotal += b.total; // total is always added
+        });
+        
+        return {
+          ...student,
+          breakdown: filteredBreakdown,
+          obtained: newObtained,
+          total: newTotal,
+          percentage: newTotal > 0 ? Number(((newObtained / newTotal) * 100).toFixed(2)) : 0,
+          isAbsent: filteredBreakdown.length === 0 ? true : isAbsent
+        };
+      }).filter(s => s.breakdown.length > 0); // Only keep students who have tests in this month
+
+      // Recalculate ranks for the month
+      filteredStudents.sort((a, b) => b.percentage - a.percentage);
+      let rank = 1;
+      filteredStudents.forEach((student, idx) => {
+        if (idx > 0 && student.percentage < filteredStudents[idx - 1].percentage) {
+          rank = idx + 1;
+        }
+        student.rank = rank;
+        student.rankChange = student.overallRank ? student.overallRank - rank : 0;
+      });
     }
+
+    if (selectedTestFilter === 'all') {
+      return filteredStudents;
+    }
+
+    // Filter and recalculate ranks and scores for the selected test
+    const testStudents = filteredStudents.map(student => {
+      const testScore = student.breakdown.find(b => b.testName === selectedTestFilter)
+      const obtained = testScore && !testScore.isAbsent ? testScore.obtained : 0
+      const total = testScore ? testScore.total : 0
+      const percentage = testScore && !testScore.isAbsent ? testScore.percentage : 0
+      const isAbsent = !testScore || testScore.isAbsent
+
+      return {
+        ...student,
+        obtained,
+        total,
+        percentage,
+        isAbsent,
+        overallRank: student.rank,
+        rank: 0,
+        previousRank: student.rank, // Compare against overall standing
+        rankChange: 0
+      }
+    })
 
     // Filter and recalculate ranks and scores for the selected test
     const testStudents = initialData.map(student => {
@@ -373,6 +462,55 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
     return testStudents
   }, [initialData, selectedTestFilter])
 
+  
+  const analyticsData = useMemo(() => {
+    // 1. Trend Data (Line Chart)
+    const testAverages = new Map<string, { total: number, count: number, date?: string }>()
+    activeData.forEach(student => {
+      student.breakdown.forEach(b => {
+        if (!b.isAbsent) {
+          if (!testAverages.has(b.testName)) {
+            testAverages.set(b.testName, { total: 0, count: 0, date: b.testDate as string })
+          }
+          const t = testAverages.get(b.testName)!
+          t.total += b.percentage
+          t.count += 1
+        }
+      })
+    })
+    
+    const trendData = Array.from(testAverages.entries()).map(([testName, data]) => ({
+      testName,
+      average: data.count > 0 ? Number((data.total / data.count).toFixed(2)) : 0,
+      date: data.date
+    }))
+    
+    // Sort chronologically if possible
+    trendData.sort((a, b) => {
+      if (a.date && b.date) return new Date(a.date).getTime() - new Date(b.date).getTime()
+      return 0
+    })
+
+    // 2. Grade Distribution (Bar Chart) for the latest test (or all if 'all')
+    const distribution = { A: 0, B: 0, C: 0, F: 0 }
+    activeData.forEach(student => {
+      if (student.isAbsent) return
+      if (student.percentage >= 85) distribution.A++
+      else if (student.percentage >= 70) distribution.B++
+      else if (student.percentage >= 50) distribution.C++
+      else distribution.F++
+    })
+
+    const gradeDistributionData = [
+      { grade: 'Platinum (85%+)', count: distribution.A, color: '#3b82f6' },
+      { grade: 'Gold (70-84%)', count: distribution.B, color: '#f59e0b' },
+      { grade: 'Silver (50-69%)', count: distribution.C, color: '#a1a1aa' },
+      { grade: 'Bronze (<50%)', count: distribution.F, color: '#b45309' },
+    ]
+
+    return { trendData, gradeDistributionData }
+  }, [activeData])
+  
   const filteredData = useMemo(() => {
     if (!search) return activeData
     const lowerSearch = search.toLowerCase()
@@ -397,6 +535,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
 
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
+
       {/* Test Filter Info Banner */}
       {selectedTestFilter !== 'all' && (
         <div className="flex justify-center pt-2">
@@ -406,6 +545,15 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           </Badge>
         </div>
       )}
+
+      {/* Analytics Charts */}
+      {selectedTestFilter === 'all' && (
+        <ClassAnalyticsCharts 
+          trendData={analyticsData.trendData} 
+          gradeDistributionData={analyticsData.gradeDistributionData} 
+        />
+      )}
+
 
       {/* Podium Display - Glassmorphism & Metallic Aesthetic */}
       {top3.length > 0 && (
@@ -470,6 +618,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       <Card className="bg-card border-border max-w-6xl mx-auto overflow-hidden shadow-2xl backdrop-blur-2xl rounded-3xl">
         <CardContent className="p-0">
           <div className="p-6 border-b border-border bg-background/20 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+
             <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex-1 max-w-md relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -482,6 +631,22 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                   className="bg-transparent border-border text-foreground pl-12 h-11 rounded-xl focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-zinc-600 shadow-inner"
                 />
               </div>
+
+              {/* Month Filter */}
+              {availableMonths.length > 0 && (
+                <Select value={selectedMonthFilter} onValueChange={setSelectedMonthFilter}>
+                  <SelectTrigger className="w-[180px] h-11 bg-card/80 border-border rounded-xl">
+                    <SelectValue placeholder="All Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    {availableMonths.map(m => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
 
               {/* Test Filter Pills */}
               {uniqueTests.length > 0 && (
@@ -519,6 +684,14 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
               )}
             </div>
 
+            {selectedMonthFilter !== 'all' && top3.length > 0 && (
+              <MonthlyCertificate 
+                monthName={selectedMonthFilter} 
+                className={initialData[0]?.breakdown[0]?.testName ? classId : classId} // We can just pass classId for now
+                topStudents={top3.map(s => ({ name: s.name, percentage: s.percentage, rank: s.rank }))}
+              />
+            )}
+            
             {selectedStudents.size > 0 && (
               <div className="flex gap-2">
                 <Button onClick={openReportModal} disabled={isExporting} className="bg-emerald-600 hover:bg-primary text-foreground rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50">
