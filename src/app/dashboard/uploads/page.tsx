@@ -4,11 +4,12 @@ import { ManageDataView } from '../manage-data-view'
 import { TestManagementView } from '../test-management-view'
 import { WhatsAppQueueView } from '../whatsapp-queue-view'
 import { ManualEntryForm } from '../manual-entry-form'
+import { CopyCheckingForm } from './copy-checking-form'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UploadCloud, Database, Calendar, Phone, MessageSquare, Edit3 } from 'lucide-react'
+import { UploadCloud, Database, Calendar, Phone, MessageSquare, Edit3, BookOpen } from 'lucide-react'
 
 export default async function UploadsPage() {
   const session = await auth()
@@ -49,6 +50,10 @@ export default async function UploadsPage() {
               <Edit3 className="w-4 h-4 mr-2" />
               Manual Entry
             </TabsTrigger>
+            <TabsTrigger value="copy" className="rounded-none border-b-2 border-transparent data-active:border-teal-500 data-active:!bg-transparent data-active:!text-teal-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
+              <BookOpen className="w-4 h-4 mr-2" />
+              Copy Checking
+            </TabsTrigger>
             <TabsTrigger value="contacts" className="rounded-none border-b-2 border-transparent data-active:border-green-500 data-active:!bg-transparent data-active:!text-green-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
               <Phone className="w-4 h-4 mr-2" />
               Upload Contacts
@@ -73,6 +78,10 @@ export default async function UploadsPage() {
 
           <TabsContent value="manual" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
             <ManualEntryForm classes={rawClasses} />
+          </TabsContent>
+          
+          <TabsContent value="copy" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
+            <CopyCheckingForm classes={rawClasses} />
           </TabsContent>
           
           <TabsContent value="contacts" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
