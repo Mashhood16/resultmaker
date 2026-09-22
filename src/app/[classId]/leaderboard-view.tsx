@@ -416,26 +416,6 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       }
     })
 
-    // Filter and recalculate ranks and scores for the selected test
-    const testStudents = initialData.map(student => {
-      const testScore = student.breakdown.find(b => b.testName === selectedTestFilter)
-      const obtained = testScore && !testScore.isAbsent ? testScore.obtained : 0
-      const total = testScore ? testScore.total : 0
-      const percentage = testScore && !testScore.isAbsent ? testScore.percentage : 0
-      const isAbsent = !testScore || testScore.isAbsent
-
-      return {
-        ...student,
-        obtained,
-        total,
-        percentage,
-        isAbsent,
-        overallRank: student.rank,
-        rank: 0,
-        previousRank: student.rank, // Compare against overall standing
-        rankChange: 0
-      }
-    })
 
     // Sort: present students first by percentage descending, then absent students
     testStudents.sort((a, b) => {

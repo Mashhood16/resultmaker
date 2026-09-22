@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect } from 'react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
@@ -68,12 +68,12 @@ export function ClassAnalyticsCharts({ trendData, gradeDistributionData }: Analy
                     tickLine={false}
                     axisLine={false}
                     domain={[0, 100]}
-                    tickFormatter={(value) => \`\${value}%\`}
+                    tickFormatter={(value) => `${value}%`}
                   />
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
                     itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
-                    formatter={(val: any) => [\`\${val}%\`, 'Class Average']}
+                    formatter={(val: any) => [`${val}%`, 'Class Average']}
                     labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }}
                   />
                   <Line 
@@ -136,7 +136,7 @@ export function ClassAnalyticsCharts({ trendData, gradeDistributionData }: Analy
                   />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]} animationDuration={1500}>
                     {gradeDistributionData.map((entry, index) => (
-                      <Cell key={\`cell-\${index}\`} fill={entry.color} />
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Bar>
                 </BarChart>

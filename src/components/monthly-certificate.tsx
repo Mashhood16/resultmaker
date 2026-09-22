@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useRef, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -107,7 +107,7 @@ export function MonthlyCertificate({ monthName, className, subjectName, topStude
               </div>
               <h1 className="text-4xl font-bold text-white mb-2">{monthName}</h1>
               <p className="text-xl text-zinc-400 font-medium tracking-wide">
-                {className} {subjectName ? \`• \${subjectName}\` : ''}
+                {displayClass} {displaySubject ? `• ${displaySubject}` : ''}
               </p>
             </div>
 
