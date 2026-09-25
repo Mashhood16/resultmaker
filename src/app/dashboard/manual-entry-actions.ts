@@ -96,9 +96,10 @@ export async function uploadManualMarksAction(data: {
         if (studentData.isAbsent) {
           urduMessage = `Assalam o Alaikum. Aap ka bacha ${student.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} تاریخ ${urduDate} کو ہونے والے ${subjectUrduName} کے امتحان میں غیر حاضر تھا۔ براہ مہربانی اس بات کا خیال رکھیں کہ بچہ باقاعدگی سے امتحان دے۔`;
         } else {
-          const isGoodMarks = percentage >= 50;
-          if (isGoodMarks) {
+          if (percentage >= 70) {
             urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein bohot achi karkardagi dikhai hai. Us ne ${data.totalMarks} mein se ${studentData.marksObtained} marks haasil kiye hain. Shabash!\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} نے تاریخ ${urduDate} کو ہونے والے ${subjectUrduName} کے امتحان میں بہت اچھی کارکردگی دکھائی ہے۔ اس نے ${data.totalMarks} میں سے ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ شاباش!`;
+          } else if (percentage >= 40) {
+            urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein karkardagi munasib (average) rahi aur us ne ${data.totalMarks} mein se ${studentData.marksObtained} marks haasil kiye hain. Hum umeed karte hain ke aainda tests mein karkardagi mazeed behtar hogi.\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} کی تاریخ ${urduDate} کو ہونے والے ${subjectUrduName} کے امتحان میں کارکردگی مناسب رہی اور اس نے ${data.totalMarks} میں سے ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ ہم امید کرتے ہیں کہ آئندہ امتحانات میں کارکردگی مزید بہتر ہوگی۔`;
           } else {
             urduMessage = `Assalam o Alaikum. Aap ke bache ${student.name} (Class ${classRecord.name}) ne ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ${data.totalMarks} mein se sirf ${studentData.marksObtained} marks haasil kiye hain. Barae meharbani bache ki parhai par tawajah dein.\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} نے تاریخ ${urduDate} کو ہونے والے ${subjectUrduName} کے امتحان میں ${data.totalMarks} میں سے صرف ${studentData.marksObtained} نمبر حاصل کیے ہیں۔ براہ مہربانی بچے کی پڑھائی پر توجہ دیں۔`;
           }

@@ -5,12 +5,13 @@ import { TestManagementView } from '../test-management-view'
 import { WhatsAppQueueView } from '../whatsapp-queue-view'
 import { ManualEntryForm } from '../manual-entry-form'
 import { CopyCheckingForm } from './copy-checking-form'
+import { InteractiveCopyCheckForm } from './interactive-copy-check-form'
 import { NotebookLogView } from '../notebook-log-view'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UploadCloud, Database, Calendar, Phone, MessageSquare, Edit3, BookOpen } from 'lucide-react'
+import { UploadCloud, Database, Calendar, Phone, MessageSquare, Edit3, BookOpen, PenTool } from 'lucide-react'
 
 export default async function UploadsPage() {
   const session = await auth()
@@ -67,9 +68,13 @@ export default async function UploadsPage() {
               <Edit3 className="w-4 h-4 mr-2" />
               Manual Entry
             </TabsTrigger>
+            <TabsTrigger value="interactive-copy" className="rounded-none border-b-2 border-transparent data-active:border-indigo-500 data-active:!bg-transparent data-active:!text-indigo-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
+              <PenTool className="w-4 h-4 mr-2" />
+              Check Copies
+            </TabsTrigger>
             <TabsTrigger value="copy" className="rounded-none border-b-2 border-transparent data-active:border-teal-500 data-active:!bg-transparent data-active:!text-teal-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
               <BookOpen className="w-4 h-4 mr-2" />
-              Copy Checking
+              Upload Copies
             </TabsTrigger>
             <TabsTrigger value="notebook-logs" className="rounded-none border-b-2 border-transparent data-active:border-teal-500 data-active:!bg-transparent data-active:!text-teal-500 hover:text-muted-foreground transition-all font-semibold h-12 px-6 flex items-center justify-center text-sm bg-transparent shadow-none whitespace-nowrap">
               <BookOpen className="w-4 h-4 mr-2" />
@@ -101,6 +106,10 @@ export default async function UploadsPage() {
             <ManualEntryForm classes={rawClasses} />
           </TabsContent>
           
+          <TabsContent value="interactive-copy" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
+            <InteractiveCopyCheckForm classes={rawClasses} />
+          </TabsContent>
+
           <TabsContent value="copy" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
             <CopyCheckingForm classes={rawClasses} />
           </TabsContent>
