@@ -57,22 +57,25 @@ export function MonthlyCertificate({ monthName, className, subjectName, topStude
   let displayClass = className;
   let displaySubject = subjectName;
   
-  if (!displaySubject || !displayClass) {
-    try {
-      if (typeof window !== 'undefined') {
-        const parts = window.location.pathname.split('/');
-        if (parts[1] === 'leaderboard' || parts[1] === 'dashboard') { // Also handle dashboard paths just in case
-          // The path might be something like /dashboard/leaderboard/[class]/[subject]
-          // or /leaderboard/[class]/[subject]
-          const classIdx = parts.indexOf('leaderboard') + 1;
-          if (classIdx > 0 && classIdx < parts.length) {
-             if (!className && parts[classIdx]) displayClass = decodeURIComponent(parts[classIdx]);
-             if (!subjectName && parts[classIdx + 1]) displaySubject = decodeURIComponent(parts[classIdx + 1]);
-          }
-        }
+  try {
+    if (typeof window !== 'undefined') {
+      const parts = window.location.pathname.split('/');
+      // The path might be something like /dashboard/leaderboard/[class]/[subject]
+      // or /leaderboard/[class]/[subject]
+      const classIdx = parts.indexOf('leaderboard') + 1;
+      if (classIdx > 0 && classIdx < parts.length) {
+         if (parts[classIdx]) {
+           const parsedClass = decodeURIComponent(parts[classIdx]);
+           // Only override if the original className looks like an ID (or just always override from URL since URL is human-readable)
+           displayClass = parsedClass;
+         }
+         // Only use URL subject if subjectName prop wasn't explicitly provided
+         if (!subjectName && parts[classIdx + 1]) {
+           displaySubject = decodeURIComponent(parts[classIdx + 1]);
+         }
       }
-    } catch (e) {}
-  }
+    }
+  } catch (e) {}
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -99,58 +102,60 @@ export function MonthlyCertificate({ monthName, className, subjectName, topStude
           {/* Certificate Container to capture */}
           <div 
             ref={certRef} 
-            className="relative w-[800px] h-[500px] bg-gradient-to-br from-zinc-900 via-[#0a0a0c] to-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-8 shrink-0"
+            className="relative w-[800px] h-[600px] bg-gradient-to-br from-zinc-950 via-[#0a0a0c] to-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-8 shrink-0"
             style={{ 
-              backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.15) 0%, transparent 50%), radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.05) 0%, transparent 50%)'
+              backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.15) 0%, transparent 60%), radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.05) 0%, transparent 50%)'
             }}
           >
             {/* Background elements */}
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
-            <div className="absolute -left-20 -top-20 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-transparent via-yellow-500/70 to-transparent"></div>
+            <div className="absolute -left-20 -top-20 w-80 h-80 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
             
-            <div className="flex flex-col items-center text-center z-10 w-full mb-10">
-              <div className="flex items-center gap-3 mb-2">
-                <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500 tracking-widest uppercase">
+            <div className="flex flex-col items-center text-center z-10 w-full mb-12 mt-4">
+              <div className="flex items-center gap-3 mb-3">
+                <Star className="w-8 h-8 text-yellow-500 fill-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
+                <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 tracking-widest uppercase drop-shadow-sm">
                   Stars of the Month
                 </h2>
-                <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                <Star className="w-8 h-8 text-yellow-500 fill-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
               </div>
-              <h1 className="text-4xl font-bold text-white mb-2">{monthName}</h1>
-              <p className="text-xl text-zinc-400 font-medium tracking-wide">
-                {displayClass} {displaySubject ? `• ${displaySubject}` : ''}
-              </p>
+              <h1 className="text-5xl font-black text-white mb-4 tracking-tight drop-shadow-lg">{monthName}</h1>
+              <div className="bg-zinc-900/80 border border-zinc-700/50 rounded-full px-6 py-2 shadow-inner backdrop-blur-sm">
+                <p className="text-xl text-zinc-300 font-bold tracking-wide">
+                  <span className="text-white">{displayClass}</span> {displaySubject ? <span className="text-zinc-500 mx-2">•</span> : ''} {displaySubject ? <span className="text-amber-400">{displaySubject}</span> : ''}
+                </p>
+              </div>
             </div>
 
             {/* Podium */}
-            <div className="flex items-end justify-center gap-6 w-full z-10 px-12">
+            <div className="flex items-end justify-center gap-4 w-full z-10 px-8 flex-1 pb-4">
               {/* Silver */}
               {second && (
                 <div className="flex flex-col items-center flex-1">
-                  <div className="bg-zinc-800/60 border border-zinc-600/50 rounded-xl p-4 w-full text-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.05)] backdrop-blur-sm">
-                    <div className="text-lg font-bold text-white truncate px-2">{second.name}</div>
-                    <div className="text-zinc-400 font-bold mt-1">{second.percentage}%</div>
+                  <div className="bg-zinc-800/80 border border-zinc-600/50 rounded-2xl p-4 w-full text-center mb-3 shadow-[0_10px_20px_rgba(0,0,0,0.3)] backdrop-blur-md relative transform hover:-translate-y-1 transition-transform">
+                    <div className="text-xl font-bold text-white truncate px-2">{second.name}</div>
+                    <div className="text-zinc-300 font-black mt-1.5 text-lg bg-zinc-900/50 rounded-lg py-1">{second.percentage}%</div>
                   </div>
-                  <div className="w-full h-32 bg-gradient-to-t from-zinc-800 to-zinc-700 rounded-t-lg border-t-4 border-zinc-400 flex flex-col items-center pt-4 relative overflow-hidden shadow-inner">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
-                    <Medal className="w-10 h-10 text-zinc-300 drop-shadow-md mb-2" />
-                    <span className="text-3xl font-black text-zinc-400">2ND</span>
+                  <div className="w-full h-36 bg-gradient-to-t from-zinc-900 via-zinc-800 to-zinc-700 rounded-t-xl border-t-4 border-zinc-300 flex flex-col items-center pt-5 relative overflow-hidden shadow-[inset_0_4px_15px_rgba(0,0,0,0.4)]">
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+                    <Medal className="w-12 h-12 text-zinc-300 drop-shadow-[0_2px_5px_rgba(0,0,0,0.5)] mb-2" />
+                    <span className="text-4xl font-black text-zinc-400/80 tracking-tighter">2ND</span>
                   </div>
                 </div>
               )}
 
               {/* Gold */}
               {first && (
-                <div className="flex flex-col items-center flex-1">
-                  <div className="bg-yellow-900/40 border border-yellow-500/50 rounded-xl p-5 w-full text-center mb-4 shadow-[0_0_30px_rgba(234,179,8,0.15)] backdrop-blur-sm relative transform -translate-y-4">
-                    <Trophy className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" />
-                    <div className="text-2xl font-black text-white truncate px-2 mt-4">{first.name}</div>
-                    <div className="text-yellow-400 font-bold mt-1 text-lg">{first.percentage}%</div>
+                <div className="flex flex-col items-center flex-1 relative z-20 mx-2">
+                  <div className="bg-gradient-to-b from-yellow-900/60 to-yellow-900/30 border-2 border-yellow-500/60 rounded-2xl p-5 w-[110%] text-center mb-3 shadow-[0_15px_30px_rgba(234,179,8,0.2)] backdrop-blur-md relative transform -translate-y-4">
+                    <Trophy className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-16 h-16 text-yellow-400 drop-shadow-[0_0_25px_rgba(234,179,8,0.8)] fill-yellow-400/20" />
+                    <div className="text-3xl font-black text-white truncate px-2 mt-4 drop-shadow-md">{first.name}</div>
+                    <div className="text-yellow-400 font-black mt-2 text-2xl bg-black/30 rounded-xl py-1.5 shadow-inner">{first.percentage}%</div>
                   </div>
-                  <div className="w-full h-44 bg-gradient-to-t from-yellow-900/80 to-yellow-600/60 rounded-t-lg border-t-4 border-yellow-400 flex flex-col items-center pt-6 relative overflow-hidden shadow-inner">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
-                    <span className="text-5xl font-black text-yellow-300 drop-shadow-lg">1ST</span>
+                  <div className="w-full h-48 bg-gradient-to-t from-yellow-950 via-yellow-900/80 to-yellow-600/80 rounded-t-xl border-t-4 border-yellow-400 flex flex-col items-center pt-8 relative overflow-hidden shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)]">
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+                    <span className="text-6xl font-black text-yellow-300/90 tracking-tighter drop-shadow-xl">1ST</span>
                   </div>
                 </div>
               )}
@@ -158,21 +163,24 @@ export function MonthlyCertificate({ monthName, className, subjectName, topStude
               {/* Bronze */}
               {third && (
                 <div className="flex flex-col items-center flex-1">
-                  <div className="bg-orange-900/30 border border-orange-700/50 rounded-xl p-4 w-full text-center mb-4 shadow-[0_0_20px_rgba(249,115,22,0.1)] backdrop-blur-sm">
-                    <div className="text-lg font-bold text-white truncate px-2">{third.name}</div>
-                    <div className="text-orange-400 font-bold mt-1">{third.percentage}%</div>
+                  <div className="bg-orange-900/50 border border-orange-700/50 rounded-2xl p-4 w-full text-center mb-3 shadow-[0_10px_20px_rgba(0,0,0,0.3)] backdrop-blur-md relative transform hover:-translate-y-1 transition-transform">
+                    <div className="text-xl font-bold text-white truncate px-2">{third.name}</div>
+                    <div className="text-orange-300 font-black mt-1.5 text-lg bg-orange-950/50 rounded-lg py-1">{third.percentage}%</div>
                   </div>
-                  <div className="w-full h-24 bg-gradient-to-t from-orange-950 to-orange-800 rounded-t-lg border-t-4 border-orange-600 flex flex-col items-center pt-3 relative overflow-hidden shadow-inner">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
-                    <Medal className="w-8 h-8 text-orange-400 drop-shadow-md mb-1" />
-                    <span className="text-2xl font-black text-orange-400">3RD</span>
+                  <div className="w-full h-28 bg-gradient-to-t from-orange-950 via-orange-900/80 to-orange-800/90 rounded-t-xl border-t-4 border-orange-500 flex flex-col items-center pt-4 relative overflow-hidden shadow-[inset_0_4px_15px_rgba(0,0,0,0.4)]">
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+                    <Medal className="w-10 h-10 text-orange-400 drop-shadow-[0_2px_5px_rgba(0,0,0,0.5)] mb-1" />
+                    <span className="text-3xl font-black text-orange-400/80 tracking-tighter">3RD</span>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="absolute bottom-4 right-6 text-zinc-600 text-xs font-bold tracking-widest uppercase">
-              Generated by ResultMaker
+            <div className="absolute bottom-5 right-8 flex items-center gap-2 opacity-60">
+              <Star className="w-4 h-4 text-zinc-500" />
+              <span className="text-zinc-500 text-[10px] font-black tracking-[0.3em] uppercase">
+                Generated by ResultMaker
+              </span>
             </div>
           </div>
         </div>
