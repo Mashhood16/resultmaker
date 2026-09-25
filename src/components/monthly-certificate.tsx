@@ -18,9 +18,10 @@ interface MonthlyCertificateProps {
   className: string
   subjectName?: string
   topStudents: Student[]
+  buttonLabel?: React.ReactNode
 }
 
-export function MonthlyCertificate({ monthName, className, subjectName, topStudents }: MonthlyCertificateProps) {
+export function MonthlyCertificate({ monthName, className, subjectName, topStudents, buttonLabel }: MonthlyCertificateProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const certRef = useRef<HTMLDivElement>(null)
@@ -55,23 +56,34 @@ export function MonthlyCertificate({ monthName, className, subjectName, topStude
   // Try to parse class and subject from URL if possible
   let displayClass = className;
   let displaySubject = subjectName;
-  try {
-    if (typeof window !== 'undefined') {
-      const parts = window.location.pathname.split('/');
-      if (parts[1] === 'leaderboard') {
-        if (parts[2]) displayClass = decodeURIComponent(parts[2]);
-        if (parts[3]) displaySubject = decodeURIComponent(parts[3]);
+  
+  if (!displaySubject || !displayClass) {
+    try {
+      if (typeof window !== 'undefined') {
+        const parts = window.location.pathname.split('/');
+        if (parts[1] === 'leaderboard' || parts[1] === 'dashboard') { // Also handle dashboard paths just in case
+          // The path might be something like /dashboard/leaderboard/[class]/[subject]
+          // or /leaderboard/[class]/[subject]
+          const classIdx = parts.indexOf('leaderboard') + 1;
+          if (classIdx > 0 && classIdx < parts.length) {
+             if (!className && parts[classIdx]) displayClass = decodeURIComponent(parts[classIdx]);
+             if (!subjectName && parts[classIdx + 1]) displaySubject = decodeURIComponent(parts[classIdx + 1]);
+          }
+        }
       }
-    }
-  } catch (e) {}
-
+    } catch (e) {}
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="bg-amber-600/10 text-amber-500 border-amber-500/30 hover:bg-amber-600/20 shadow-sm whitespace-nowrap">
-          <Award className="w-4 h-4 mr-2" />
-          Export Monthly Top 3
+          {buttonLabel || (
+            <>
+              <Award className="w-4 h-4 mr-2" />
+              Export Monthly Top 3
+            </>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl bg-card border-border shadow-2xl p-6 sm:p-8">

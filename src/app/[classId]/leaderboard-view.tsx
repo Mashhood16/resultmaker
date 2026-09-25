@@ -16,7 +16,7 @@ import { ConsolidatedReport } from '@/components/consolidated-report'
 import { toPng, toJpeg } from 'html-to-image'
 import jsPDF from 'jspdf'
 import { toast } from 'sonner'
-import { fetchComprehensiveScores } from '@/app/actions/result-card-actions'
+import { fetchComprehensiveScores, fetchOverallMonthlyTop3 } from '@/app/actions/result-card-actions'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { MonthlyCertificate } from '@/components/monthly-certificate'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -128,7 +128,15 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
   const [expandedTestDetail, setExpandedTestDetail] = useState<string | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
   const [isExporting, setIsExporting] = useState(false)
+  const [overallMonthlyTop3, setOverallMonthlyTop3] = useState<{name: string, percentage: number, rank: number}[]>([])
   
+  useEffect(() => {
+    if (selectedMonthFilter !== 'all') {
+      fetchOverallMonthlyTop3(classId, selectedMonthFilter).then(data => setOverallMonthlyTop3(data))
+    } else {
+      setOverallMonthlyTop3([])
+    }
+  }, [selectedMonthFilter, classId])
   // Report Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [reportSelectedTests, setReportSelectedTests] = useState<Set<string>>(new Set())
@@ -196,12 +204,44 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
         orderedSelectedSubjects
       )
 
+      const isSingleStudentRawMode = selectedStudents.size === 1
+      let tableCols: string[] = []
+
       // Map the multi-subject data to the structure ConsolidatedReport expects,
-      // where "testName" becomes the Subject Name so columns are subjects instead of tests!
       const mappedStudents = data.map(s => {
         const totalObtained = s.subjects.reduce((sum, subj) => sum + subj.rawObtained, 0)
         const totalTotal = s.subjects.reduce((sum, subj) => sum + subj.rawTotal, 0)
         const percentage = totalTotal > 0 ? (totalObtained / totalTotal) * 100 : 0
+        
+        let breakdown: any[] = []
+        if (isSingleStudentRawMode && s.rawScores) {
+          // Sort raw scores by test name then subject name to group them nicely
+          const sortedRaw = [...s.rawScores].sort((a, b) => {
+            if (a.testName !== b.testName) return a.testName.localeCompare(b.testName)
+            return a.subjectName.localeCompare(b.subjectName)
+          })
+          
+          breakdown = sortedRaw.map(rs => ({
+            testName: `${rs.subjectName} - ${rs.testName}`,
+            obtained: rs.obtained,
+            total: rs.total,
+            percentage: rs.percentage,
+            isAbsent: rs.isAbsent
+          }))
+          
+          if (tableCols.length === 0) {
+            tableCols = sortedRaw.map(rs => `${rs.subjectName} - ${rs.testName}`)
+          }
+        } else {
+          breakdown = s.subjects.map(subj => ({
+            testName: subj.subjectName,
+            obtained: subj.rawObtained,
+            total: subj.rawTotal,
+            percentage: subj.rawTotal > 0 ? Number(((subj.rawObtained / subj.rawTotal) * 100).toFixed(2)) : 0,
+            isAbsent: subj.isAbsent
+          }))
+          tableCols = orderedSelectedSubjects
+        }
         
         return {
           id: s.studentId,
@@ -211,13 +251,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           obtained: totalObtained,
           total: totalTotal,
           percentage: Number(percentage.toFixed(2)),
-          breakdown: s.subjects.map(subj => ({
-            testName: subj.subjectName,
-            obtained: subj.rawObtained,
-            total: subj.rawTotal,
-            percentage: subj.rawTotal > 0 ? Number(((subj.rawObtained / subj.rawTotal) * 100).toFixed(2)) : 0,
-            isAbsent: subj.isAbsent
-          })),
+          breakdown: breakdown,
           testBreakdown: s.tests.map(t => ({
             testName: t.testName,
             obtained: t.rawObtained,
@@ -233,8 +267,8 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
 
       setReportData({
         students: mappedStudents,
-        tableColumns: orderedSelectedSubjects,
-        selectedTests: orderedSelectedTests,
+        tableColumns: tableCols,
+        selectedTests: isSingleStudentRawMode ? tableCols : orderedSelectedTests,
         performanceBand: reportPerformanceBand
       })
       
@@ -657,12 +691,37 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
               )}
             </div>
 
-            {selectedMonthFilter !== 'all' && top3.length > 0 && (
-              <MonthlyCertificate 
-                monthName={selectedMonthFilter} 
-                className={initialData[0]?.breakdown[0]?.testName ? classId : classId} // We can just pass classId for now
-                topStudents={top3.map(s => ({ name: s.name, percentage: s.percentage, rank: s.rank }))}
-              />
+            {selectedMonthFilter !== 'all' && (
+              <div className="flex gap-2 flex-wrap">
+                {top3.length > 0 && (
+                  <MonthlyCertificate 
+                    monthName={selectedMonthFilter} 
+                    className={initialData[0]?.breakdown[0]?.testName ? classId : classId} // We can just pass classId for now
+                    subjectName={availableSubjects?.find(s => s.id === initialData[0]?.breakdown[0]?.testName)?.name}
+                    topStudents={top3.map(s => ({ name: s.name, percentage: s.percentage, rank: s.rank }))}
+                    buttonLabel={
+                      <>
+                        <Award className="w-4 h-4 mr-2" />
+                        Subject Top 3
+                      </>
+                    }
+                  />
+                )}
+                {overallMonthlyTop3.length > 0 && (
+                  <MonthlyCertificate 
+                    monthName={selectedMonthFilter} 
+                    className={classId} 
+                    subjectName="Overall Class Performance"
+                    topStudents={overallMonthlyTop3}
+                    buttonLabel={
+                      <>
+                        <Trophy className="w-4 h-4 mr-2" />
+                        Overall Top 3
+                      </>
+                    }
+                  />
+                )}
+              </div>
             )}
             
             {selectedStudents.size > 0 && (

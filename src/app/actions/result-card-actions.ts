@@ -19,6 +19,15 @@ export type ComprehensiveTestScore = {
   isAbsent: boolean
 }
 
+export type ComprehensiveRawScore = {
+  subjectName: string
+  testName: string
+  obtained: number
+  total: number
+  percentage: number
+  isAbsent: boolean
+}
+
 export type ComprehensiveStudentScore = {
   studentId: string
   rollNumber: string | null
@@ -28,6 +37,7 @@ export type ComprehensiveStudentScore = {
   className: string
   subjects: ComprehensiveSubjectScore[]
   tests: ComprehensiveTestScore[]
+  rawScores: ComprehensiveRawScore[]
 }
 
 export async function fetchComprehensiveScores(
@@ -178,6 +188,15 @@ export async function fetchComprehensiveScores(
       }
     })
 
+    const rawScores = student.scores.map(score => ({
+      subjectName: score.subject.name,
+      testName: score.testName,
+      obtained: score.marksObtained,
+      total: score.totalMarks,
+      percentage: Number(score.percentage.toFixed(2)),
+      isAbsent: score.isAbsent
+    }))
+
     return {
       studentId: student.id,
       rollNumber: student.rollNumber,
@@ -186,7 +205,8 @@ export async function fetchComprehensiveScores(
       classId: student.classId,
       className: student.class.name,
       subjects,
-      tests
+      tests,
+      rawScores
     }
   }).sort((a, b) => {
     const aRoll = parseInt(a.rollNumber || '0') || 0
@@ -224,4 +244,87 @@ export async function fetchClassSubjects(classId: string) {
   })
   
   return scores.map(s => s.subject).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export async function fetchOverallMonthlyTop3(classId: string, monthStr: string) {
+  if (!classId || typeof classId !== 'string' || classId.length > 100) {
+    throw new Error('Invalid class ID')
+  }
+
+  const session = await auth()
+  let schoolId: string | undefined
+
+  if (session?.user) {
+    const role = session.user.role
+    if (role === 'admin') throw new Error('Forbidden: Access denied')
+
+    if (role === 'school') {
+      schoolId = session.user.id
+    } else if (role === 'teacher' || role === 'student') {
+      schoolId = session.user.schoolId
+      if (!session.user.classIds?.includes(classId)) {
+        throw new Error('Forbidden: You do not have access to this class')
+      }
+    }
+  } else {
+    // Public unauthenticated access for shared public leaderboard
+    const classRecord = await prisma.class.findUnique({
+      where: { id: classId },
+      select: { id: true, schoolId: true }
+    })
+    if (!classRecord) throw new Error('Class not found')
+    schoolId = classRecord.schoolId
+  }
+
+  if (!schoolId) throw new Error('School context not found')
+
+  const scores = await prisma.score.findMany({
+    where: {
+      student: { 
+        classId,
+        class: { schoolId },
+        ...(!session?.user || session.user.role === 'student' ? { showInLeaderboard: true } : {})
+      }
+    },
+    include: {
+      student: true
+    }
+  })
+  
+  const monthlyScores = scores.filter(s => {
+    const d = new Date(s.testDate)
+    const mStr = d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    return mStr === monthStr
+  })
+  
+  const studentMap = new Map<string, { name: string, obtained: number, total: number }>()
+  
+  for (const s of monthlyScores) {
+    if (!studentMap.has(s.studentId)) {
+      studentMap.set(s.studentId, { name: s.student.name, obtained: 0, total: 0 })
+    }
+    const stu = studentMap.get(s.studentId)!
+    
+    stu.total += s.totalMarks
+    if (!s.isAbsent) {
+      stu.obtained += s.marksObtained
+    }
+  }
+  
+  const results = Array.from(studentMap.values()).map(stu => ({
+    name: stu.name,
+    percentage: stu.total > 0 ? Number(((stu.obtained / stu.total) * 100).toFixed(2)) : 0
+  }))
+  
+  results.sort((a, b) => b.percentage - a.percentage)
+  
+  let currentRank = 1
+  const ranked = results.map((r, idx) => {
+    if (idx > 0 && r.percentage < results[idx-1].percentage) {
+      currentRank = idx + 1
+    }
+    return { ...r, rank: currentRank }
+  })
+  
+  return ranked.filter(r => r.rank <= 3)
 }
