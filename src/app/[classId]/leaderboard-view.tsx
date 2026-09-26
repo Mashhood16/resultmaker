@@ -157,7 +157,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
         if (b.testDate) {
           const d = new Date(b.testDate)
           if (!isNaN(d.getTime())) {
-            const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+            const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
             months.add(monthYear)
           }
         }
@@ -387,7 +387,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           if (!b.testDate) return false;
           const d = new Date(b.testDate);
           if (isNaN(d.getTime())) return false;
-          return d.toLocaleString('en-US', { month: 'long', year: 'numeric' }) === selectedMonthFilter;
+          return d.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }) === selectedMonthFilter;
         });
         
         let newObtained = 0;

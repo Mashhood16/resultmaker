@@ -293,7 +293,7 @@ export async function fetchOverallMonthlyTop3(classId: string, monthStr: string)
   
   const monthlyScores = scores.filter(s => {
     const d = new Date(s.testDate)
-    const mStr = d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    const mStr = d.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
     return mStr === monthStr
   })
   
