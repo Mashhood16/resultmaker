@@ -262,7 +262,10 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
         }
       })
 
-      mappedStudents.sort((a, b) => b.percentage - a.percentage)
+      mappedStudents.sort((a, b) => {
+        if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+        return a.name.localeCompare(b.name);
+      })
       mappedStudents.forEach((s, idx) => s.rank = idx + 1)
 
       setReportData({
@@ -413,7 +416,10 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
       }).filter(s => s.breakdown.length > 0); // Only keep students who have tests in this month
 
       // Recalculate ranks for the month
-      filteredStudents.sort((a, b) => b.percentage - a.percentage);
+      filteredStudents.sort((a, b) => {
+        if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+        return a.name.localeCompare(b.name);
+      });
       let rank = 1;
       filteredStudents.forEach((student, idx) => {
         if (idx > 0 && student.percentage < filteredStudents[idx - 1].percentage) {
@@ -454,7 +460,8 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
     testStudents.sort((a, b) => {
       if (a.isAbsent && !b.isAbsent) return 1
       if (!a.isAbsent && b.isAbsent) return -1
-      return b.percentage - a.percentage
+      if (b.percentage !== a.percentage) return b.percentage - a.percentage
+      return a.name.localeCompare(b.name)
     })
 
     let tRank = 1

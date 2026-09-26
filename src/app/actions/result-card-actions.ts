@@ -316,7 +316,10 @@ export async function fetchOverallMonthlyTop3(classId: string, monthStr: string)
     percentage: stu.total > 0 ? Number(((stu.obtained / stu.total) * 100).toFixed(2)) : 0
   }))
   
-  results.sort((a, b) => b.percentage - a.percentage)
+  results.sort((a, b) => {
+    if (b.percentage !== a.percentage) return b.percentage - a.percentage
+    return a.name.localeCompare(b.name)
+  })
   
   let currentRank = 1
   const ranked = results.map((r, idx) => {
