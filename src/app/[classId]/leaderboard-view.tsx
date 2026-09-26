@@ -655,74 +655,55 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
               )}
 
 
-              {/* Test Filter Pills */}
+              {/* Test Dropdown Filter */}
               {uniqueTests.length > 0 && (
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-                  <div className="flex items-center gap-1 p-1 bg-card/80 border border-border rounded-xl shadow-inner">
-                    <Button
-                      size="sm"
-                      variant={selectedTestFilter === 'all' ? 'default' : 'ghost'}
-                      onClick={() => setSelectedTestFilter('all')}
-                      className={`h-8 px-3 rounded-lg text-xs font-bold transition-all ${
-                        selectedTestFilter === 'all'
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      All Tests
-                    </Button>
-                    {uniqueTests.map((test) => (
-                      <Button
-                        key={test}
-                        size="sm"
-                        variant={selectedTestFilter === test ? 'default' : 'ghost'}
-                        onClick={() => setSelectedTestFilter(test)}
-                        className={`h-8 px-3 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-                          selectedTestFilter === test
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {test}
-                      </Button>
+                <Select value={selectedTestFilter} onValueChange={setSelectedTestFilter}>
+                  <SelectTrigger className="w-[180px] h-11 bg-card/80 border-border rounded-xl">
+                    <SelectValue placeholder="All Tests" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tests</SelectItem>
+                    {uniqueTests.map(test => (
+                      <SelectItem key={test} value={test}>{test}</SelectItem>
                     ))}
-                  </div>
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Monthly Export Buttons */}
+              {selectedMonthFilter !== 'all' && (
+                <div className="flex gap-2 shrink-0 ml-auto">
+                  {top3.length > 0 && (
+                    <MonthlyCertificate 
+                      monthName={selectedMonthFilter} 
+                      className={initialData[0]?.breakdown[0]?.testName ? classId : classId}
+                      subjectName={availableSubjects?.find(s => s.id === initialData[0]?.breakdown[0]?.testName)?.name || "Subject Score"}
+                      topStudents={top3.map(s => ({ name: s.name, percentage: s.percentage, rank: s.rank }))}
+                      buttonLabel={
+                        <>
+                          <Award className="w-4 h-4 mr-2" />
+                          Subject Top 3
+                        </>
+                      }
+                    />
+                  )}
+                  {overallMonthlyTop3.length > 0 && (
+                    <MonthlyCertificate 
+                      monthName={selectedMonthFilter} 
+                      className={classId} 
+                      subjectName="Overall Class Performance"
+                      topStudents={overallMonthlyTop3}
+                      buttonLabel={
+                        <>
+                          <Trophy className="w-4 h-4 mr-2" />
+                          Overall Top 3
+                        </>
+                      }
+                    />
+                  )}
                 </div>
               )}
             </div>
-
-            {selectedMonthFilter !== 'all' && (
-              <div className="flex gap-2 flex-wrap">
-                {top3.length > 0 && (
-                  <MonthlyCertificate 
-                    monthName={selectedMonthFilter} 
-                    className={initialData[0]?.breakdown[0]?.testName ? classId : classId} // We can just pass classId for now
-                    subjectName={availableSubjects?.find(s => s.id === initialData[0]?.breakdown[0]?.testName)?.name}
-                    topStudents={top3.map(s => ({ name: s.name, percentage: s.percentage, rank: s.rank }))}
-                    buttonLabel={
-                      <>
-                        <Award className="w-4 h-4 mr-2" />
-                        Subject Top 3
-                      </>
-                    }
-                  />
-                )}
-                {overallMonthlyTop3.length > 0 && (
-                  <MonthlyCertificate 
-                    monthName={selectedMonthFilter} 
-                    className={classId} 
-                    subjectName="Overall Class Performance"
-                    topStudents={overallMonthlyTop3}
-                    buttonLabel={
-                      <>
-                        <Trophy className="w-4 h-4 mr-2" />
-                        Overall Top 3
-                      </>
-                    }
-                  />
-                )}
-              </div>
-            )}
             
             {selectedStudents.size > 0 && (
               <div className="flex gap-2">
