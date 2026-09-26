@@ -49,9 +49,23 @@ export function MonthlyCertificate({ monthName, className, subjectName, topStude
     }
   }
 
-  const first = topStudents.find(s => s.rank === 1) || topStudents[0]
-  const second = topStudents.find(s => s.rank === 2) || topStudents[1]
-  const third = topStudents.find(s => s.rank === 3) || topStudents[2]
+  // Use unique percentages to group tied students together (Dense Ranking)
+  const uniquePercentages = Array.from(new Set(topStudents.map(s => s.percentage))).sort((a, b) => b - a)
+  
+  const getGroup = (idx: number) => {
+    if (idx >= uniquePercentages.length) return null
+    const p = uniquePercentages[idx]
+    const tied = topStudents.filter(s => s.percentage === p)
+    if (tied.length === 0) return null
+    return {
+      name: tied.map(s => s.name).join(" & "),
+      percentage: p
+    }
+  }
+
+  const first = getGroup(0)
+  const second = getGroup(1)
+  const third = getGroup(2)
 
   // Try to parse class and subject from URL if possible
   let displayClass = className;

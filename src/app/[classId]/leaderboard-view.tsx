@@ -541,9 +541,17 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
     )
   }, [activeData, search])
 
-  // Get Top 3
-  const top3 = activeData.slice(0, 3)
-  const [first, second, third] = top3
+  // Get Top 3 using dense ranking (unique percentages)
+  const uniquePercentages = Array.from(new Set(activeData.filter(s => !s.isAbsent).map(s => s.percentage))).sort((a, b) => b - a)
+  const top3Percentages = uniquePercentages.slice(0, 3)
+  
+  // Find all students who match these top 3 percentages
+  const top3Students = activeData.filter(s => !s.isAbsent && top3Percentages.includes(s.percentage))
+  
+  // Group them for the podium display
+  const first = top3Students.filter(s => s.percentage === top3Percentages[0])
+  const second = top3Students.filter(s => s.percentage === top3Percentages[1])
+  const third = top3Students.filter(s => s.percentage === top3Percentages[2])
 
   const getTierBadge = (percentage: number, isAbsent: boolean) => {
     if (isAbsent) return <Badge variant="destructive" className="bg-red-600">Absent</Badge>
@@ -570,18 +578,18 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
 
 
       {/* Podium Display - Glassmorphism & Metallic Aesthetic */}
-      {top3.length > 0 && (
+      {top3Students.length > 0 && (
         <div className="flex flex-row justify-center items-end gap-2 sm:gap-4 md:gap-12 pt-12 pb-8 px-2 sm:px-4">
           {/* Rank 2 - Silver */}
-          {second && (
+          {second.length > 0 && (
             <div className="order-2 md:order-1 flex flex-col items-center animate-in slide-in-from-bottom-16 duration-700 delay-300">
               <div className="relative group w-full flex justify-center pb-4">
                 <div className="absolute -inset-0.5 bg-gradient-to-b from-zinc-300/40 to-transparent rounded-3xl blur-[2px] opacity-70 group-hover:opacity-100 transition duration-700"></div>
                 <Card className="relative bg-background/40 border border-zinc-400/30 w-24 sm:w-32 md:w-56 text-center py-4 sm:py-6 md:py-10 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:-translate-y-2 transition-transform duration-500">
                   <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-zinc-300/50 to-transparent"></div>
                   <Medal className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 text-zinc-300 mx-auto mb-2 sm:mb-3 md:mb-5 drop-shadow-[0_0_15px_rgba(212,212,216,0.3)]" />
-                  <div className="font-bold text-foreground text-sm md:text-xl truncate px-2 md:px-4 tracking-tight">{second.name}</div>
-                  <div className="text-zinc-400 font-medium mt-1 md:mt-2 text-xs md:text-sm tracking-widest uppercase">{second.percentage}%</div>
+                  <div className="font-bold text-foreground text-sm md:text-xl truncate px-2 md:px-4 tracking-tight">{second.map(s => s.name).join(" & ")}</div>
+                  <div className="text-zinc-400 font-medium mt-1 md:mt-2 text-xs md:text-sm tracking-widest uppercase">{second[0].percentage}%</div>
                 </Card>
               </div>
               <div className="h-12 sm:h-16 md:h-32 w-24 sm:w-32 md:w-56 bg-gradient-to-b from-background/80 to-transparent border-t border-zinc-500/30 rounded-t-2xl flex flex-col items-center justify-start pt-3 sm:pt-4 backdrop-blur-md">
@@ -591,15 +599,15 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           )}
 
           {/* Rank 1 - Gold */}
-          {first && (
+          {first.length > 0 && (
             <div className="order-1 md:order-2 flex flex-col items-center animate-in slide-in-from-bottom-24 duration-700 delay-500 z-10">
               <div className="relative group w-full flex justify-center pb-4">
                 <div className="absolute -inset-0.5 bg-gradient-to-b from-yellow-400/50 to-transparent rounded-3xl blur-[3px] opacity-80 group-hover:opacity-100 group-hover:blur-[5px] transition duration-700"></div>
                 <Card className="relative bg-background/50 border border-yellow-500/40 w-28 sm:w-36 md:w-64 text-center py-6 sm:py-8 md:py-14 backdrop-blur-3xl rounded-3xl shadow-[0_0_50px_rgba(234,179,8,0.15)] hover:-translate-y-3 transition-transform duration-500">
                   <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-400/80 to-transparent"></div>
                   <Trophy className="w-10 h-10 sm:w-12 sm:h-12 md:w-20 md:h-20 text-yellow-400 mx-auto mb-3 sm:mb-4 md:mb-6 drop-shadow-[0_0_25px_rgba(250,204,21,0.5)]" />
-                  <div className="font-black text-foreground text-base md:text-2xl truncate px-2 md:px-6 tracking-tight">{first.name}</div>
-                  <div className="text-yellow-400 font-bold mt-1 md:mt-2 text-sm md:text-base tracking-widest uppercase drop-shadow-[0_0_10px_rgba(250,204,21,0.2)]">{first.percentage}%</div>
+                  <div className="font-black text-foreground text-base md:text-2xl truncate px-2 md:px-6 tracking-tight">{first.map(s => s.name).join(" & ")}</div>
+                  <div className="text-yellow-400 font-bold mt-1 md:mt-2 text-sm md:text-base tracking-widest uppercase drop-shadow-[0_0_10px_rgba(250,204,21,0.2)]">{first[0].percentage}%</div>
                 </Card>
               </div>
               <div className="h-16 sm:h-24 md:h-48 w-28 sm:w-36 md:w-64 bg-gradient-to-b from-yellow-900/20 to-transparent border-t-2 border-yellow-500/40 rounded-t-2xl flex flex-col items-center justify-start pt-3 sm:pt-4 md:pt-6 backdrop-blur-md">
@@ -609,15 +617,15 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
           )}
 
           {/* Rank 3 - Bronze */}
-          {third && (
+          {third.length > 0 && (
             <div className="order-3 md:order-3 flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100">
               <div className="relative group w-full flex justify-center pb-4">
                 <div className="absolute -inset-0.5 bg-gradient-to-b from-orange-600/40 to-transparent rounded-3xl blur-[2px] opacity-70 group-hover:opacity-100 transition duration-700"></div>
                 <Card className="relative bg-background/40 border border-orange-700/30 w-20 sm:w-28 md:w-48 text-center py-4 sm:py-5 md:py-8 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:-translate-y-2 transition-transform duration-500">
                   <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent"></div>
                   <Star className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 text-orange-500 mx-auto mb-2 sm:mb-3 md:mb-4 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]" />
-                  <div className="font-bold text-foreground text-xs md:text-lg truncate px-2 md:px-4 tracking-tight">{third.name}</div>
-                  <div className="text-orange-500/80 font-medium mt-1 md:mt-2 text-[10px] md:text-xs tracking-widest uppercase">{third.percentage}%</div>
+                  <div className="font-bold text-foreground text-xs md:text-lg truncate px-2 md:px-4 tracking-tight">{third.map(s => s.name).join(" & ")}</div>
+                  <div className="text-orange-500/80 font-medium mt-1 md:mt-2 text-[10px] md:text-xs tracking-widest uppercase">{third[0].percentage}%</div>
                 </Card>
               </div>
               <div className="h-10 sm:h-12 md:h-24 w-20 sm:w-28 md:w-48 bg-gradient-to-b from-background/80 to-transparent border-t border-orange-700/30 rounded-t-2xl flex flex-col items-center justify-start pt-2 sm:pt-3 backdrop-blur-md">
@@ -680,12 +688,12 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
               {/* Monthly Export Buttons */}
               {selectedMonthFilter !== 'all' && (
                 <div className="flex gap-2 shrink-0 ml-auto">
-                  {top3.length > 0 && (
+                  {top3Students.length > 0 && (
                     <MonthlyCertificate 
                       monthName={selectedMonthFilter} 
                       className={initialData[0]?.breakdown[0]?.testName ? classId : classId}
                       subjectName={availableSubjects?.find(s => s.id === initialData[0]?.breakdown[0]?.testName)?.name || "Subject Score"}
-                      topStudents={top3.map(s => ({ name: s.name, percentage: s.percentage, rank: s.rank }))}
+                      topStudents={top3Students.map(s => ({ name: s.name, percentage: s.percentage, rank: s.rank }))}
                       buttonLabel={
                         <>
                           <Award className="w-4 h-4 mr-2" />

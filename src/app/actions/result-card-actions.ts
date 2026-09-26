@@ -321,13 +321,13 @@ export async function fetchOverallMonthlyTop3(classId: string, monthStr: string)
     return a.name.localeCompare(b.name)
   })
   
-  let currentRank = 1
-  const ranked = results.map((r, idx) => {
-    if (idx > 0 && r.percentage < results[idx-1].percentage) {
-      currentRank = idx + 1
-    }
-    return { ...r, rank: currentRank }
-  })
+  const uniquePercentages = Array.from(new Set(results.map(r => r.percentage))).sort((a, b) => b - a)
+  const top3Percentages = uniquePercentages.slice(0, 3)
   
-  return ranked.filter(r => r.rank <= 3)
+  return results
+    .filter(r => top3Percentages.includes(r.percentage))
+    .map(r => ({
+      ...r,
+      rank: uniquePercentages.indexOf(r.percentage) + 1
+    }))
 }
