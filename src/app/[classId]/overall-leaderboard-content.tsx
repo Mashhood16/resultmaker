@@ -34,8 +34,7 @@ export async function OverallLeaderboardContent({ classId, availableSubjects, is
         total: 0,
         percentage: 0,
         isAbsent: true,
-        breakdown: [],
-        _subjectMap: new Map<string, any>() // Temporary map to group by subject
+        breakdown: []
       })
     } else {
       const existing = studentMap.get(key)!
@@ -58,43 +57,20 @@ export async function OverallLeaderboardContent({ classId, availableSubjects, is
     sData.obtained += obtainedNum
     sData.total += totalNum
 
-    // Group by subject
-    const subjectName = score.subject.name
-    if (!sData._subjectMap.has(subjectName)) {
-      sData._subjectMap.set(subjectName, {
-        testName: subjectName, // Mapping subject name to testName so LeaderboardView shows it as a column
-        testDate: score.testDate, // Just store the latest date to allow month filtering to somewhat work
-        obtained: 0,
-        total: 0,
-        percentage: 0,
-        isAbsent: true
-      })
-    }
-    
-    const subjectData = sData._subjectMap.get(subjectName)!
-    if (!isAbsent) subjectData.isAbsent = false
-    subjectData.obtained += obtainedNum
-    subjectData.total += totalNum
-    
-    // Always keep the latest test date for month filtering
-    if (score.testDate && (!subjectData.testDate || score.testDate > subjectData.testDate)) {
-       subjectData.testDate = score.testDate
-    }
+    // Preserve individual tests to allow client-side month filtering to work
+    sData.breakdown.push({
+      testName: `${score.subject.name} - ${score.testName}`,
+      testDate: score.testDate,
+      obtained: obtainedNum,
+      total: totalNum,
+      percentage: totalNum > 0 ? Number(((obtainedNum / totalNum) * 100).toFixed(2)) : 0,
+      isAbsent: isAbsent
+    })
   })
 
   // Finalize calculations
   const finalData = Array.from(studentMap.values()).map(sData => {
     sData.percentage = sData.total > 0 ? Number(((sData.obtained / sData.total) * 100).toFixed(2)) : 0
-    
-    sData.breakdown = Array.from(sData._subjectMap.values()).map((subj: any) => {
-      subj.percentage = subj.total > 0 ? Number(((subj.obtained / subj.total) * 100).toFixed(2)) : 0
-      return subj
-    })
-    
-    // Sort breakdown by subject name
-    sData.breakdown.sort((a: any, b: any) => a.testName.localeCompare(b.testName))
-    
-    delete sData._subjectMap
     return sData
   })
 
