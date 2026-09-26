@@ -84,10 +84,10 @@ export async function OverallLeaderboardContent({ classId, availableSubjects, is
 
   // Finalize calculations
   const finalData = Array.from(studentMap.values()).map(sData => {
-    sData.percentage = sData.total > 0 ? (sData.obtained / sData.total) * 100 : 0
+    sData.percentage = sData.total > 0 ? Number(((sData.obtained / sData.total) * 100).toFixed(2)) : 0
     
     sData.breakdown = Array.from(sData._subjectMap.values()).map((subj: any) => {
-      subj.percentage = subj.total > 0 ? (subj.obtained / subj.total) * 100 : 0
+      subj.percentage = subj.total > 0 ? Number(((subj.obtained / subj.total) * 100).toFixed(2)) : 0
       return subj
     })
     
