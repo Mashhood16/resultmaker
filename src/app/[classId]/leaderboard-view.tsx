@@ -473,7 +473,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
     })
 
     return testStudents
-  }, [initialData, selectedTestFilter])
+  }, [initialData, selectedMonthFilter, selectedTestFilter])
 
   
   const analyticsData = useMemo(() => {
