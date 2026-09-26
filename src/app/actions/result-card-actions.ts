@@ -283,7 +283,7 @@ export async function fetchOverallMonthlyTop3(classId: string, monthStr: string)
       student: { 
         classId,
         class: { schoolId },
-        ...(!session?.user || session.user.role === 'student' ? { showInLeaderboard: true } : {})
+        showInLeaderboard: true
       }
     },
     include: {
