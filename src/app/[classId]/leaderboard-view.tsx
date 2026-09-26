@@ -380,11 +380,21 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
 
   // Calculate active dataset based on selected test filter
   const activeData = useMemo(() => {
-    let filteredStudents = initialData;
+    let filteredStudents = initialData.map(s => ({ ...s }));
+    
+    // Calculate initial All Time ranks
+    let initialRank = 1;
+    filteredStudents.forEach((student, idx) => {
+      if (idx > 0 && student.percentage < filteredStudents[idx - 1].percentage) {
+        initialRank = idx + 1;
+      }
+      student.rank = initialRank;
+      student.overallRank = initialRank;
+    });
 
     // Filter by Month first if selected
     if (selectedMonthFilter !== 'all') {
-      filteredStudents = initialData.map(student => {
+      filteredStudents = filteredStudents.map(student => {
         // Only keep breakdown items that match the month
         const filteredBreakdown = student.breakdown.filter(b => {
           if (!b.testDate) return false;
