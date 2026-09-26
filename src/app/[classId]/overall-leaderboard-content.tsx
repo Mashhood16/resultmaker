@@ -46,15 +46,13 @@ export async function OverallLeaderboardContent({ classId, availableSubjects, is
 
     const sData = studentMap.get(key)!
     
-    // We want to skip 'A' (Absent) for obtained, but still include in total if it was a graded test? 
-    // Actually, following the logic in leaderboard-content.tsx:
-    const isAbsent = score.isAbsent || score.obtainedMarks.toUpperCase() === 'A' || score.obtainedMarks.toUpperCase() === 'ABSENT'
+    const isAbsent = score.isAbsent
     
     if (!isAbsent) {
       sData.isAbsent = false
     }
 
-    const obtainedNum = isAbsent ? 0 : (parseFloat(score.obtainedMarks) || 0)
+    const obtainedNum = isAbsent ? 0 : (score.marksObtained || 0)
     const totalNum = score.totalMarks || 0
 
     sData.obtained += obtainedNum
