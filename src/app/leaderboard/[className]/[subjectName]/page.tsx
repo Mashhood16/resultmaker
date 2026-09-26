@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LeaderboardContent } from '../../../[classId]/leaderboard-content'
+import { OverallLeaderboardContent } from '../../../[classId]/overall-leaderboard-content'
 import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
 import { Suspense } from 'react'
 import { auth } from '@/auth'
@@ -28,6 +29,7 @@ export default async function ClassLeaderboardPage({
   // Lookup the class for the currently logged in school
   const decodedClassName = decodeURIComponent(params.className)
   const decodedSubjectName = decodeURIComponent(params.subjectName)
+  const isOverall = decodedSubjectName.toLowerCase() === 'overall'
   
   const schoolId = session.user.role === 'school' ? session.user.id : session.user.schoolId
 
@@ -50,16 +52,6 @@ export default async function ClassLeaderboardPage({
     redirect('/dashboard')
   }
 
-  // Find the subject
-  const subjectData = await prisma.subject.findFirst({
-    where: {
-      schoolId: schoolId,
-      name: { equals: decodedSubjectName, mode: 'insensitive' }
-    }
-  })
-
-  if (!subjectData) return <div className="p-8 text-center text-red-500">Subject "{decodedSubjectName}" not found.</div>
-
   // Find other subjects that have scores for this class, so we can show the navigation tabs
   const subjects = await prisma.subject.findMany({
     where: {
@@ -74,10 +66,23 @@ export default async function ClassLeaderboardPage({
     orderBy: { name: 'asc' }
   })
 
-  // Ensure the current subject is in the list of tabs, even if it has no scores yet
-  if (!subjects.find(s => s.id === subjectData.id)) {
-    subjects.push(subjectData)
-    subjects.sort((a, b) => a.name.localeCompare(b.name))
+  // Find the subject if not overall
+  let subjectData = null
+  if (!isOverall) {
+    subjectData = await prisma.subject.findFirst({
+      where: {
+        schoolId: schoolId,
+        name: { equals: decodedSubjectName, mode: 'insensitive' }
+      }
+    })
+
+    if (!subjectData) return <div className="p-8 text-center text-red-500">Subject "{decodedSubjectName}" not found.</div>
+
+    // Ensure the current subject is in the list of tabs, even if it has no scores yet
+    if (!subjects.find(s => s.id === subjectData!.id)) {
+      subjects.push(subjectData)
+      subjects.sort((a, b) => a.name.localeCompare(b.name))
+    }
   }
 
   const activeTests = await prisma.onlineTest.findMany({
@@ -135,11 +140,19 @@ export default async function ClassLeaderboardPage({
         <div className="space-y-8">
           <div className="overflow-x-auto pb-2 scrollbar-hide">
             <div className="flex gap-2">
+              <Link href={`/leaderboard/${encodeURIComponent(classData.name)}/Overall`}>
+                <Button 
+                  variant={isOverall ? "default" : "outline"}
+                  className={`whitespace-nowrap ${isOverall ? 'bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
+                >
+                  Overall
+                </Button>
+              </Link>
               {subjects.map((sub) => (
                 <Link key={sub.id} href={`/leaderboard/${encodeURIComponent(classData.name)}/${encodeURIComponent(sub.name)}`}>
                   <Button 
-                    variant={subjectData.id === sub.id ? "default" : "outline"}
-                    className={`whitespace-nowrap ${subjectData.id === sub.id ? 'bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
+                    variant={!isOverall && subjectData?.id === sub.id ? "default" : "outline"}
+                    className={`whitespace-nowrap ${!isOverall && subjectData?.id === sub.id ? 'bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
                   >
                     {sub.name}
                   </Button>
@@ -149,7 +162,11 @@ export default async function ClassLeaderboardPage({
           </div>
 
           <Suspense fallback={<div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse">Loading rankings...</div>}>
-            <LeaderboardContent classId={classData.id} subjectId={subjectData.id} availableSubjects={subjects} />
+            {isOverall ? (
+              <OverallLeaderboardContent classId={classData.id} availableSubjects={subjects} />
+            ) : (
+              <LeaderboardContent classId={classData.id} subjectId={subjectData!.id} availableSubjects={subjects} />
+            )}
           </Suspense>
         </div>
       </div>
