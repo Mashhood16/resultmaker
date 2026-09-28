@@ -22,7 +22,7 @@ export default async function OnlineTestsPage() {
   // Fetch online tests created by this school
   const tests = await prisma.onlineTest.findMany({
     where: {
-      schoolId: access.schoolId,
+      ...(access.isAdmin ? {} : { schoolId: access.schoolId as string }),
       ...(isTeacher ? { classId: { in: classIds } } : {})
     },
     include: {

@@ -8,7 +8,8 @@ import {
   FileText, 
   UploadCloud,
   Settings,
-  MonitorPlay
+  MonitorPlay,
+  BookOpen
 } from "lucide-react";
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
   { name: "Roster", href: "/dashboard/roster", icon: Users, roles: ["admin", "school", "teacher"] },
   { name: "Wizard", href: "/dashboard/wizard", icon: FileText, roles: ["admin", "school", "teacher"] },
   { name: "Tests", href: "/dashboard/online-tests", icon: MonitorPlay, roles: ["admin", "school", "teacher"] },
+  { name: "Materials", href: "/dashboard/materials", icon: BookOpen, roles: ["teacher"] },
   { name: "Manage", href: "/dashboard/uploads", icon: UploadCloud, roles: ["admin", "school", "teacher"] },
   { name: "Users", href: "/dashboard/users", icon: Settings, roles: ["admin", "school", "teacher"] },
 ];

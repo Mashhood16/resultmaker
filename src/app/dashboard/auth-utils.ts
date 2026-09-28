@@ -1,4 +1,4 @@
-import { auth } from '@/auth'
+﻿import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 
 export async function requireSchoolOrTeacherAccess(className?: string, classId?: string, subjectName?: string) {
@@ -9,6 +9,17 @@ export async function requireSchoolOrTeacherAccess(className?: string, classId?:
   }
 
   const role = session.user.role
+
+  if (role === 'admin') {
+    return {
+      schoolId: null,
+      session,
+      isTeacher: false,
+      classIds: [],
+      isAdmin: true
+    }
+  }
+
   const schoolId = role === 'school' ? session.user.id : session.user.schoolId
 
   if (!schoolId) {
@@ -61,6 +72,7 @@ export async function requireSchoolOrTeacherAccess(className?: string, classId?:
     schoolId, 
     session,
     isTeacher: role === 'teacher',
-    classIds: role === 'teacher' ? session.user.classIds || [] : []
+    classIds: role === 'teacher' ? session.user.classIds || [] : [],
+    isAdmin: false
   }
 }
