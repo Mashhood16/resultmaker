@@ -16,7 +16,7 @@ export async function GET() {
 
   try {
     const timestamp = Math.round(new Date().getTime() / 1000)
-    const folder = 'resultmaker_materials'
+    const folder = 'cendroclass_materials'
     
     // Generate signature
     const signature = cloudinary.utils.api_sign_request(

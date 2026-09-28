@@ -310,7 +310,7 @@ export default async function PublicMaterialsPage({
 
         {/* Footer info */}
         <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground border-t border-border/40">
-          <p>This is a read-only public view provided by ResultMaker for students and parents.</p>
+          <p>This is a read-only public view provided by Cendro Class for students and parents.</p>
         </footer>
       </div>
     </div>

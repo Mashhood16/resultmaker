@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     const uploadResponse = await cloudinary.uploader.upload(image, {
-      folder: 'resultmaker_grading'
+      folder: 'cendroclass_grading'
     })
 
     return NextResponse.json({ url: uploadResponse.secure_url })

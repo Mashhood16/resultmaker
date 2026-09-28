@@ -2,7 +2,7 @@
 import { MaterialsClient } from './materials-client'
 
 export const metadata = {
-  title: 'Materials | ResultMaker',
+  title: 'Materials | Cendro Class',
 }
 
 export default async function MaterialsPage() {
