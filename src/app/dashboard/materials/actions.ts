@@ -6,9 +6,26 @@ import { revalidatePath } from 'next/cache'
 
 export async function getTeacherClassesAndSubjects() {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'teacher') throw new Error('Unauthorized')
+  if (!session?.user || !['teacher', 'school'].includes(session.user.role)) {
+    throw new Error('Unauthorized')
+  }
 
-  const schoolId = session.user.schoolId!
+  const role = session.user.role
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId!
+
+  if (role === 'school') {
+    const classes = await prisma.class.findMany({ where: { schoolId } })
+    const subjects = await prisma.subject.findMany({ where: { schoolId } })
+    
+    // Create an access map giving school admin access to all subjects for all classes
+    const subjectAccess: Record<string, string[]> = {}
+    classes.forEach(c => {
+      subjectAccess[c.id] = subjects.map(s => s.id)
+    })
+    
+    return { classes, subjects, subjectAccess }
+  }
+
   const classIds = session.user.classIds || []
   const subjectAccess = session.user.subjectAccess || {}
 
@@ -16,7 +33,6 @@ export async function getTeacherClassesAndSubjects() {
     where: { id: { in: classIds }, schoolId }
   })
 
-  // We need all subjects that the teacher has access to in any class
   const allAllowedSubjectIds = Object.values(subjectAccess).flat()
   const subjects = await prisma.subject.findMany({
     where: { id: { in: allAllowedSubjectIds }, schoolId }
@@ -34,21 +50,25 @@ export async function createMaterial(data: {
   subjectId?: string
 }) {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'teacher') throw new Error('Unauthorized')
-
-  const schoolId = session.user.schoolId!
-  const classIds = session.user.classIds || []
-  const subjectAccess = session.user.subjectAccess || {}
-
-  // Verify access
-  if (!classIds.includes(data.classId)) {
-    throw new Error('Unauthorized access to this class')
+  if (!session?.user || !['teacher', 'school'].includes(session.user.role)) {
+    throw new Error('Unauthorized')
   }
 
-  if (data.subjectId) {
-    const allowedSubjects = subjectAccess[data.classId] || []
-    if (!allowedSubjects.includes(data.subjectId)) {
-      throw new Error('Unauthorized access to this subject for this class')
+  const role = session.user.role
+
+  if (role === 'teacher') {
+    const classIds = session.user.classIds || []
+    const subjectAccess = session.user.subjectAccess || {}
+
+    if (!classIds.includes(data.classId)) {
+      throw new Error('Unauthorized access to this class')
+    }
+
+    if (data.subjectId) {
+      const allowedSubjects = subjectAccess[data.classId] || []
+      if (!allowedSubjects.includes(data.subjectId)) {
+        throw new Error('Unauthorized access to this subject for this class')
+      }
     }
   }
 
@@ -60,7 +80,8 @@ export async function createMaterial(data: {
       fileType: data.fileType,
       classId: data.classId,
       subjectId: data.subjectId || null,
-      teacherId: session.user.id
+      teacherId: role === 'teacher' ? session.user.id : null,
+      schoolId: role === 'school' ? session.user.id : session.user.schoolId
     }
   })
 
@@ -70,14 +91,28 @@ export async function createMaterial(data: {
 
 export async function deleteMaterial(materialId: string) {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'teacher') throw new Error('Unauthorized')
+  if (!session?.user || !['teacher', 'school'].includes(session.user.role)) {
+    throw new Error('Unauthorized')
+  }
 
   const material = await prisma.classMaterial.findUnique({
-    where: { id: materialId }
+    where: { id: materialId },
+    include: { class: true }
   })
 
-  if (!material || material.teacherId !== session.user.id) {
-    throw new Error('Unauthorized or material not found')
+  if (!material) throw new Error('Material not found')
+
+  const role = session.user.role
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+
+  if (role === 'school') {
+    if (material.class.schoolId !== schoolId) {
+      throw new Error('Unauthorized')
+    }
+  } else {
+    if (material.teacherId !== session.user.id) {
+      throw new Error('Unauthorized')
+    }
   }
 
   await prisma.classMaterial.delete({
@@ -90,14 +125,24 @@ export async function deleteMaterial(materialId: string) {
 
 export async function getTeacherMaterials() {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'teacher') throw new Error('Unauthorized')
+  if (!session?.user || !['teacher', 'school'].includes(session.user.role)) {
+    throw new Error('Unauthorized')
+  }
+
+  const role = session.user.role
+  const schoolId = role === 'school' ? session.user.id : session.user.schoolId
+
+  if (role === 'school') {
+    return await prisma.classMaterial.findMany({
+      where: { class: { schoolId } },
+      include: { class: true, subject: true },
+      orderBy: { createdAt: 'desc' }
+    })
+  }
 
   return await prisma.classMaterial.findMany({
     where: { teacherId: session.user.id },
-    include: {
-      class: true,
-      subject: true
-    },
+    include: { class: true, subject: true },
     orderBy: { createdAt: 'desc' }
   })
 }
