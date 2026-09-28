@@ -1,4 +1,4 @@
-﻿import prisma from '@/lib/prisma'
+import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { AlertCircle, Home, GraduationCap, Globe, Lock, LogIn, FileText, DownloadCloud, Video, HardDrive, ExternalLink } from 'lucide-react'
@@ -23,10 +23,14 @@ function getDrivePreviewUrl(url: string) {
 }
 
 export default async function PublicMaterialsPage({
-  params
+  params,
+  searchParams
 }: {
-  params: { classId: string }
+  params: { classId: string },
+  searchParams: { subject?: string }
 }) {
+  const subjectFilter = searchParams.subject || 'all'
+
   const classData = await prisma.class.findUnique({
     where: { id: params.classId },
     include: {
@@ -73,7 +77,10 @@ export default async function PublicMaterialsPage({
 
   // Fetch materials for this class
   const materials = await prisma.classMaterial.findMany({
-    where: { classId: classData.id },
+    where: { 
+      classId: classData.id,
+      ...(subjectFilter !== 'all' ? { subjectId: subjectFilter === 'general' ? null : subjectFilter } : {})
+    },
     include: { subject: true },
     orderBy: [
       { chapter: 'asc' },
@@ -145,10 +152,18 @@ export default async function PublicMaterialsPage({
           </div>
         </header>
 
-        {/* Subject Navigation Tabs & Content */}
+        {/* Main Navigation Tabs */}
         <div className="space-y-6">
           <div className="overflow-x-auto pb-2 scrollbar-hide">
             <div className="flex gap-2">
+              <Link href={`/public/leaderboard/${classData.id}/overall`}>
+                <Button 
+                  variant="outline"
+                  className="whitespace-nowrap rounded-xl transition-all bg-card border-border text-muted-foreground hover:text-foreground"
+                >
+                  Overall
+                </Button>
+              </Link>
               {subjects.map((sub) => (
                 <Link 
                   key={sub.id} 
@@ -174,10 +189,33 @@ export default async function PublicMaterialsPage({
           </div>
 
           <div className="space-y-12">
+            
+            {/* Subject Filters within Resources */}
+            <div className="flex flex-wrap gap-2 items-center bg-card/40 p-4 rounded-2xl border border-border/60">
+              <span className="text-sm font-semibold text-muted-foreground mr-2">Filter by Subject:</span>
+              <Link href={`/public/leaderboard/${classData.id}/materials`}>
+                <Badge variant={subjectFilter === 'all' ? 'default' : 'outline'} className={subjectFilter === 'all' ? 'bg-primary cursor-pointer' : 'cursor-pointer hover:bg-muted'}>
+                  All Subjects
+                </Badge>
+              </Link>
+              <Link href={`/public/leaderboard/${classData.id}/materials?subject=general`}>
+                <Badge variant={subjectFilter === 'general' ? 'default' : 'outline'} className={subjectFilter === 'general' ? 'bg-primary cursor-pointer' : 'cursor-pointer hover:bg-muted'}>
+                  General / Uncategorized
+                </Badge>
+              </Link>
+              {subjects.map(sub => (
+                <Link key={sub.id} href={`/public/leaderboard/${classData.id}/materials?subject=${sub.id}`}>
+                  <Badge variant={subjectFilter === sub.id ? 'default' : 'outline'} className={subjectFilter === sub.id ? 'bg-primary cursor-pointer' : 'cursor-pointer hover:bg-muted'}>
+                    {sub.name}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+
             {Object.keys(groupedMaterials).length === 0 ? (
               <div className="py-12 text-center text-muted-foreground bg-card/30 rounded-3xl border border-border/50 border-dashed">
                 <HardDrive className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No study resources have been added for this class yet.</p>
+                <p>No study resources found for this selection.</p>
               </div>
             ) : (
               Object.entries(groupedMaterials).map(([chapter, topics]) => (
