@@ -29,6 +29,7 @@ model Class {
   students      Student[]
   subjectAccess TeacherSubjectAccess[]
   onlineTests   OnlineTest[]
+  materials     ClassMaterial[]
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
 
@@ -44,6 +45,7 @@ model Subject {
   scores        Score[]
   teacherAccess TeacherSubjectAccess[]
   onlineTests   OnlineTest[]
+  materials     ClassMaterial[]
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
   NotebookCheck NotebookCheck[]
@@ -110,6 +112,7 @@ model User {
   classes       Class[]                @relation("UserClasses")
   subjectAccess TeacherSubjectAccess[]
   onlineTests   OnlineTest[]
+  materials     ClassMaterial[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -243,3 +246,22 @@ model NotebookCheck {
 
   @@unique([studentId, subjectId, checkDate])
 }
+
+model ClassMaterial {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String?
+  classId     String
+  subjectId   String?
+  teacherId   String
+
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher     User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

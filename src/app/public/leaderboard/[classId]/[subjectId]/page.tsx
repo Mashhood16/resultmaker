@@ -206,6 +206,14 @@ export default async function PublicClassLeaderboardPage({
                   </Link>
                 )
               })}
+              <Link href={`/public/leaderboard/${classData.id}/materials`}>
+                <Button 
+                  variant="outline"
+                  className="whitespace-nowrap rounded-xl transition-all bg-card border-border text-muted-foreground hover:text-foreground"
+                >
+                  Downloads
+                </Button>
+              </Link>
             </div>
           </div>
 
