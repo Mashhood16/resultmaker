@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
 import { LeaderboardContent } from '@/app/[classId]/leaderboard-content'
+import { OverallLeaderboardContent } from '@/app/[classId]/overall-leaderboard-content'
 import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
@@ -241,12 +242,20 @@ export default async function PublicSubjectLeaderboardPage({
               <p className="text-sm animate-pulse">Loading real-time rankings...</p>
             </div>
           }>
-            <LeaderboardContent 
-              classId={classData.id} 
-              subjectId={subjectData.id} 
-              availableSubjects={subjects as any} 
-              isReadOnly={true}
-            />
+            {subjectData.id === 'overall' ? (
+              <OverallLeaderboardContent 
+                classId={classData.id} 
+                availableSubjects={subjects as any}
+                isReadOnly={true}
+              />
+            ) : (
+              <LeaderboardContent 
+                classId={classData.id} 
+                subjectId={subjectData.id} 
+                availableSubjects={subjects as any} 
+                isReadOnly={true}
+              />
+            )}
           </Suspense>
         </div>
 
