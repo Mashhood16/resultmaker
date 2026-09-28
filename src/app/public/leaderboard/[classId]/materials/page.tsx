@@ -1,7 +1,7 @@
-﻿import prisma from '@/lib/prisma'
+import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { AlertCircle, Home, GraduationCap, Globe, Lock, LogIn, FileText, DownloadCloud, Youtube, HardDrive, ExternalLink } from 'lucide-react'
+import { AlertCircle, Home, GraduationCap, Globe, Lock, LogIn, FileText, DownloadCloud, Video, HardDrive, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
@@ -200,10 +200,10 @@ export default async function PublicMaterialsPage({
                           <Card key={mat.id} className="bg-card border-border hover:shadow-lg transition-all overflow-hidden flex flex-col h-full">
                             
                             {/* Embed Preview Area */}
-                            {mat.resourceType === 'YOUTUBE' && getYouTubeId(mat.fileUrl) && (
+                            {mat.resourceType === 'Video' && getYouTubeId(mat.fileUrl) && (
                               <div className="w-full aspect-video bg-black relative">
                                 <iframe 
-                                  src={`https://www.youtube.com/embed/${getYouTubeId(mat.fileUrl)}`}
+                                  src={`https://www.Video.com/embed/${getYouTubeId(mat.fileUrl)}`}
                                   className="absolute top-0 left-0 w-full h-full border-0"
                                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                   allowFullScreen
@@ -227,7 +227,7 @@ export default async function PublicMaterialsPage({
                               <div>
                                 <div className="flex items-start gap-3">
                                   <div className="mt-1">
-                                    {mat.resourceType === 'YOUTUBE' && <Youtube className="w-5 h-5 text-red-500" />}
+                                    {mat.resourceType === 'Video' && <Video className="w-5 h-5 text-red-500" />}
                                     {mat.resourceType === 'GOOGLE_DRIVE' && <HardDrive className="w-5 h-5 text-blue-500" />}
                                     {mat.resourceType === 'UPLOAD' && <FileText className="w-5 h-5 text-emerald-500" />}
                                   </div>
@@ -253,7 +253,7 @@ export default async function PublicMaterialsPage({
                                   <a href={mat.fileUrl} target="_blank" rel="noopener noreferrer">
                                     <Button size="sm" variant="outline" className="border-border">
                                       <ExternalLink className="w-4 h-4 mr-2" />
-                                      {mat.resourceType === 'YOUTUBE' ? 'Open in YouTube' : 'Open in Google Drive'}
+                                      {mat.resourceType === 'Video' ? 'Open in Video' : 'Open in Google Drive'}
                                     </Button>
                                   </a>
                                 )}
@@ -278,3 +278,4 @@ export default async function PublicMaterialsPage({
     </div>
   )
 }
+
