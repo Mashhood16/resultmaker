@@ -1,4 +1,4 @@
-'use client'
+ï»¿'use client'
 
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -70,7 +70,7 @@ export function MaterialsClient({
 
     try {
       let finalUrl = externalUrl
-      let finalType = resourceType === 'Video' ? 'video/Video' : 'link/gdrive'
+      let finalType = resourceType === 'YOUTUBE' ? 'video/youtube' : 'link/gdrive'
 
       if (resourceType === 'UPLOAD') {
         toast.loading('Uploading large file to cloud... This may take a moment.', { id: toastId })
@@ -137,7 +137,7 @@ export function MaterialsClient({
   }
 
   const getResourceIcon = (type: string) => {
-    if (type === 'Video') return <Video className="w-5 h-5 text-red-500" />
+    if (type === 'YOUTUBE') return <Video className="w-5 h-5 text-red-500" />
     if (type === 'GOOGLE_DRIVE') return <HardDrive className="w-5 h-5 text-blue-500" />
     return <FileText className="w-5 h-5 text-emerald-500" />
   }
@@ -148,7 +148,7 @@ export function MaterialsClient({
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
         <CardHeader>
           <CardTitle>Add Study Material</CardTitle>
-          <CardDescription>Upload files or embed Google Drive & Video links.</CardDescription>
+          <CardDescription>Upload files or embed Google Drive & YouTube links.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -160,8 +160,8 @@ export function MaterialsClient({
               <Button type="button" variant={resourceType === 'GOOGLE_DRIVE' ? 'default' : 'ghost'} onClick={() => setResourceType('GOOGLE_DRIVE')} className="rounded-lg">
                 <HardDrive className="w-4 h-4 mr-2" /> Google Drive Link
               </Button>
-              <Button type="button" variant={resourceType === 'Video' ? 'default' : 'ghost'} onClick={() => setResourceType('Video')} className="rounded-lg">
-                <Video className="w-4 h-4 mr-2" /> Video Video
+              <Button type="button" variant={resourceType === 'YOUTUBE' ? 'default' : 'ghost'} onClick={() => setResourceType('YOUTUBE')} className="rounded-lg">
+                <Video className="w-4 h-4 mr-2" /> YouTube Video
               </Button>
             </div>
 
@@ -214,7 +214,7 @@ export function MaterialsClient({
               </div>
             ) : (
               <div className="space-y-2 p-4 border rounded-xl bg-card">
-                <Label>{resourceType === 'Video' ? 'Video Video URL' : 'Google Drive Shareable Link'}</Label>
+                <Label>{resourceType === 'YOUTUBE' ? 'YouTube Video URL' : 'Google Drive Shareable Link'}</Label>
                 <Input type="url" required={resourceType !== 'UPLOAD'} value={externalUrl} onChange={e => setExternalUrl(e.target.value)} placeholder="https://" />
                 {resourceType === 'GOOGLE_DRIVE' && <p className="text-xs text-muted-foreground mt-1">Make sure link sharing is set to "Anyone with the link".</p>}
               </div>
@@ -245,7 +245,7 @@ export function MaterialsClient({
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mb-1 font-semibold">
-                    {mat.class.name} {mat.subject ? `• ${mat.subject.name}` : '• General'}
+                    {mat.class.name} {mat.subject ? `â€¢ ${mat.subject.name}` : 'â€¢ General'}
                   </p>
                   {(mat.chapter || mat.topic) && (
                     <div className="flex flex-wrap gap-1 mb-2">
@@ -271,5 +271,3 @@ export function MaterialsClient({
     </div>
   )
 }
-
-
