@@ -1,15 +1,16 @@
 import prisma from '@/lib/prisma'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Suspense } from 'react'
-import { GraduationCap, Globe, Lock, LogIn, AlertCircle, Home } from 'lucide-react'
+import { Trophy, AlertCircle, Home, GraduationCap, Globe, Lock, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { LeaderboardContent } from '@/app/[classId]/leaderboard-content'
 import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
+import { LeaderboardContent } from '@/app/[classId]/leaderboard-content'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
-export default async function PublicClassLeaderboardPage({
+export default async function PublicSubjectLeaderboardPage({
   params
 }: {
   params: { classId: string, subjectId: string }
@@ -30,8 +31,8 @@ export default async function PublicClassLeaderboardPage({
           <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto border border-red-500/20">
             <AlertCircle className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-foreground">Class Not Found</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <h2 className="text-xl font-bold text-foreground">Leaderboard Not Found</h2>
+          <p className="text-sm text-muted-foreground">
             The requested class leaderboard does not exist or the link is invalid.
           </p>
           <div className="pt-2">
@@ -47,17 +48,22 @@ export default async function PublicClassLeaderboardPage({
     )
   }
 
-  // Find the subject either by ID or by name
   const decodedSubject = decodeURIComponent(params.subjectId)
-  const subjectData = await prisma.subject.findFirst({
-    where: {
-      schoolId: classData.schoolId,
-      OR: [
-        { id: decodedSubject },
-        { name: { equals: decodedSubject, mode: 'insensitive' } }
-      ]
-    }
-  })
+  
+  let subjectData = null
+  if (decodedSubject === 'overall') {
+    subjectData = { id: 'overall', name: 'Overall' }
+  } else {
+    subjectData = await prisma.subject.findFirst({
+      where: {
+        schoolId: classData.schoolId,
+        OR: [
+          { id: decodedSubject },
+          { name: { equals: decodedSubject, mode: 'insensitive' } }
+        ]
+      }
+    })
+  }
 
   if (!subjectData) {
     return (
@@ -96,9 +102,9 @@ export default async function PublicClassLeaderboardPage({
     orderBy: { name: 'asc' }
   })
 
-  // Ensure the current subject is included in the list of tabs
-  if (!subjects.find(s => s.id === subjectData.id)) {
-    subjects.push(subjectData)
+  // Ensure the current subject is included in the list of tabs (if it's not overall)
+  if (subjectData.id !== 'overall' && !subjects.find(s => s.id === subjectData.id)) {
+    subjects.push(subjectData as any)
     subjects.sort((a, b) => a.name.localeCompare(b.name))
   }
 
@@ -186,6 +192,18 @@ export default async function PublicClassLeaderboardPage({
         <div className="space-y-6">
           <div className="overflow-x-auto pb-2 scrollbar-hide">
             <div className="flex gap-2">
+              <Link href={`/public/leaderboard/${classData.id}/overall`}>
+                <Button 
+                  variant={subjectData.id === 'overall' ? "default" : "outline"}
+                  className={`whitespace-nowrap rounded-xl transition-all ${
+                    subjectData.id === 'overall'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent shadow-md' 
+                      : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Overall
+                </Button>
+              </Link>
               {subjects.map((sub) => {
                 const isActive = subjectData.id === sub.id
                 return (
@@ -211,7 +229,7 @@ export default async function PublicClassLeaderboardPage({
                   variant="outline"
                   className="whitespace-nowrap rounded-xl transition-all bg-card border-border text-muted-foreground hover:text-foreground"
                 >
-                  Downloads
+                  Resources
                 </Button>
               </Link>
             </div>
@@ -226,7 +244,7 @@ export default async function PublicClassLeaderboardPage({
             <LeaderboardContent 
               classId={classData.id} 
               subjectId={subjectData.id} 
-              availableSubjects={subjects} 
+              availableSubjects={subjects as any} 
               isReadOnly={true}
             />
           </Suspense>
@@ -234,7 +252,7 @@ export default async function PublicClassLeaderboardPage({
 
         {/* Footer info */}
         <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground border-t border-border/40">
-          <p>This is a read-only public view provided by CendroClass for students and parents.</p>
+          <p>This is a read-only public view provided by ResultMaker for students and parents.</p>
         </footer>
       </div>
     </div>

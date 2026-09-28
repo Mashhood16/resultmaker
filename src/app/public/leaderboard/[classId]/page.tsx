@@ -59,7 +59,7 @@ export default async function PublicClassLeaderboardRedirectPage({
   })
 
   if (subjects.length > 0) {
-    redirect(`/public/leaderboard/${classData.id}/${encodeURIComponent(subjects[0].id)}`)
+    redirect(`/public/leaderboard/${classData.id}/overall`)
   } else {
     // If no scores exist yet, find any subject from this school
     const anySubject = await prisma.subject.findFirst({
@@ -68,7 +68,7 @@ export default async function PublicClassLeaderboardRedirectPage({
     })
 
     if (anySubject) {
-      redirect(`/public/leaderboard/${classData.id}/${encodeURIComponent(anySubject.id)}`)
+      redirect(`/public/leaderboard/${classData.id}/overall`)
     } else {
       return (
         <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
