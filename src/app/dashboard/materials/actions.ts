@@ -1,4 +1,4 @@
-﻿'use server'
+'use server'
 
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
@@ -47,7 +47,10 @@ export async function createMaterial(data: {
   fileUrl: string,
   fileType: string,
   classId: string,
-  subjectId?: string
+  subjectId?: string,
+  resourceType: string,
+  chapter?: string,
+  topic?: string
 }) {
   const session = await auth()
   if (!session?.user || !['teacher', 'school'].includes(session.user.role)) {
@@ -80,6 +83,9 @@ export async function createMaterial(data: {
       fileType: data.fileType,
       classId: data.classId,
       subjectId: data.subjectId || null,
+      resourceType: data.resourceType,
+      chapter: data.chapter || null,
+      topic: data.topic || null,
       teacherId: role === 'teacher' ? session.user.id : null,
       schoolId: role === 'school' ? session.user.id : session.user.schoolId
     }

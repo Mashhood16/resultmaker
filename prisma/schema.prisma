@@ -254,6 +254,9 @@ model ClassMaterial {
   description String?
   fileUrl     String
   fileType    String?
+  resourceType String @default("UPLOAD")
+  chapter     String?
+  topic       String?
   classId     String
   subjectId   String?
   teacherId   String?
@@ -267,6 +270,7 @@ model ClassMaterial {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
 
 
 

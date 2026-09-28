@@ -1,13 +1,26 @@
 ﻿import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { AlertCircle, Home, GraduationCap, Globe, Lock, LogIn, FileText, DownloadCloud } from 'lucide-react'
+import { AlertCircle, Home, GraduationCap, Globe, Lock, LogIn, FileText, DownloadCloud, Youtube, HardDrive, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
 import { Card, CardContent } from '@/components/ui/card'
 
 export const dynamic = 'force-dynamic'
+
+function getYouTubeId(url: string) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+function getDrivePreviewUrl(url: string) {
+  if (url.includes('drive.google.com/file/d/')) {
+    return url.replace(/\/view.*$/, '/preview');
+  }
+  return url;
+}
 
 export default async function PublicMaterialsPage({
   params
@@ -62,7 +75,24 @@ export default async function PublicMaterialsPage({
   const materials = await prisma.classMaterial.findMany({
     where: { classId: classData.id },
     include: { subject: true },
-    orderBy: { createdAt: 'desc' }
+    orderBy: [
+      { chapter: 'asc' },
+      { topic: 'asc' },
+      { createdAt: 'desc' }
+    ]
+  })
+
+  // Group materials
+  const groupedMaterials: Record<string, Record<string, typeof materials>> = {}
+  
+  materials.forEach(mat => {
+    const chapter = mat.chapter || 'General Resources'
+    const topic = mat.topic || 'Uncategorized'
+    
+    if (!groupedMaterials[chapter]) groupedMaterials[chapter] = {}
+    if (!groupedMaterials[chapter][topic]) groupedMaterials[chapter][topic] = []
+    
+    groupedMaterials[chapter][topic].push(mat)
   })
 
   return (
@@ -88,10 +118,10 @@ export default async function PublicMaterialsPage({
             </div>
 
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-              {classData.name} Downloads
+              Study Resources
             </h1>
             <p className="text-sm text-muted-foreground">
-              Download class textbooks, notes, and past papers.
+              Watch embedded video lectures, read Google Drive textbooks, and download notes.
             </p>
           </div>
 
@@ -137,44 +167,105 @@ export default async function PublicMaterialsPage({
                   variant="default"
                   className="whitespace-nowrap rounded-xl transition-all bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent shadow-md"
                 >
-                  Downloads
+                  Resources
                 </Button>
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {materials.map(mat => (
-              <Card key={mat.id} className="bg-card/50 border-border hover:bg-card/80 transition-colors">
-                <CardContent className="p-4 flex flex-col justify-between h-full">
-                  <div>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2 text-primary mb-2">
-                        <FileText className="w-5 h-5 shrink-0" />
-                        <span className="font-bold line-clamp-1">{mat.title}</span>
+          <div className="space-y-12">
+            {Object.keys(groupedMaterials).length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground bg-card/30 rounded-3xl border border-border/50 border-dashed">
+                <HardDrive className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p>No study resources have been added for this class yet.</p>
+              </div>
+            ) : (
+              Object.entries(groupedMaterials).map(([chapter, topics]) => (
+                <div key={chapter} className="space-y-6">
+                  <div className="border-b border-border/40 pb-2">
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">{chapter}</h2>
+                  </div>
+                  
+                  {Object.entries(topics).map(([topic, mats]) => (
+                    <div key={topic} className="space-y-4">
+                      {topic !== 'Uncategorized' && (
+                        <h3 className="text-lg font-bold text-muted-foreground/80 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                          {topic}
+                        </h3>
+                      )}
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {mats.map(mat => (
+                          <Card key={mat.id} className="bg-card border-border hover:shadow-lg transition-all overflow-hidden flex flex-col h-full">
+                            
+                            {/* Embed Preview Area */}
+                            {mat.resourceType === 'YOUTUBE' && getYouTubeId(mat.fileUrl) && (
+                              <div className="w-full aspect-video bg-black relative">
+                                <iframe 
+                                  src={`https://www.youtube.com/embed/${getYouTubeId(mat.fileUrl)}`}
+                                  className="absolute top-0 left-0 w-full h-full border-0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              </div>
+                            )}
+                            
+                            {mat.resourceType === 'GOOGLE_DRIVE' && (
+                              <div className="w-full h-48 bg-muted relative border-b border-border">
+                                <iframe 
+                                  src={getDrivePreviewUrl(mat.fileUrl)}
+                                  className="absolute top-0 left-0 w-full h-full border-0"
+                                  allow="autoplay"
+                                />
+                                {/* Overlay to prevent iframe capturing scrolls easily */}
+                                <div className="absolute inset-0 bg-transparent pointer-events-none shadow-[inset_0_0_20px_rgba(0,0,0,0.1)]" />
+                              </div>
+                            )}
+
+                            <CardContent className="p-5 flex flex-col flex-grow justify-between gap-4">
+                              <div>
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-1">
+                                    {mat.resourceType === 'YOUTUBE' && <Youtube className="w-5 h-5 text-red-500" />}
+                                    {mat.resourceType === 'GOOGLE_DRIVE' && <HardDrive className="w-5 h-5 text-blue-500" />}
+                                    {mat.resourceType === 'UPLOAD' && <FileText className="w-5 h-5 text-emerald-500" />}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-lg leading-tight">{mat.title}</h4>
+                                    <p className="text-xs text-muted-foreground mt-1 font-medium">
+                                      {mat.subject ? mat.subject.name : 'General Subject'}
+                                    </p>
+                                  </div>
+                                </div>
+                                {mat.description && <p className="text-sm text-foreground/80 mt-3 bg-muted/50 p-3 rounded-lg leading-relaxed">{mat.description}</p>}
+                              </div>
+                              
+                              <div className="pt-4 flex justify-end gap-2 border-t border-border/50">
+                                {mat.resourceType === 'UPLOAD' ? (
+                                  <a href={mat.fileUrl} target="_blank" rel="noopener noreferrer">
+                                    <Button size="sm" variant="outline" className="border-border">
+                                      <DownloadCloud className="w-4 h-4 mr-2" />
+                                      Download File
+                                    </Button>
+                                  </a>
+                                ) : (
+                                  <a href={mat.fileUrl} target="_blank" rel="noopener noreferrer">
+                                    <Button size="sm" variant="outline" className="border-border">
+                                      <ExternalLink className="w-4 h-4 mr-2" />
+                                      {mat.resourceType === 'YOUTUBE' ? 'Open in YouTube' : 'Open in Google Drive'}
+                                    </Button>
+                                  </a>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {mat.subject ? `• ${mat.subject.name}` : '• General Material'}
-                    </p>
-                    {mat.description && <p className="text-sm text-foreground line-clamp-2">{mat.description}</p>}
-                  </div>
-                  <div className="mt-4 pt-4 border-t flex justify-end">
-                    <a href={mat.fileUrl} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant="outline" className="border-border">
-                        <DownloadCloud className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {materials.length === 0 && (
-              <div className="col-span-full py-12 text-center text-muted-foreground bg-card/30 rounded-3xl border border-border/50 border-dashed">
-                <FileText className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No materials or textbooks have been uploaded for this class yet.</p>
-              </div>
+                  ))}
+                </div>
+              ))
             )}
           </div>
         </div>
