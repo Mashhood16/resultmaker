@@ -36,8 +36,9 @@ export function MaterialsClient({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0]
-      if (selected.size > 15 * 1024 * 1024) {
-        toast.error('File size must be under 15MB')
+      // Increased limit to 100MB
+      if (selected.size > 100 * 1024 * 1024) {
+        toast.error('File size must be under 100MB')
         return
       }
       setFile(selected)
@@ -52,44 +53,48 @@ export function MaterialsClient({
     }
 
     setIsUploading(true)
-    const toastId = toast.loading('Uploading file...')
+    const toastId = toast.loading('Uploading large file to cloud... This may take a moment.')
 
     try {
-      // Convert file to base64
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = async () => {
-        const base64 = reader.result as string
-        
-        // Upload to Cloudinary via our API
-        const res = await fetch('/api/upload-document', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: base64, fileName: file.name })
-        })
+      // 1. Get secure signature from our backend
+      const signRes = await fetch('/api/cloudinary-sign')
+      const signData = await signRes.json()
+      
+      if (!signRes.ok) throw new Error(signData.error || 'Failed to get upload signature')
 
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed to upload file')
+      // 2. Upload directly to Cloudinary bypassing Vercel limits
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('api_key', signData.apiKey)
+      formData.append('timestamp', signData.timestamp)
+      formData.append('signature', signData.signature)
+      formData.append('folder', signData.folder)
+      
+      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloudName}/auto/upload`, {
+        method: 'POST',
+        body: formData
+      })
 
-        // Save to DB
-        await createMaterial({
-          title,
-          description,
-          fileUrl: data.url,
-          fileType: file.type || 'application/octet-stream',
-          classId: selectedClass,
-          subjectId: selectedSubject === 'general' ? undefined : selectedSubject
-        })
+      const cloudinaryData = await cloudinaryRes.json()
+      if (!cloudinaryRes.ok) throw new Error(cloudinaryData.error?.message || 'Failed to upload to cloud storage')
 
-        toast.success('Material uploaded successfully!', { id: toastId })
-        setTitle('')
-        setDescription('')
-        setFile(null)
-        // Reset file input visually
-        const fileInput = document.getElementById('file-upload') as HTMLInputElement
-        if (fileInput) fileInput.value = ''
-      }
-      reader.onerror = () => { throw new Error('Failed to read file') }
+      // 3. Save the secure URL to our database
+      await createMaterial({
+        title,
+        description,
+        fileUrl: cloudinaryData.secure_url,
+        fileType: file.type || 'application/octet-stream',
+        classId: selectedClass,
+        subjectId: selectedSubject === 'general' ? undefined : selectedSubject
+      })
+
+      toast.success('Material uploaded successfully!', { id: toastId })
+      setTitle('')
+      setDescription('')
+      setFile(null)
+      // Reset file input visually
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement
+      if (fileInput) fileInput.value = ''
     } catch (err: any) {
       toast.error(err.message, { id: toastId })
     } finally {
@@ -113,7 +118,7 @@ export function MaterialsClient({
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
         <CardHeader>
           <CardTitle>Upload Study Material</CardTitle>
-          <CardDescription>Upload textbooks, notes, or past papers for your students to download.</CardDescription>
+          <CardDescription>Upload textbooks, notes, or past papers (Up to 100MB).</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -154,7 +159,7 @@ export function MaterialsClient({
             </div>
 
             <div className="space-y-2">
-              <Label>File Attachment (PDF, DOCX, ZIP - Max 15MB)</Label>
+              <Label>File Attachment (Max 100MB)</Label>
               <Input id="file-upload" type="file" required onChange={handleFileChange} accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.rar" className="cursor-pointer" />
             </div>
 
@@ -175,7 +180,7 @@ export function MaterialsClient({
                 <div>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 text-primary mb-2">
-                      <FileText className="w-5 h-5" />
+                      <FileText className="w-5 h-5 shrink-0" />
                       <span className="font-bold line-clamp-1">{mat.title}</span>
                     </div>
                     <Button variant="ghost" size="icon" className="text-destructive h-6 w-6" onClick={() => handleDelete(mat.id)}>
