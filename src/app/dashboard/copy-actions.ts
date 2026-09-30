@@ -112,7 +112,7 @@ export async function uploadCopyCheckingAction(formData: FormData) {
           })
         }
 
-        if (student && student.fatherPhone && (data.status === 'I' || data.status === 'A' || data.status === 'C' || data.status === 'N')) {
+        if (student && student.fatherPhone && (data.status === 'I' || data.status === 'A' || data.status === 'N')) {
           let studentUrduName = student.urduName;
           if (!studentUrduName) {
              studentUrduName = await translateToUrdu(student.name);
@@ -253,7 +253,7 @@ export async function saveInteractiveCopyChecksAction(data: {
           }
         })
 
-        if (student.fatherPhone && (check.status === 'C' || check.status === 'I' || check.status === 'A' || check.status === 'N')) {
+        if (student.fatherPhone && (check.status === 'I' || check.status === 'A' || check.status === 'N')) {
           let studentUrduName = student.urduName;
           if (!studentUrduName) {
              studentUrduName = await translateToUrdu(student.name);
