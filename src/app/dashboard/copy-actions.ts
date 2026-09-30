@@ -133,7 +133,7 @@ export async function uploadCopyCheckingAction(formData: FormData) {
           } else if (data.status === 'A') {
             urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj gair hazir (absent) tha jis ki wajah se ${subjectName} ki copy check nahi ho saki.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج غیر حاضر تھا جس کی وجہ سے ${subjectUrduName} کی کاپی چیک نہیں ہو سکی۔`
           } else if (data.status === 'N') {
-            urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj ${subjectName} ki copy school nahi laya jis ki wajah se checking nahi ho saki. Barae meharbani yaqeeni banayen ke bacha rozana apna mukammal bag school laye.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج ${subjectUrduName} کی کاپی سکول نہیں لایا جس کی وجہ سے چیکنگ نہیں ہو سکی۔ براہ مہربانی یقینی بنائیں کہ بچہ روزانہ اپنا مکمل بیگ سکول لائے.`
+            urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj ${subjectName} ki copy school nahi laya jis ki wajah se checking nahi ho saki. Barae meharbani koshish karein jab copies check ka kaha jaye bache ke paas mojood ho.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج ${subjectUrduName} کی کاپی سکول نہیں لایا جس کی وجہ سے چیکنگ نہیں ہو سکی۔ براہ مہربانی کوشش کریں جب کاپیاں چیک کرنے کا کہا جائے بچے کے پاس موجود ہو۔`
           }
 
           urduMessage += '\n\nMuhammad Mashhood Tariq'
@@ -273,7 +273,7 @@ export async function saveInteractiveCopyChecksAction(data: {
           } else if (check.status === 'A') {
              urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj gair hazir (absent) tha jis ki wajah se ${data.subjectName} ki copy check nahi ho saki.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج غیر حاضر تھا جس کی وجہ سے ${subjectUrduName} کی کاپی چیک نہیں ہو سکی۔`
           } else if (check.status === 'N') {
-             urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj ${data.subjectName} ki copy school nahi laya jis ki wajah se checking nahi ho saki. Barae meharbani yaqeeni banayen ke bacha rozana apna mukammal bag school laye.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج ${subjectUrduName} کی کاپی سکول نہیں لایا جس کی وجہ سے چیکنگ نہیں ہو سکی۔ براہ مہربانی یقینی بنائیں کہ بچہ روزانہ اپنا مکمل بیگ سکول لائے.`
+             urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj ${data.subjectName} ki copy school nahi laya jis ki wajah se checking nahi ho saki. Barae meharbani koshish karein jab copies check ka kaha jaye bache ke paas mojood ho.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج ${subjectUrduName} کی کاپی سکول نہیں لایا جس کی وجہ سے چیکنگ نہیں ہو سکی۔ براہ مہربانی کوشش کریں جب کاپیاں چیک کرنے کا کہا جائے بچے کے پاس موجود ہو۔`
           }
           urduMessage += '\n\nMuhammad Mashhood Tariq'
 
