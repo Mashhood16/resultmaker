@@ -63,10 +63,11 @@ export async function uploadCopyCheckingAction(formData: FormData) {
       const rollNumber = rollNoKey ? String(row[rollNoKey]).trim() : ''
       const statusRaw = statusKey ? String(row[statusKey]).trim().toUpperCase() : ''
       
-      let status: 'C' | 'I' | 'A' | null = null
+      let status: 'C' | 'I' | 'A' | 'N' | null = null
       if (statusRaw === 'C' || statusRaw === 'COMPLETE') status = 'C'
       if (statusRaw === 'I' || statusRaw === 'INCOMPLETE') status = 'I'
       if (statusRaw === 'A' || statusRaw === 'ABSENT') status = 'A'
+      if (statusRaw === 'N' || statusRaw === 'NOT BROUGHT' || statusRaw === 'NOT') status = 'N'
 
       if (name && status) {
         validatedData.push({ name, rollNumber, status })
@@ -111,7 +112,7 @@ export async function uploadCopyCheckingAction(formData: FormData) {
           })
         }
 
-        if (student && student.fatherPhone && (data.status === 'I' || data.status === 'A' || data.status === 'C')) {
+        if (student && student.fatherPhone && (data.status === 'I' || data.status === 'A' || data.status === 'C' || data.status === 'N')) {
           let studentUrduName = student.urduName;
           if (!studentUrduName) {
              studentUrduName = await translateToUrdu(student.name);
@@ -131,6 +132,8 @@ export async function uploadCopyCheckingAction(formData: FormData) {
             urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${subjectName} ki copy namukammal (incomplete) hai. Barae meharbani is par tawajah dein aur bache ka kaam mukammal karwayen.\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} کی ${subjectUrduName} کی کاپی نامکمل ہے۔ براہ مہربانی اس پر توجہ دیں اور بچے کا کام مکمل کروائیں۔`
           } else if (data.status === 'A') {
             urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj gair hazir (absent) tha jis ki wajah se ${subjectName} ki copy check nahi ho saki.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج غیر حاضر تھا جس کی وجہ سے ${subjectUrduName} کی کاپی چیک نہیں ہو سکی۔`
+          } else if (data.status === 'N') {
+            urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj ${subjectName} ki copy school nahi laya jis ki wajah se checking nahi ho saki. Barae meharbani yaqeeni banayen ke bacha rozana apna mukammal bag school laye.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج ${subjectUrduName} کی کاپی سکول نہیں لایا جس کی وجہ سے چیکنگ نہیں ہو سکی۔ براہ مہربانی یقینی بنائیں کہ بچہ روزانہ اپنا مکمل بیگ سکول لائے.`
           }
 
           urduMessage += '\n\nMuhammad Mashhood Tariq'
@@ -206,7 +209,7 @@ export async function saveInteractiveCopyChecksAction(data: {
   classId: string
   subjectName: string
   checkDate: string
-  studentChecks: { studentId: string, status: 'C' | 'I' | 'A' }[]
+  studentChecks: { studentId: string, status: 'C' | 'I' | 'A' | 'N' }[]
 }) {
   try {
     const session = await auth()
@@ -250,7 +253,7 @@ export async function saveInteractiveCopyChecksAction(data: {
           }
         })
 
-        if (student.fatherPhone && (check.status === 'I' || check.status === 'A')) {
+        if (student.fatherPhone && (check.status === 'C' || check.status === 'I' || check.status === 'A' || check.status === 'N')) {
           let studentUrduName = student.urduName;
           if (!studentUrduName) {
              studentUrduName = await translateToUrdu(student.name);
@@ -263,10 +266,14 @@ export async function saveInteractiveCopyChecksAction(data: {
           }
 
           let urduMessage = ''
-          if (check.status === 'I') {
+          if (check.status === 'C') {
+            urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${data.subjectName} ki copy mukammal (complete) hai aur check kar li gayi hai. Shabash!\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} کی ${subjectUrduName} کی کاپی مکمل ہے اور چیک کر لی گئی ہے۔ شاباش!`
+          } else if (check.status === 'I') {
             urduMessage = `Assalam o Alaikum! Aap ke bache ${student.name} (Class ${classRecord.name}) ki ${data.subjectName} ki copy namukammal (incomplete) hai. Barae meharbani is par tawajah dein aur bache ka kaam mukammal karwayen.\n\nالسلام علیکم! آپ کے بچے ${studentUrduName} کی ${subjectUrduName} کی کاپی نامکمل ہے۔ براہ مہربانی اس پر توجہ دیں اور بچے کا کام مکمل کروائیں۔`
           } else if (check.status === 'A') {
              urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj gair hazir (absent) tha jis ki wajah se ${data.subjectName} ki copy check nahi ho saki.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج غیر حاضر تھا جس کی وجہ سے ${subjectUrduName} کی کاپی چیک نہیں ہو سکی۔`
+          } else if (check.status === 'N') {
+             urduMessage = `Assalam o Alaikum! Aap ka bacha ${student.name} (Class ${classRecord.name}) aaj ${data.subjectName} ki copy school nahi laya jis ki wajah se checking nahi ho saki. Barae meharbani yaqeeni banayen ke bacha rozana apna mukammal bag school laye.\n\nالسلام علیکم! آپ کا بچہ ${studentUrduName} آج ${subjectUrduName} کی کاپی سکول نہیں لایا جس کی وجہ سے چیکنگ نہیں ہو سکی۔ براہ مہربانی یقینی بنائیں کہ بچہ روزانہ اپنا مکمل بیگ سکول لائے.`
           }
           urduMessage += '\n\nMuhammad Mashhood Tariq'
 
