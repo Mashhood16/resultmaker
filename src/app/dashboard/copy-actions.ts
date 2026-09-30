@@ -296,3 +296,35 @@ export async function saveInteractiveCopyChecksAction(data: {
     return { success: false, error: error.message }
   }
 }
+export async function deleteNotebookLogsAction(data: { classId: string, subjectId: string, date: string }) {
+  try {
+    const session = await auth()
+    if (!session?.user) throw new Error('Unauthorized')
+    
+    // We must parse the date as start and end of day in UTC or local to match the records, 
+    // but the DB stores them as DateTime. 
+    // Since Prisma stores ISO dates, we can just delete where checkDate is exactly that date if it was saved as midnight, 
+    // or within the date range. Let's use gte and lte.
+    const startOfDay = new Date(data.date)
+    const endOfDay = new Date(data.date)
+    endOfDay.setHours(23, 59, 59, 999)
+
+    const result = await prisma.notebookCheck.deleteMany({
+      where: {
+        student: {
+          classId: data.classId
+        },
+        subjectId: data.subjectId,
+        checkDate: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      }
+    })
+
+    revalidatePath('/dashboard/uploads')
+    return { success: true, message: `Successfully deleted ${result.count} notebook log(s).` }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
