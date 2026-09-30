@@ -141,7 +141,7 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
 
     return <LeaderboardView 
       classId={classId} 
-      students={formattedStudents as any} 
+      initialData={formattedStudents as any} 
       isReadOnly={isReadOnly}
       title="Overall Notebook Checks"
       unit="Copies"
@@ -150,7 +150,7 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
 
   return <LeaderboardView 
     classId={classId} 
-    students={finalStudents} 
+    initialData={finalStudents as any} 
     subjectId={subjectId} 
     isReadOnly={isReadOnly} 
   />
