@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { UploadCloud, FileSpreadsheet, Loader2, Download } from 'lucide-react'
+import { UploadCloud, FileSpreadsheet, Loader2 } from 'lucide-react'
 import { useFormStatus } from 'react-dom'
+import { DownloadTemplateModal } from '@/components/download-template-modal'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -20,8 +21,9 @@ function SubmitButton() {
   )
 }
 
-export function UploadForm() {
+export function UploadForm({ classes }: { classes?: { id: string, name: string }[] }) {
   const [file, setFile] = useState<File | null>(null)
+  const [classNameInput, setClassNameInput] = useState('')
 
   async function action(formData: FormData) {
     if (!file) {
@@ -60,7 +62,15 @@ export function UploadForm() {
           <form action={action} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="className" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Class Name</Label>
-              <Input id="className" name="className" placeholder="e.g. Grade 10" required className="bg-transparent border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" />
+              <Input 
+                id="className" 
+                name="className" 
+                value={classNameInput}
+                onChange={(e) => setClassNameInput(e.target.value)}
+                placeholder="e.g. Grade 10" 
+                required 
+                className="bg-transparent border-border text-foreground focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all rounded-xl h-12 px-4 shadow-inner" 
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="subjectName" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Subject Name</Label>
@@ -78,10 +88,13 @@ export function UploadForm() {
             <div>
               <div className="flex justify-between items-end mb-2 mt-6">
                 <Label className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Spreadsheet File</Label>
-                <a href="/sample_format.xlsx" download className="text-primary/80 hover:text-primary text-xs flex items-center gap-1 transition-colors hover:underline">
-                  <Download className="w-3 h-3" />
-                  Download Example Format
-                </a>
+                <DownloadTemplateModal 
+                  actionType="marks"
+                  classes={classes}
+                  selectedClassName={classNameInput}
+                  variant="link"
+                  buttonText="Download Example Format"
+                />
               </div>
               <div className="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center text-muted-foreground hover:bg-card hover:border-blue-400/50 transition-all duration-300 cursor-pointer relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />

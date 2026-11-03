@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { uploadMarksAction, deleteUploadedMarksAction, uploadMasterMarksAction, getTestNamesForClassAction } from './actions'
 import { toast } from 'sonner'
 import * as xlsx from 'xlsx'
+import { DownloadTemplateModal } from '@/components/download-template-modal'
 
 const CLASS_SUBJECTS: Record<string, string[]> = {
   '1': ['Math', 'English', 'Urdu', 'General Knowledge'],
@@ -341,10 +342,14 @@ export function TermResultWizard({ role }: { role?: string }) {
                       <span className="font-bold text-lg block">Class {selectedClass} - {term}</span>
                       <span className="text-sm opacity-80">Master Upload for {subjectsRequired.length} subjects</span>
                     </div>
-                    <Button onClick={downloadMasterTemplate} variant="outline" className="bg-transparent border-primary/50 hover:bg-primary/20 text-primary h-10">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Master Template
-                    </Button>
+                    <DownloadTemplateModal 
+                      actionType="term-master"
+                      selectedClassName={selectedClass ? `Class ${selectedClass}` : undefined}
+                      subjects={subjectsRequired}
+                      variant="outline"
+                      buttonText="Download Master Template"
+                      className="bg-transparent border-primary/50 hover:bg-primary/20 text-primary h-10"
+                    />
                   </div>
                   
                   <div className="p-8 border-2 border-dashed border-border rounded-2xl bg-card flex flex-col items-center justify-center text-center relative overflow-hidden group hover:border-primary/50 transition-colors">
@@ -442,14 +447,24 @@ export function TermResultWizard({ role }: { role?: string }) {
 
                           {!isUploaded && (
                             <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                className="w-1/3 bg-transparent border-border hover:bg-card text-foreground h-10"
-                                onClick={() => downloadSingleTemplate(subject)}
-                                disabled={isUploading}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
+                              <DownloadTemplateModal
+                                actionType="term-single"
+                                selectedClassName={selectedClass ? `Class ${selectedClass}` : undefined}
+                                subjectName={subject}
+                                totalMarks={subjectTotalMarks[subject] ? Number(subjectTotalMarks[subject]) : 100}
+                                trigger={
+                                  <Button 
+                                    type="button"
+                                    variant="outline" 
+                                    className="w-full bg-transparent border-border hover:bg-card text-foreground h-10 px-2"
+                                    disabled={isUploading}
+                                    title={`Download ${subject} template`}
+                                  >
+                                    <Download className="w-4 h-4 mr-1 shrink-0" />
+                                    <span className="text-xs truncate">Template</span>
+                                  </Button>
+                                }
+                              />
                               <div className="relative group w-2/3">
                                 <input
                                   type="file"

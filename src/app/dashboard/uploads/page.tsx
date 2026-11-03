@@ -99,7 +99,7 @@ export default async function UploadsPage() {
           </TabsList>
           
           <TabsContent value="upload" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
-            <UploadForm />
+            <UploadForm classes={rawClasses} />
           </TabsContent>
 
           <TabsContent value="manual" className="mt-0 focus-visible:ring-0 w-full flex justify-center">

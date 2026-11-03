@@ -12,6 +12,7 @@ import { uploadStudentRosterAction, deleteStudentAction, editStudentAction, bulk
 import { toast } from 'sonner'
 import { Student, Class } from '@prisma/client'
 import * as xlsx from 'xlsx'
+import { DownloadTemplateModal } from '@/components/download-template-modal'
 
 type StudentWithClass = Student & { class: Class }
 
@@ -373,14 +374,13 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
             onChange={handleFastAppend}
             disabled={isUploading || isFastAppending}
           />
-          <Button 
+          <DownloadTemplateModal 
+            actionType="roster"
+            classes={availableClasses.map(name => ({ id: name, name }))}
+            selectedClassName={selectedClass.trim() || (filterClass !== 'all' ? filterClass : undefined)}
             variant="outline"
-            onClick={downloadTemplate}
-            className="bg-transparent border-primary/50 hover:bg-primary/20 text-primary whitespace-nowrap h-10"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Template
-          </Button>
+            buttonText="Template"
+          />
           <Button 
             onClick={() => fastAppendInputRef.current?.click()}
             disabled={isFastAppending || !selectedClass.trim()}

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { UploadCloud, Phone, Loader2 } from 'lucide-react'
+import { DownloadTemplateModal } from '@/components/download-template-modal'
 
 export function UploadContactsForm({ classes }: { classes: { id: string, name: string }[] }) {
   const [file, setFile] = useState<File | null>(null)
@@ -82,6 +83,13 @@ export function UploadContactsForm({ classes }: { classes: { id: string, name: s
             <div>
               <div className="flex justify-between items-end mb-2 mt-6">
                 <Label className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Spreadsheet File</Label>
+                <DownloadTemplateModal 
+                  actionType="contacts"
+                  classes={classes}
+                  selectedClassName={selectedClass}
+                  variant="link"
+                  buttonText="Download Example Format"
+                />
               </div>
               <div 
                 className="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center text-muted-foreground hover:bg-card hover:border-green-400/50 transition-all duration-300 cursor-pointer relative group overflow-hidden"

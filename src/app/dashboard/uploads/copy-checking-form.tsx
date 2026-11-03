@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,9 +9,11 @@ import { BookOpen, Upload, Loader2, FileSpreadsheet } from 'lucide-react'
 import { uploadCopyCheckingAction } from '../copy-actions'
 import { toast } from 'sonner'
 import { Class } from '@prisma/client'
+import { DownloadTemplateModal } from '@/components/download-template-modal'
 
 export function CopyCheckingForm({ classes }: { classes: Class[] }) {
   const [isUploading, setIsUploading] = useState(false)
+  const [selectedClass, setSelectedClass] = useState<string>('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -55,6 +57,8 @@ export function CopyCheckingForm({ classes }: { classes: Class[] }) {
               <select 
                 id="className" 
                 name="className" 
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
                 required
                 className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all hover:bg-accent/20"
               >
@@ -89,7 +93,16 @@ export function CopyCheckingForm({ classes }: { classes: Class[] }) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="file" className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Excel File (.xlsx / .csv)</Label>
+              <div className="flex justify-between items-end mb-1">
+                <Label htmlFor="file" className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Excel File (.xlsx / .csv)</Label>
+                <DownloadTemplateModal 
+                  actionType="copy-checking"
+                  classes={classes}
+                  selectedClassName={selectedClass}
+                  variant="link"
+                  buttonText="Download Example Format"
+                />
+              </div>
               <div className="relative group">
                 <Input 
                   id="file" 
