@@ -1,10 +1,11 @@
 import prisma from '@/lib/prisma'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Home } from 'lucide-react'
+import { Home, Trophy, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LeaderboardContent } from '../../../[classId]/leaderboard-content'
 import { OverallLeaderboardContent } from '../../../[classId]/overall-leaderboard-content'
+import { NotebookLeaderboardContent } from '../../../[classId]/notebook-leaderboard-content'
 import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
 import { Suspense } from 'react'
 import { auth } from '@/auth'
@@ -12,9 +13,11 @@ import { auth } from '@/auth'
 export const dynamic = 'force-dynamic'
 
 export default async function ClassLeaderboardPage({
-  params
+  params,
+  searchParams
 }: {
   params: { className: string, subjectName: string }
+  searchParams?: { view?: string }
 }) {
   const session = await auth()
   
@@ -52,16 +55,31 @@ export default async function ClassLeaderboardPage({
     redirect('/dashboard')
   }
 
-  // Find other subjects that have scores for this class, so we can show the navigation tabs
+  const viewMode = searchParams?.view === 'copies' || searchParams?.view === 'notebooks' ? 'copies' : 'tests'
+
+  // Find other subjects that have scores or copy checks for this class, so we can show the navigation tabs
   const subjects = await prisma.subject.findMany({
     where: {
-      scores: {
-        some: {
-          student: {
-            classId: classData.id
+      OR: [
+        {
+          scores: {
+            some: {
+              student: {
+                classId: classData.id
+              }
+            }
+          }
+        },
+        {
+          NotebookCheck: {
+            some: {
+              student: {
+                classId: classData.id
+              }
+            }
           }
         }
-      }
+      ]
     },
     orderBy: { name: 'asc' }
   })
@@ -137,10 +155,29 @@ export default async function ClassLeaderboardPage({
           </div>
         )}
 
-        <div className="space-y-8">
+        <div className="space-y-6">
+          {/* Top Level View Toggle (Tests vs Copies) */}
+          <div className="flex p-1 bg-card/60 backdrop-blur-md border border-border rounded-xl w-full max-w-sm mx-auto shadow-sm">
+            <Link 
+              href={`/leaderboard/${encodeURIComponent(classData.name)}/${encodeURIComponent(params.subjectName)}?view=tests`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${viewMode === 'tests' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
+            >
+              <Trophy className="w-4 h-4" />
+              Tests
+            </Link>
+            <Link 
+              href={`/leaderboard/${encodeURIComponent(classData.name)}/${encodeURIComponent(params.subjectName)}?view=copies`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${viewMode === 'copies' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
+            >
+              <BookOpen className="w-4 h-4" />
+              Copies
+            </Link>
+          </div>
+
+          {/* Subject Navigation Tabs */}
           <div className="overflow-x-auto pb-2 scrollbar-hide">
-            <div className="flex gap-2">
-              <Link href={`/leaderboard/${encodeURIComponent(classData.name)}/Overall`}>
+            <div className="flex gap-2 justify-center md:justify-start">
+              <Link href={`/leaderboard/${encodeURIComponent(classData.name)}/Overall?view=${viewMode}`}>
                 <Button 
                   variant={isOverall ? "default" : "outline"}
                   className={`whitespace-nowrap ${isOverall ? 'bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
@@ -149,7 +186,7 @@ export default async function ClassLeaderboardPage({
                 </Button>
               </Link>
               {subjects.map((sub) => (
-                <Link key={sub.id} href={`/leaderboard/${encodeURIComponent(classData.name)}/${encodeURIComponent(sub.name)}`}>
+                <Link key={sub.id} href={`/leaderboard/${encodeURIComponent(classData.name)}/${encodeURIComponent(sub.name)}?view=${viewMode}`}>
                   <Button 
                     variant={!isOverall && subjectData?.id === sub.id ? "default" : "outline"}
                     className={`whitespace-nowrap ${!isOverall && subjectData?.id === sub.id ? 'bg-emerald-600 hover:bg-emerald-700 text-foreground border-transparent' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
@@ -162,10 +199,18 @@ export default async function ClassLeaderboardPage({
           </div>
 
           <Suspense fallback={<div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse">Loading rankings...</div>}>
-            {isOverall ? (
-              <OverallLeaderboardContent classId={classData.id} availableSubjects={subjects} />
+            {viewMode === 'tests' ? (
+              isOverall ? (
+                <OverallLeaderboardContent classId={classData.id} availableSubjects={subjects} />
+              ) : (
+                <LeaderboardContent classId={classData.id} subjectId={subjectData!.id} availableSubjects={subjects} />
+              )
             ) : (
-              <LeaderboardContent classId={classData.id} subjectId={subjectData!.id} availableSubjects={subjects} />
+              <NotebookLeaderboardContent 
+                classId={classData.id} 
+                subjectId={isOverall ? 'overall' : subjectData!.id} 
+                availableSubjects={subjects as any} 
+              />
             )}
           </Suspense>
         </div>

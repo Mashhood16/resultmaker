@@ -1,4 +1,4 @@
-﻿import prisma from '@/lib/prisma'
+import prisma from '@/lib/prisma'
 import { LeaderboardView } from './leaderboard-view'
 
 export async function NotebookLeaderboardContent({ classId, subjectId, availableSubjects, isReadOnly = false }: { classId: string, subjectId: string, availableSubjects: {id: string, name: string}[], isReadOnly?: boolean }) {
@@ -82,6 +82,23 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
       subjBreakdown.percentage = Math.round((subjBreakdown.obtained / subjBreakdown.total) * 100)
     } else {
       // For single subject, breakdown by date
+      let statusLabel = 'Complete'
+      let feedback = 'Complete'
+      if (check.status === 'A') {
+        statusLabel = 'Absent'
+        feedback = 'Student was absent on this date.'
+      } else if (check.status === 'N') {
+        statusLabel = 'Not Brought'
+        feedback = 'Student did not bring notebook/copy.'
+      } else if (check.status.startsWith('I:')) {
+        const missing = check.status.substring(2).trim()
+        statusLabel = 'Incomplete'
+        feedback = `Incomplete. Missing: ${missing}`
+      } else if (check.status === 'I') {
+        statusLabel = 'Incomplete'
+        feedback = 'Incomplete notebook/copy.'
+      }
+
       sData.breakdown.push({
         testName: `Check ${dateStr}`,
         testDate: check.checkDate,
@@ -89,7 +106,8 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
         total: 1,
         percentage: obtainedScore * 100,
         isAbsent: check.status === 'A' || check.status === 'N',
-        statusLabel: check.status // Custom field just in case
+        statusLabel,
+        feedback
       })
     }
   })
@@ -144,16 +162,15 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
       initialData={formattedStudents as any} 
       availableSubjects={availableSubjects} 
       isReadOnly={isReadOnly}
-      title="Overall Notebook Checks"
-      unit="Copies"
+      isCopies={true}
     />
   }
 
   return <LeaderboardView 
     classId={classId} 
     initialData={finalStudents as any} 
-    subjectId={subjectId} 
     availableSubjects={availableSubjects} 
     isReadOnly={isReadOnly} 
+    isCopies={true}
   />
 }

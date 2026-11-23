@@ -56,6 +56,7 @@ interface LeaderboardViewProps {
   lastTestName?: string | null
   allClassTests?: string[]
   isReadOnly?: boolean
+  isCopies?: boolean
 }
 
 function StudentPerformanceChart({ breakdown }: { breakdown: Array<{ testName: string, percentage: number }> }) {
@@ -120,7 +121,7 @@ function StudentPerformanceChart({ breakdown }: { breakdown: Array<{ testName: s
   )
 }
 
-export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests, isReadOnly = false }: LeaderboardViewProps) {
+export function LeaderboardView({ initialData, classId, availableSubjects, lastTestName, allClassTests, isReadOnly = false, isCopies = false }: LeaderboardViewProps) {
   const [search, setSearch] = useState('')
   const [selectedTestFilter, setSelectedTestFilter] = useState<string>('all')
   const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>('all')
@@ -753,10 +754,10 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Roll No.</TableHead>
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Section</TableHead>
                   <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
-                    {selectedTestFilter === 'all' ? 'Total Marks' : 'Test Marks'}
+                    {isCopies ? 'Copies Checked' : (selectedTestFilter === 'all' ? 'Total Marks' : 'Test Marks')}
                   </TableHead>
                   <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
-                    {selectedTestFilter === 'all' ? 'Overall %' : 'Test %'}
+                    {isCopies ? 'Completion %' : (selectedTestFilter === 'all' ? 'Overall %' : 'Test %')}
                   </TableHead>
                   <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px] pr-6">Tier</TableHead>
                 </TableRow>
@@ -972,10 +973,10 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Test Breakdown
+                  {isCopies ? 'Copy Checking Breakdown' : 'Test Breakdown'}
                 </h4>
                 <span className="text-xs text-muted-foreground">
-                  {selectedStudentForModal.breakdown.length} {selectedStudentForModal.breakdown.length === 1 ? 'Test' : 'Tests'}
+                  {selectedStudentForModal.breakdown.length} {isCopies ? (selectedStudentForModal.breakdown.length === 1 ? 'Check' : 'Checks') : (selectedStudentForModal.breakdown.length === 1 ? 'Test' : 'Tests')}
                 </span>
               </div>
 
@@ -1036,7 +1037,7 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                         <div className="pt-3 border-t border-border/60 space-y-4 animate-in fade-in duration-200">
                           {test.feedback && (
                             <div className="bg-primary/10 border border-primary/20 rounded-xl p-3.5">
-                              <h5 className="text-xs font-bold text-primary mb-1.5">Teacher's Feedback</h5>
+                              <h5 className="text-xs font-bold text-primary mb-1.5">{isCopies ? 'Status & Remarks' : "Teacher's Feedback"}</h5>
                               <p className="text-xs sm:text-sm text-foreground leading-relaxed whitespace-pre-wrap">{test.feedback}</p>
                             </div>
                           )}

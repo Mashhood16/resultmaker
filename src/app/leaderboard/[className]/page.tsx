@@ -3,9 +3,11 @@ import { redirect, notFound } from 'next/navigation'
 import { auth } from '@/auth'
 
 export default async function ClassLeaderboardRedirectPage({
-  params
+  params,
+  searchParams
 }: {
   params: { className: string }
+  searchParams?: { view?: string }
 }) {
   const session = await auth()
   
@@ -35,33 +37,6 @@ export default async function ClassLeaderboardRedirectPage({
     redirect('/dashboard')
   }
 
-  // Find the first subject that has scores for this class
-  const subjects = await prisma.subject.findMany({
-    where: {
-      scores: {
-        some: {
-          student: {
-            classId: classData.id
-          }
-        }
-      }
-    },
-    orderBy: { name: 'asc' }
-  })
-
-  if (subjects.length > 0) {
-    redirect(`/leaderboard/${encodeURIComponent(classData.name)}/${encodeURIComponent(subjects[0].name)}`)
-  } else {
-    // If no subjects have scores, just pick the first subject from the school
-    const anySubject = await prisma.subject.findFirst({
-      where: { schoolId },
-      orderBy: { name: 'asc' }
-    })
-    
-    if (anySubject) {
-      redirect(`/leaderboard/${encodeURIComponent(classData.name)}/${encodeURIComponent(anySubject.name)}`)
-    } else {
-      return <div className="p-8 text-center text-muted-foreground">No subjects found for this school.</div>
-    }
-  }
+  const viewQuery = searchParams?.view ? `?view=${encodeURIComponent(searchParams.view)}` : ''
+  redirect(`/leaderboard/${encodeURIComponent(classData.name)}/Overall${viewQuery}`)
 }

@@ -1,7 +1,7 @@
-﻿import prisma from '@/lib/prisma'
+import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Trophy, AlertCircle, Home, LogIn, GraduationCap, Globe, Lock, Book } from 'lucide-react'
+import { Trophy, AlertCircle, Home, LogIn, GraduationCap, Globe, Lock, Book, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ShareLeaderboardModal } from '@/components/share-leaderboard-modal'
@@ -92,7 +92,7 @@ export default async function PublicSubjectLeaderboardPage({
     )
   }
 
-  const viewMode = searchParams?.view === 'notebooks' ? 'notebooks' : 'tests'
+  const viewMode = searchParams?.view === 'copies' || searchParams?.view === 'notebooks' ? 'copies' : 'tests'
 
   // Find all subjects that have scores or notebooks for this class
   // To keep it simple, we just fetch all subjects that have EITHER scores OR notebooks for this class
@@ -201,7 +201,7 @@ export default async function PublicSubjectLeaderboardPage({
         )}
 
         <div className="space-y-6">
-          {/* Top Level View Toggle (Tests vs Notebooks) */}
+          {/* Top Level View Toggle (Tests vs Copies) */}
           <div className="flex p-1 bg-card/60 backdrop-blur-md border border-border rounded-xl w-full max-w-sm mx-auto shadow-sm">
             <Link 
               href={`/public/leaderboard/${classData.id}/${subjectData.id === 'overall' ? 'overall' : encodeURIComponent(subjectData.id)}?view=tests`}
@@ -211,11 +211,11 @@ export default async function PublicSubjectLeaderboardPage({
               Tests
             </Link>
             <Link 
-              href={`/public/leaderboard/${classData.id}/${subjectData.id === 'overall' ? 'overall' : encodeURIComponent(subjectData.id)}?view=notebooks`}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${viewMode === 'notebooks' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
+              href={`/public/leaderboard/${classData.id}/${subjectData.id === 'overall' ? 'overall' : encodeURIComponent(subjectData.id)}?view=copies`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${viewMode === 'copies' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
             >
-              <Book className="w-4 h-4" />
-              Notebooks
+              <BookOpen className="w-4 h-4" />
+              Copies
             </Link>
           </div>
 
