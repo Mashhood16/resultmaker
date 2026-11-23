@@ -13,6 +13,15 @@ function findKey(row: Record<string, any>, possibleKeys: string[]) {
   return keys.find(k => possibleKeys.some(pk => k.includes(pk)))
 }
 
+function normalizeDateRange(dateStr: string) {
+  const base = new Date(dateStr)
+  const startOfDay = new Date(base)
+  startOfDay.setUTCHours(0, 0, 0, 0)
+  const endOfDay = new Date(base)
+  endOfDay.setUTCHours(23, 59, 59, 999)
+  return { startOfDay, endOfDay, targetDate: startOfDay }
+}
+
 function parseMissingChapters(raw: string | null | undefined): { count: number, text: string } | null {
   if (!raw || !raw.trim()) return null
   const cleaned = raw.trim()
@@ -218,22 +227,29 @@ export async function uploadCopyCheckingAction(formData: FormData) {
           })
           
           if (subject) {
-            await tx.notebookCheck.upsert({
+            const { startOfDay, endOfDay, targetDate } = normalizeDateRange(checkDate)
+            const existingCheck = await tx.notebookCheck.findFirst({
               where: {
-                studentId_subjectId_checkDate: {
-                  studentId: student.id,
-                  subjectId: subject.id,
-                  checkDate: new Date(checkDate)
-                }
-              },
-              update: { status: data.status },
-              create: {
                 studentId: student.id,
                 subjectId: subject.id,
-                status: data.status,
-                checkDate: new Date(checkDate)
+                checkDate: { gte: startOfDay, lte: endOfDay }
               }
             })
+            if (existingCheck) {
+              await tx.notebookCheck.update({
+                where: { id: existingCheck.id },
+                data: { status: data.status, checkDate: targetDate }
+              })
+            } else {
+              await tx.notebookCheck.create({
+                data: {
+                  studentId: student.id,
+                  subjectId: subject.id,
+                  status: data.status,
+                  checkDate: targetDate
+                }
+              })
+            }
           }
         }
       }
@@ -266,6 +282,120 @@ export async function getStudentsByClass(classId: string) {
   return students
 }
 
+export async function getStudentsForCopyCheckAction(
+  classId: string,
+  subjectName?: string,
+  checkDate?: string
+) {
+  try {
+    const session = await auth()
+    if (!session?.user) throw new Error('Unauthorized')
+    
+    const classRecord = await prisma.class.findUnique({ where: { id: classId } })
+    if (!classRecord) throw new Error('Class not found')
+    
+    const authRes = await requireSchoolOrTeacherAccess(classRecord.name, classId, subjectName)
+    const schoolId = authRes.schoolId
+
+    const students = await prisma.student.findMany({
+      where: { classId },
+      orderBy: { rollNumber: 'asc' }
+    })
+
+    if (!subjectName || !checkDate) {
+      return {
+        success: true,
+        students: students.map(s => ({
+          id: s.id,
+          name: s.name,
+          rollNumber: s.rollNumber,
+          status: 'C' as const,
+          missingChapters: ''
+        })),
+        hasExistingChecks: false
+      }
+    }
+
+    const subject = await prisma.subject.findUnique({
+      where: { name_schoolId: { name: subjectName, schoolId } }
+    })
+
+    if (!subject) {
+      return {
+        success: true,
+        students: students.map(s => ({
+          id: s.id,
+          name: s.name,
+          rollNumber: s.rollNumber,
+          status: 'C' as const,
+          missingChapters: ''
+        })),
+        hasExistingChecks: false
+      }
+    }
+
+    const { startOfDay, endOfDay } = normalizeDateRange(checkDate)
+
+    const existingChecks = await prisma.notebookCheck.findMany({
+      where: {
+        studentId: { in: students.map(s => s.id) },
+        subjectId: subject.id,
+        checkDate: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      }
+    })
+
+    const checkMap = new Map<string, string>()
+    for (const c of existingChecks) {
+      checkMap.set(c.studentId, c.status)
+    }
+
+    const resultStudents = students.map(s => {
+      const rawStatus = checkMap.get(s.id)
+      let status: 'C' | 'I' | 'A' | 'N' = 'C'
+      let missingChapters = ''
+
+      if (rawStatus) {
+        if (rawStatus.startsWith('I:')) {
+          status = 'I'
+          missingChapters = rawStatus.substring(2).trim()
+        } else if (rawStatus === 'I') {
+          status = 'I'
+        } else if (rawStatus === 'A') {
+          status = 'A'
+        } else if (rawStatus === 'N') {
+          status = 'N'
+        } else if (rawStatus === 'C') {
+          status = 'C'
+        }
+      }
+
+      return {
+        id: s.id,
+        name: s.name,
+        rollNumber: s.rollNumber,
+        status,
+        missingChapters
+      }
+    })
+
+    return {
+      success: true,
+      students: resultStudents,
+      hasExistingChecks: existingChecks.length > 0
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to fetch students',
+      students: [],
+      hasExistingChecks: false
+    }
+  }
+}
+
 export async function saveInteractiveCopyChecksAction(data: {
   classId: string
   subjectName: string
@@ -293,6 +423,8 @@ export async function saveInteractiveCopyChecksAction(data: {
         create: { name: data.subjectName, schoolId }
       })
 
+      const { startOfDay, endOfDay, targetDate } = normalizeDateRange(data.checkDate)
+
       for (const check of data.studentChecks) {
         const student = await tx.student.findUnique({ where: { id: check.studentId } })
         if (!student) continue
@@ -302,22 +434,32 @@ export async function saveInteractiveCopyChecksAction(data: {
           finalStatus = `I:${check.missingChapters.trim()}`
         }
 
-        await tx.notebookCheck.upsert({
+        const existingCheck = await tx.notebookCheck.findFirst({
           where: {
-            studentId_subjectId_checkDate: {
-              studentId: student.id,
-              subjectId: subject.id,
-              checkDate: new Date(data.checkDate)
-            }
-          },
-          update: { status: finalStatus },
-          create: {
             studentId: student.id,
             subjectId: subject.id,
-            status: finalStatus,
-            checkDate: new Date(data.checkDate)
+            checkDate: {
+              gte: startOfDay,
+              lte: endOfDay
+            }
           }
         })
+
+        if (existingCheck) {
+          await tx.notebookCheck.update({
+            where: { id: existingCheck.id },
+            data: { status: finalStatus, checkDate: targetDate }
+          })
+        } else {
+          await tx.notebookCheck.create({
+            data: {
+              studentId: student.id,
+              subjectId: subject.id,
+              status: finalStatus,
+              checkDate: targetDate
+            }
+          })
+        }
 
         if (student.fatherPhone && (check.status === 'I' || check.status === 'A' || check.status === 'N')) {
           let studentUrduName = student.urduName;

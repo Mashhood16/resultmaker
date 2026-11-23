@@ -8,23 +8,52 @@ import { Button } from '@/components/ui/button'
 import { BookOpen, Upload, Loader2, FileSpreadsheet } from 'lucide-react'
 import { uploadCopyCheckingAction } from '../copy-actions'
 import { toast } from 'sonner'
-import { Class } from '@prisma/client'
+import { Class, Subject } from '@prisma/client'
 import { DownloadTemplateModal } from '@/components/download-template-modal'
 
-export function CopyCheckingForm({ classes }: { classes: Class[] }) {
+interface CopyCheckingFormProps {
+  classes: Class[]
+  subjects?: Subject[]
+  subjectAccess?: Record<string, string[]> | null
+  isTeacher?: boolean
+}
+
+export function CopyCheckingForm({ 
+  classes,
+  subjects = [],
+  subjectAccess = null,
+  isTeacher = false
+}: CopyCheckingFormProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [selectedClass, setSelectedClass] = useState<string>('')
+  const [selectedSubject, setSelectedSubject] = useState<string>('')
+  const [customSubject, setCustomSubject] = useState<string>('')
+
+  const selectedClassObj = classes.find(c => c.name === selectedClass)
+  const allowedSubjectIds = (isTeacher && subjectAccess && selectedClassObj)
+    ? (subjectAccess[selectedClassObj.id] || [])
+    : null
+
+  const availableSubjects = allowedSubjectIds
+    ? subjects.filter(s => allowedSubjectIds.includes(s.id))
+    : subjects
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsUploading(true)
 
     const formData = new FormData(e.currentTarget)
+    // Ensure correct subject name is used if custom
+    if (selectedSubject === '__custom__') {
+      formData.set('subjectName', customSubject.trim())
+    }
     const res = await uploadCopyCheckingAction(formData)
 
     if (res.success) {
       toast.success(res.message)
       ;(e.target as HTMLFormElement).reset()
+      setSelectedSubject('')
+      setCustomSubject('')
     } else {
       toast.error(res.error)
     }
@@ -70,13 +99,57 @@ export function CopyCheckingForm({ classes }: { classes: Class[] }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="subjectName" className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Subject Name</Label>
-              <Input 
-                id="subjectName" 
-                name="subjectName" 
-                placeholder="e.g. English, Math..." 
-                required 
-                className="h-12 bg-background/50 border-input rounded-xl hover:bg-accent/20 transition-all focus:bg-background" 
-              />
+              {availableSubjects.length > 0 && selectedSubject !== '__custom__' ? (
+                <div className="flex gap-2">
+                  <select
+                    id="subjectName"
+                    name="subjectName"
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    required
+                    className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all hover:bg-accent/20"
+                  >
+                    <option value="">Select a subject...</option>
+                    {availableSubjects.map(s => (
+                      <option key={s.id} value={s.name}>{s.name}</option>
+                    ))}
+                    {!isTeacher && (
+                      <option value="__custom__">+ Enter custom subject...</option>
+                    )}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input 
+                    id="subjectName" 
+                    name="subjectName" 
+                    placeholder="e.g. English, Math..." 
+                    value={selectedSubject === '__custom__' ? customSubject : selectedSubject}
+                    onChange={(e) => {
+                      if (selectedSubject === '__custom__') {
+                        setCustomSubject(e.target.value)
+                      } else {
+                        setSelectedSubject(e.target.value)
+                      }
+                    }}
+                    required 
+                    className="h-12 bg-background/50 border-input rounded-xl hover:bg-accent/20 transition-all focus:bg-background" 
+                  />
+                  {availableSubjects.length > 0 && (
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSubject('')
+                        setCustomSubject('')
+                      }}
+                      className="h-12 rounded-xl text-xs whitespace-nowrap"
+                    >
+                      Choose from list
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

@@ -107,11 +107,21 @@ export default async function UploadsPage() {
           </TabsContent>
           
           <TabsContent value="interactive-copy" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
-            <InteractiveCopyCheckForm classes={rawClasses} />
+            <InteractiveCopyCheckForm 
+              classes={rawClasses} 
+              subjects={rawSubjects}
+              subjectAccess={session.user.subjectAccess || null}
+              isTeacher={role === 'teacher'}
+            />
           </TabsContent>
 
           <TabsContent value="copy" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
-            <CopyCheckingForm classes={rawClasses} />
+            <CopyCheckingForm 
+              classes={rawClasses} 
+              subjects={rawSubjects}
+              subjectAccess={session.user.subjectAccess || null}
+              isTeacher={role === 'teacher'}
+            />
           </TabsContent>
 
           <TabsContent value="notebook-logs" className="mt-0 focus-visible:ring-0 w-full flex justify-center">
