@@ -14,6 +14,7 @@ type StudentCheck = {
   name: string
   rollNumber: string | null
   status: 'C' | 'I' | 'A'
+  missingChapters?: string
 }
 
 export function InteractiveCopyCheckForm({ classes }: { classes: Class[] }) {
@@ -41,7 +42,8 @@ export function InteractiveCopyCheckForm({ classes }: { classes: Class[] }) {
         id: s.id,
         name: s.name,
         rollNumber: s.rollNumber,
-        status: 'C'
+        status: 'C',
+        missingChapters: ''
       })))
     } catch (e: any) {
       toast.error('Failed to load students: ' + e.message)
@@ -51,6 +53,10 @@ export function InteractiveCopyCheckForm({ classes }: { classes: Class[] }) {
 
   function handleStatusToggle(studentId: string, newStatus: 'C' | 'I' | 'A') {
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: newStatus } : s))
+  }
+
+  function handleMissingChaptersChange(studentId: string, missingChapters: string) {
+    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, missingChapters } : s))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -70,13 +76,17 @@ export function InteractiveCopyCheckForm({ classes }: { classes: Class[] }) {
       classId: selectedClassId,
       subjectName,
       checkDate,
-      studentChecks: students.map(s => ({ studentId: s.id, status: s.status }))
+      studentChecks: students.map(s => ({
+        studentId: s.id,
+        status: s.status,
+        missingChapters: s.missingChapters
+      }))
     })
 
     if (res.success) {
       toast.success(res.message || 'Notebook checks saved successfully!')
       // Optionally clear or reset
-      setStudents(students.map(s => ({ ...s, status: 'C' })))
+      setStudents(students.map(s => ({ ...s, status: 'C', missingChapters: '' })))
     } else {
       toast.error(res.error || 'Failed to save checks.')
     }
@@ -189,28 +199,41 @@ export function InteractiveCopyCheckForm({ classes }: { classes: Class[] }) {
                               <td className="px-4 py-3">{student.rollNumber || '-'}</td>
                               <td className="px-4 py-3 font-medium">{student.name}</td>
                               <td className="px-4 py-3">
-                                <div className="flex items-center justify-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusToggle(student.id, 'C')}
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'C' ? 'bg-green-500/20 text-green-600 border border-green-500/30' : 'bg-muted text-muted-foreground hover:bg-green-500/10 hover:text-green-600'}`}
-                                  >
-                                    <Check className="w-3 h-3" /> Complete
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusToggle(student.id, 'I')}
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'I' ? 'bg-red-500/20 text-red-600 border border-red-500/30' : 'bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-600'}`}
-                                  >
-                                    <X className="w-3 h-3" /> Incomplete
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusToggle(student.id, 'A')}
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'A' ? 'bg-orange-500/20 text-orange-600 border border-orange-500/30' : 'bg-muted text-muted-foreground hover:bg-orange-500/10 hover:text-orange-600'}`}
-                                  >
-                                    <UserMinus className="w-3 h-3" /> Absent
-                                  </button>
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStatusToggle(student.id, 'C')}
+                                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'C' ? 'bg-green-500/20 text-green-600 border border-green-500/30' : 'bg-muted text-muted-foreground hover:bg-green-500/10 hover:text-green-600'}`}
+                                    >
+                                      <Check className="w-3 h-3" /> Complete
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStatusToggle(student.id, 'I')}
+                                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'I' ? 'bg-red-500/20 text-red-600 border border-red-500/30' : 'bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-600'}`}
+                                    >
+                                      <X className="w-3 h-3" /> Incomplete
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStatusToggle(student.id, 'A')}
+                                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'A' ? 'bg-orange-500/20 text-orange-600 border border-orange-500/30' : 'bg-muted text-muted-foreground hover:bg-orange-500/10 hover:text-orange-600'}`}
+                                    >
+                                      <UserMinus className="w-3 h-3" /> Absent
+                                    </button>
+                                  </div>
+                                  {student.status === 'I' && (
+                                    <div className="flex items-center gap-2 animate-in fade-in duration-200">
+                                      <span className="text-[11px] font-semibold text-red-500/90 whitespace-nowrap">Missing Chapters:</span>
+                                      <Input
+                                        placeholder="e.g. Ch 3, 4, 5"
+                                        value={student.missingChapters || ''}
+                                        onChange={(e) => handleMissingChaptersChange(student.id, e.target.value)}
+                                        className="h-7 text-xs w-44 bg-background border-red-500/30 focus-visible:ring-red-500/40"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                             </tr>

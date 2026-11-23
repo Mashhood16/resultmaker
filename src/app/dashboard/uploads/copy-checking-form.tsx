@@ -44,7 +44,7 @@ export function CopyCheckingForm({ classes }: { classes: Class[] }) {
           Copy / Notebook Checking Status
         </CardTitle>
         <CardDescription className="text-muted-foreground text-sm mt-2 leading-relaxed">
-          Upload an Excel sheet containing Roll Number, Name, and Status (C for Complete, I for Incomplete). 
+          Upload an Excel sheet containing Roll Number, Name, Status (C for Complete, I for Incomplete, A for Absent, N for Not Brought), and optional Missing Chapters (e.g. Ch 3, 4, 5). 
           This will automatically queue WhatsApp messages to their parents.
         </CardDescription>
       </CardHeader>

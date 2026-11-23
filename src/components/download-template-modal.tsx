@@ -89,8 +89,8 @@ export function DownloadTemplateModal({
       title: 'Notebook Checking Template',
       badge: 'Copy Checking',
       description:
-        'Download an Excel sheet pre-filled with all enrolled students to record notebook completion statuses (C, I, A, N).',
-      columns: ['Roll Number', 'Name', 'Status (C / I / A / N)'],
+        'Download an Excel sheet pre-filled with all enrolled students to record notebook completion statuses (C, I, A, N) and optional missing chapters (e.g. Ch 3, 4, 5).',
+      columns: ['Roll Number', 'Name', 'Status (C / I / A / N)', 'Missing Chapters (Optional)'],
       defaultButtonText: 'Download Example Format',
       sheetName: 'Notebook Checks',
     },
@@ -237,19 +237,21 @@ export function DownloadTemplateModal({
           ]
         }
       } else if (actionType === 'copy-checking') {
-        colWidths = [{ wch: 14 }, { wch: 25 }, { wch: 14 }]
+        colWidths = [{ wch: 14 }, { wch: 25 }, { wch: 14 }, { wch: 28 }]
         if (students.length > 0) {
           sheetData = students.map((s) => ({
             'Roll Number': s.rollNumber || '',
             'Name': s.name,
             'Status': '',
+            'Missing Chapters (Optional)': '',
           }))
         } else {
           sheetData = [
             {
               'Roll Number': '1',
               'Name': 'Sample Student Name',
-              'Status': 'C',
+              'Status': 'I',
+              'Missing Chapters (Optional)': 'Ch 3, 4, 5',
             },
           ]
         }

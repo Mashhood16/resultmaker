@@ -193,10 +193,17 @@ export function NotebookLogView({ checks, classes, subjects }: { checks: Enriche
                         <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
                           <CheckCircle2 className="w-3 h-3 mr-1" /> Complete
                         </Badge>
-                      ) : check.status === 'I' ? (
-                        <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
-                          <XCircle className="w-3 h-3 mr-1" /> Incomplete
-                        </Badge>
+                      ) : check.status.startsWith('I') ? (
+                        <div className="flex flex-col gap-1 items-start">
+                          <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
+                            <XCircle className="w-3 h-3 mr-1" /> Incomplete
+                          </Badge>
+                          {check.status.includes(':') && (
+                            <span className="text-[11px] font-medium text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">
+                              Missing: {check.status.split(':')[1]?.trim()}
+                            </span>
+                          )}
+                        </div>
                       ) : check.status === 'A' ? (
                         <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20">
                           <UserMinus className="w-3 h-3 mr-1" /> Absent
