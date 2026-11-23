@@ -1,8 +1,19 @@
 import prisma from '@/lib/prisma'
 import { LeaderboardView } from './leaderboard-view'
+import { formatCheckStatus } from '@/lib/notebook-utils'
 
-export async function NotebookLeaderboardContent({ classId, subjectId, availableSubjects, isReadOnly = false }: { classId: string, subjectId: string, availableSubjects: {id: string, name: string}[], isReadOnly?: boolean }) {
-  if (!subjectId) return null;
+export async function NotebookLeaderboardContent({ 
+  classId, 
+  subjectId, 
+  availableSubjects, 
+  isReadOnly = false 
+}: { 
+  classId: string
+  subjectId: string
+  availableSubjects: { id: string, name: string }[]
+  isReadOnly?: boolean 
+}) {
+  if (!subjectId) return null
 
   const isOverall = subjectId === 'overall'
 
@@ -17,15 +28,26 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
       },
       subject: true
     },
-    orderBy: { checkDate: 'asc' }
+    orderBy: { checkDate: 'desc' }
   })
 
   // Group by student
   const studentMap = new Map<string, any>()
+  const dateSet = new Set<string>()
 
   checks.forEach(check => {
     const key = check.student.rollNumber ? check.student.rollNumber.trim() : check.student.id
+    const parsedStatus = formatCheckStatus(check.status)
+    const dateFormatted = new Date(check.checkDate).toLocaleDateString('en-GB', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    })
     
+    // Filter option name for dropdown
+    const filterName = isOverall ? `${check.subject.name} - ${dateFormatted}` : dateFormatted
+    dateSet.add(filterName)
+
     if (!studentMap.has(key)) {
       studentMap.set(key, {
         id: check.student.id,
@@ -33,10 +55,17 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
         rollNumber: check.student.rollNumber,
         section: check.student.section,
         badges: check.student.badges || [],
-        obtained: 0, // This will be number of 'C' checks
+        obtained: 0, // Number of 'C' checks
         total: 0,    // Total checks
         percentage: 0,
-        isAbsent: false, // We'll just say false for notebooks if they have a record
+        isAbsent: false,
+        copySummary: {
+          complete: 0,
+          incomplete: 0,
+          notBrought: 0,
+          absent: 0,
+          totalMissingChapters: 0
+        },
         breakdown: []
       })
     } else {
@@ -49,71 +78,47 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
     const sData = studentMap.get(key)
     sData.total += 1
     
-    let obtainedScore = 0
-    // Give 1 point for complete, 0 for incomplete/absent/not brought
-    if (check.status === 'C') {
+    if (parsedStatus.isComplete) {
       sData.obtained += 1
-      obtainedScore = 1
+      sData.copySummary.complete += 1
+    } else if (parsedStatus.isIncomplete) {
+      sData.copySummary.incomplete += 1
+      if (parsedStatus.missingCount) {
+        sData.copySummary.totalMissingChapters += parsedStatus.missingCount
+      }
+    } else if (parsedStatus.isNotBrought) {
+      sData.copySummary.notBrought += 1
+    } else if (parsedStatus.isAbsent) {
+      sData.copySummary.absent += 1
     }
 
     sData.percentage = Math.round((sData.obtained / sData.total) * 100)
 
-    const dateStr = new Date(check.checkDate).toLocaleDateString('en-GB')
-    
-    // Ensure we handle breakdowns correctly for overall vs subject
-    // In subject view, breakdown item is by date.
-    // In overall view, we typically want breakdown by subject.
-    if (isOverall) {
-      // For overall, let's aggregate by subject in the breakdown
-      let subjBreakdown = sData.breakdown.find((b: any) => b.testName === check.subject.name)
-      if (!subjBreakdown) {
-        subjBreakdown = {
-          testName: check.subject.name,
-          testDate: null,
-          obtained: 0,
-          total: 0,
-          percentage: 0,
-          isAbsent: false
-        }
-        sData.breakdown.push(subjBreakdown)
-      }
-      subjBreakdown.total += 1
-      if (check.status === 'C') subjBreakdown.obtained += 1
-      subjBreakdown.percentage = Math.round((subjBreakdown.obtained / subjBreakdown.total) * 100)
-    } else {
-      // For single subject, breakdown by date
-      let statusLabel = 'Complete'
-      let feedback = 'Complete'
-      if (check.status === 'A') {
-        statusLabel = 'Absent'
-        feedback = 'Student was absent on this date.'
-      } else if (check.status === 'N') {
-        statusLabel = 'Not Brought'
-        feedback = 'Student did not bring notebook/copy.'
-      } else if (check.status.startsWith('I:')) {
-        const missing = check.status.substring(2).trim()
-        statusLabel = 'Incomplete'
-        feedback = `Incomplete. Missing: ${missing}`
-      } else if (check.status === 'I') {
-        statusLabel = 'Incomplete'
-        feedback = 'Incomplete notebook/copy.'
-      }
-
-      sData.breakdown.push({
-        testName: `Check ${dateStr}`,
-        testDate: check.checkDate,
-        obtained: obtainedScore,
-        total: 1,
-        percentage: obtainedScore * 100,
-        isAbsent: check.status === 'A' || check.status === 'N',
-        statusLabel,
-        feedback
-      })
-    }
+    // Store each check by date in breakdown
+    sData.breakdown.push({
+      testName: filterName,
+      testDate: check.checkDate,
+      subjectName: check.subject.name,
+      obtained: parsedStatus.isComplete ? 1 : 0,
+      total: 1,
+      percentage: parsedStatus.isComplete ? 100 : 0,
+      isAbsent: parsedStatus.isAbsent || parsedStatus.isNotBrought,
+      statusCode: parsedStatus.code,
+      statusLabel: parsedStatus.label,
+      missingChapters: parsedStatus.missingChapters,
+      missingCount: parsedStatus.missingCount,
+      fullDescription: parsedStatus.fullDescription,
+      feedback: parsedStatus.fullDescription
+    })
   })
 
-  let finalStudents = Array.from(studentMap.values())
-  
+  const finalStudents = Array.from(studentMap.values())
+
+  // Ensure each student's breakdown is sorted newest to oldest
+  finalStudents.forEach(s => {
+    s.breakdown.sort((a: any, b: any) => new Date(b.testDate).getTime() - new Date(a.testDate).getTime())
+  })
+
   // Rank them
   finalStudents.sort((a, b) => {
     if (b.percentage !== a.percentage) {
@@ -139,38 +144,16 @@ export async function NotebookLeaderboardContent({ classId, subjectId, available
     currentRank++
   }
 
-  if (isOverall) {
-    // For OverallLeaderboardView, we need to map the breakdowns so they match subjects exactly
-    // OverallLeaderboardView expects subjectBreakdown map
-    const formattedStudents = finalStudents.map(s => {
-      const subjectBreakdown: Record<string, { obtained: number, total: number, percentage: number }> = {}
-      s.breakdown.forEach((b: any) => {
-        subjectBreakdown[b.testName] = {
-          obtained: b.obtained,
-          total: b.total,
-          percentage: b.percentage
-        }
-      })
-      return {
-        ...s,
-        subjectBreakdown
-      }
-    })
+  const allClassTests = Array.from(dateSet)
 
-    return <LeaderboardView 
+  return (
+    <LeaderboardView 
       classId={classId} 
-      initialData={formattedStudents as any} 
+      initialData={finalStudents as any} 
       availableSubjects={availableSubjects} 
       isReadOnly={isReadOnly}
       isCopies={true}
+      allClassTests={allClassTests}
     />
-  }
-
-  return <LeaderboardView 
-    classId={classId} 
-    initialData={finalStudents as any} 
-    availableSubjects={availableSubjects} 
-    isReadOnly={isReadOnly} 
-    isCopies={true}
-  />
+  )
 }

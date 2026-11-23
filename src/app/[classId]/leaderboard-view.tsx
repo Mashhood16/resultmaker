@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Search, Medal, Trophy, Star, ChevronDown, ChevronRight, Printer, ScrollText, ArrowUp, ArrowDown, Minus, Filter, Award } from 'lucide-react'
+import { Search, Medal, Trophy, Star, ChevronDown, ChevronRight, Printer, ScrollText, ArrowUp, ArrowDown, Minus, Filter, Award, CheckCircle2, XCircle, BookX, AlertCircle, UserMinus } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from '@/components/ui/dialog'
@@ -46,7 +46,20 @@ type StudentScore = {
     feedback?: string | null
     answers?: string | null
     questionMarks?: string[] | null
+    statusCode?: string
+    statusLabel?: string
+    subjectName?: string
+    missingChapters?: string
+    missingCount?: number
+    fullDescription?: string
   }>
+  copySummary?: {
+    complete: number
+    incomplete: number
+    notBrought: number
+    absent: number
+    totalMissingChapters: number
+  }
 }
 
 interface LeaderboardViewProps {
@@ -681,15 +694,15 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
               )}
 
 
-              {/* Test Dropdown Filter */}
-              {uniqueTests.length > 0 && (
+              {/* Test / Date Dropdown Filter */}
+              {(allClassTests && allClassTests.length > 0 ? allClassTests : uniqueTests).length > 0 && (
                 <Select value={selectedTestFilter} onValueChange={setSelectedTestFilter}>
                   <SelectTrigger className="w-[180px] h-11 bg-card/80 border-border rounded-xl">
-                    <SelectValue placeholder="All Tests" />
+                    <SelectValue placeholder={isCopies ? "All Dates" : "All Tests"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Tests</SelectItem>
-                    {uniqueTests.map(test => (
+                    <SelectItem value="all">{isCopies ? "All Dates" : "All Tests"}</SelectItem>
+                    {(allClassTests && allClassTests.length > 0 ? allClassTests : uniqueTests).map(test => (
                       <SelectItem key={test} value={test}>{test}</SelectItem>
                     ))}
                   </SelectContent>
@@ -748,16 +761,16 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                     <input type="checkbox" checked={filteredData.length > 0 && selectedStudents.size === filteredData.length} onChange={toggleAll} className="w-4 h-4 rounded border-zinc-500 bg-accent accent-primary cursor-pointer" />
                   </TableHead>
                   <TableHead className="w-28 font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
-                    {selectedTestFilter === 'all' ? 'Rank & Movement' : 'Test Rank'}
+                    {selectedTestFilter === 'all' ? 'Rank & Movement' : (isCopies ? 'Rank' : 'Test Rank')}
                   </TableHead>
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Student Name</TableHead>
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Roll No.</TableHead>
                   <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Section</TableHead>
                   <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
-                    {isCopies ? 'Copies Checked' : (selectedTestFilter === 'all' ? 'Total Marks' : 'Test Marks')}
+                    {isCopies ? (selectedTestFilter === 'all' ? 'Complete Copies' : 'Check Status') : (selectedTestFilter === 'all' ? 'Total Marks' : 'Test Marks')}
                   </TableHead>
                   <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
-                    {isCopies ? 'Completion %' : (selectedTestFilter === 'all' ? 'Overall %' : 'Test %')}
+                    {isCopies ? (selectedTestFilter === 'all' ? 'Completion %' : 'Missing Chapters') : (selectedTestFilter === 'all' ? 'Overall %' : 'Test %')}
                   </TableHead>
                   <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px] pr-6">Tier</TableHead>
                 </TableRow>
@@ -859,17 +872,61 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                         </TableCell>
                         <TableCell className="text-muted-foreground font-medium py-5">{student.section || '-'}</TableCell>
                         <TableCell className="text-right text-muted-foreground font-medium py-5 tracking-wide">
-                          {student.isAbsent ? (
-                            <span className="text-red-500 font-bold text-xs uppercase bg-red-500/10 px-2 py-1 rounded">Absent</span>
+                          {isCopies ? (
+                            selectedTestFilter !== 'all' ? (
+                              (() => {
+                                const check = student.breakdown.find(b => b.testName === selectedTestFilter) as any
+                                if (!check) return <span className="text-muted-foreground text-xs font-mono">Not Checked</span>
+                                if (check.statusCode === 'C') {
+                                  return <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold text-xs">Complete</Badge>
+                                }
+                                if (check.statusCode === 'I') {
+                                  return <Badge className="bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30 font-bold text-xs">Incomplete</Badge>
+                                }
+                                if (check.statusCode === 'N') {
+                                  return <Badge className="bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30 font-bold text-xs">Not Brought</Badge>
+                                }
+                                if (check.statusCode === 'A') {
+                                  return <Badge className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold text-xs">Absent</Badge>
+                                }
+                                return <Badge variant="outline" className="text-xs">{check.statusLabel || 'Checked'}</Badge>
+                              })()
+                            ) : (
+                              <span>
+                                <span className="text-foreground font-bold">{student.obtained}</span>
+                                <span className="text-muted-foreground mx-1">/</span>
+                                <span className="text-muted-foreground">{student.total}</span>
+                              </span>
+                            )
                           ) : (
-                            <><span className="text-foreground">{student.obtained}</span> <span className="text-zinc-700">/</span> {student.total}</>
+                            student.isAbsent ? (
+                              <span className="text-red-500 font-bold text-xs uppercase bg-red-500/10 px-2 py-1 rounded">Absent</span>
+                            ) : (
+                              <><span className="text-foreground">{student.obtained}</span> <span className="text-zinc-700">/</span> {student.total}</>
+                            )
                           )}
                         </TableCell>
                         <TableCell className="text-right py-5">
-                          {student.isAbsent ? (
-                            <span className="text-red-500 font-bold text-sm">0%</span>
+                          {isCopies ? (
+                            selectedTestFilter !== 'all' ? (
+                              (() => {
+                                const check = student.breakdown.find(b => b.testName === selectedTestFilter) as any
+                                if (!check || check.statusCode !== 'I') return <span className="text-muted-foreground text-xs">-</span>
+                                return (
+                                  <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">
+                                    {check.missingChapters || 'Incomplete'}
+                                  </span>
+                                )
+                              })()
+                            ) : (
+                              <span className="text-primary font-black text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{student.percentage}%</span>
+                            )
                           ) : (
-                            <span className="text-primary font-black text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{student.percentage}%</span>
+                            student.isAbsent ? (
+                              <span className="text-red-500 font-bold text-sm">0%</span>
+                            ) : (
+                              <span className="text-primary font-black text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{student.percentage}%</span>
+                            )
                           )}
                         </TableCell>
                         <TableCell className="text-right py-5 pr-6">
@@ -940,7 +997,9 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
 
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">Overall Score</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">
+                      {isCopies ? 'Copy Completion' : 'Overall Score'}
+                    </div>
                     <div className="text-xl sm:text-2xl font-black text-primary">
                       {selectedStudentForModal.isAbsent ? '0%' : `${selectedStudentForModal.percentage}%`}
                     </div>
@@ -966,21 +1025,134 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                   ))}
                 </div>
               )}
+
+              {/* Copy Summary Stats Bar */}
+              {isCopies && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-between">
+                    <span className="font-medium text-[11px] uppercase tracking-wider">Complete</span>
+                    <span className="font-black text-sm">
+                      {selectedStudentForModal.breakdown.filter((b: any) => b.statusCode === 'C').length}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 flex items-center justify-between">
+                    <span className="font-medium text-[11px] uppercase tracking-wider">Incomplete</span>
+                    <span className="font-black text-sm">
+                      {selectedStudentForModal.breakdown.filter((b: any) => b.statusCode === 'I').length}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-400 flex items-center justify-between">
+                    <span className="font-medium text-[11px] uppercase tracking-wider">Not Brought</span>
+                    <span className="font-black text-sm">
+                      {selectedStudentForModal.breakdown.filter((b: any) => b.statusCode === 'N').length}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-between">
+                    <span className="font-medium text-[11px] uppercase tracking-wider">Absent</span>
+                    <span className="font-black text-sm">
+                      {selectedStudentForModal.breakdown.filter((b: any) => b.statusCode === 'A').length}
+                    </span>
+                  </div>
+                </div>
+              )}
             </DialogHeader>
 
-            {/* SECTION 1: Test Breakdown UP */}
+            {/* SECTION 1: Breakdown (Copies by Date vs Tests) */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  {isCopies ? 'Copy Checking Breakdown' : 'Test Breakdown'}
+                  {isCopies ? 'Copy Checking History by Date' : 'Test Breakdown'}
                 </h4>
                 <span className="text-xs text-muted-foreground">
                   {selectedStudentForModal.breakdown.length} {isCopies ? (selectedStudentForModal.breakdown.length === 1 ? 'Check' : 'Checks') : (selectedStudentForModal.breakdown.length === 1 ? 'Test' : 'Tests')}
                 </span>
               </div>
 
-              <div className="grid gap-2.5">
+              {isCopies ? (
+                <div className="grid gap-2.5">
+                  {selectedStudentForModal.breakdown.map((item: any, idx) => {
+                    const dateFormatted = item.testDate
+                      ? new Date(item.testDate).toLocaleDateString('en-PK', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+                      : item.testName
+
+                    return (
+                      <div 
+                        key={idx}
+                        className="bg-card/80 border border-border rounded-xl p-3.5 sm:p-4 space-y-2.5 hover:border-primary/40 transition-all shadow-sm"
+                      >
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-foreground text-sm sm:text-base">
+                              {dateFormatted}
+                            </span>
+                            {item.subjectName && (
+                              <Badge variant="outline" className="text-xs font-semibold bg-muted/40">
+                                {item.subjectName}
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div>
+                            {item.statusCode === 'C' && (
+                              <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold px-3 py-1 flex items-center gap-1.5 text-xs">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Complete
+                              </Badge>
+                            )}
+                            {item.statusCode === 'I' && (
+                              <Badge className="bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30 font-bold px-3 py-1 flex items-center gap-1.5 text-xs">
+                                <XCircle className="w-3.5 h-3.5" /> Incomplete
+                              </Badge>
+                            )}
+                            {item.statusCode === 'N' && (
+                              <Badge className="bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30 font-bold px-3 py-1 flex items-center gap-1.5 text-xs">
+                                <BookX className="w-3.5 h-3.5" /> Not Brought
+                              </Badge>
+                            )}
+                            {item.statusCode === 'A' && (
+                              <Badge className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold px-3 py-1 flex items-center gap-1.5 text-xs">
+                                <UserMinus className="w-3.5 h-3.5" /> Absent
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        {item.statusCode === 'I' && (
+                          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 text-xs sm:text-sm flex items-start gap-2.5">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+                            <div className="space-y-0.5">
+                              <p className="font-bold text-rose-600 dark:text-rose-400">
+                                {item.missingCount ? `${item.missingCount} ${item.missingCount === 1 ? 'Chapter' : 'Chapters'} Missing` : 'Incomplete Copy Work'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.missingChapters ? (
+                                  <>Missing Chapters: <strong className="text-foreground font-semibold underline decoration-rose-500">{item.missingChapters}</strong></>
+                                ) : (
+                                  'Copy marked incomplete without specific chapter notes'
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {item.statusCode === 'N' && (
+                          <p className="text-xs text-muted-foreground">Student did not bring notebook/copy to class on this date.</p>
+                        )}
+                        {item.statusCode === 'A' && (
+                          <p className="text-xs text-muted-foreground">Student was absent on this date.</p>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                  {selectedStudentForModal.breakdown.length === 0 && (
+                    <div className="text-muted-foreground text-sm italic p-4 bg-muted/20 rounded-xl border border-border text-center">
+                      No copy checking records found for this student.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="grid gap-2.5">
                 {selectedStudentForModal.breakdown.map((test, idx) => {
                   const hasDetails = Boolean(test.annotatedImage || test.feedback || test.answers || (test.questionMarks && test.questionMarks.length > 0));
                   const isExpanded = expandedTestDetail === test.testName;
@@ -1076,18 +1248,21 @@ export function LeaderboardView({ initialData, classId, availableSubjects, lastT
                   </div>
                 )}
               </div>
+            )}
             </div>
 
-            {/* SECTION 2: Performance Trend DOWN */}
-            <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-black text-blue-500/80 uppercase tracking-[0.2em] flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                Performance Trend
-              </h4>
-              <div className="bg-background/50 rounded-2xl p-4 sm:p-5 border border-border">
-                <StudentPerformanceChart breakdown={selectedStudentForModal.breakdown} />
+            {/* SECTION 2: Performance Trend DOWN (Only for Tests) */}
+            {!isCopies && selectedStudentForModal.breakdown.length > 1 && (
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-black text-blue-500/80 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  Performance Trend
+                </h4>
+                <div className="bg-background/50 rounded-2xl p-4 sm:p-5 border border-border">
+                  <StudentPerformanceChart breakdown={selectedStudentForModal.breakdown} />
+                </div>
               </div>
-            </div>
+            )}
           </DialogContent>
         )}
       </Dialog>
