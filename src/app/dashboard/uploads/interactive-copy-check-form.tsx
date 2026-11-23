@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, Save, Search, Check, X, UserMinus } from 'lucide-react'
+import { Loader2, Save, Search, Check, X, UserMinus, BookX } from 'lucide-react'
 import { toast } from 'sonner'
 import { Class } from '@prisma/client'
 import { getStudentsByClass, saveInteractiveCopyChecksAction } from '../copy-actions'
@@ -13,7 +13,7 @@ type StudentCheck = {
   id: string
   name: string
   rollNumber: string | null
-  status: 'C' | 'I' | 'A'
+  status: 'C' | 'I' | 'A' | 'N'
   missingChapters?: string
 }
 
@@ -51,7 +51,7 @@ export function InteractiveCopyCheckForm({ classes }: { classes: Class[] }) {
     setIsLoading(false)
   }
 
-  function handleStatusToggle(studentId: string, newStatus: 'C' | 'I' | 'A') {
+  function handleStatusToggle(studentId: string, newStatus: 'C' | 'I' | 'A' | 'N') {
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: newStatus } : s))
   }
 
@@ -214,6 +214,13 @@ export function InteractiveCopyCheckForm({ classes }: { classes: Class[] }) {
                                       className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'I' ? 'bg-red-500/20 text-red-600 border border-red-500/30' : 'bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-600'}`}
                                     >
                                       <X className="w-3 h-3" /> Incomplete
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStatusToggle(student.id, 'N')}
+                                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${student.status === 'N' ? 'bg-purple-500/20 text-purple-600 border border-purple-500/30' : 'bg-muted text-muted-foreground hover:bg-purple-500/10 hover:text-purple-600'}`}
+                                    >
+                                      <BookX className="w-3 h-3" /> Not Brought
                                     </button>
                                     <button
                                       type="button"
