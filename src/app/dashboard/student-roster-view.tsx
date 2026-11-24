@@ -584,15 +584,24 @@ export function StudentRosterView({ initialStudents, role }: { initialStudents: 
                 <Label className="text-muted-foreground">Father's Name</Label>
                 <Input className="bg-background border-border text-foreground" value={editForm.fatherName} onChange={e => setEditForm({...editForm, fatherName: e.target.value})} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Father's Phone</Label>
-                  <Input className="bg-card border-border text-foreground" value={editForm.fatherPhone} onChange={e => setEditForm({...editForm, fatherPhone: e.target.value})} />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-muted-foreground">Parent Contact Numbers</Label>
+                  <span className="text-[10px] text-primary font-medium">Multiple allowed</span>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Father's CNIC</Label>
-                  <Input className="bg-card border-border text-foreground" value={editForm.fatherCnic} onChange={e => setEditForm({...editForm, fatherCnic: e.target.value})} />
-                </div>
+                <Input 
+                  className="bg-card border-border text-foreground" 
+                  value={editForm.fatherPhone} 
+                  placeholder="e.g. 03001234567, 03217654321"
+                  onChange={e => setEditForm({...editForm, fatherPhone: e.target.value})} 
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Separate multiple numbers with commas or slashes. Messages will be sent to all numbers.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Father's CNIC</Label>
+                <Input className="bg-card border-border text-foreground" value={editForm.fatherCnic} onChange={e => setEditForm({...editForm, fatherCnic: e.target.value})} />
               </div>
               <Button className="w-full bg-primary hover:bg-primary/90 text-black font-bold mt-4" onClick={handleSaveEdit} disabled={isSavingEdit}>
                 {isSavingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}

@@ -6,10 +6,25 @@ import prisma from '@/lib/prisma'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 import { requireSchoolOrTeacherAccess } from './auth-utils'
+import { extractPhoneNumbers, formatPhoneList, mergePhoneInputs } from '@/lib/phone-utils'
 
 function findKey(row: Record<string, any>, possibleKeys: string[]) {
   const keys = Object.keys(row)
   return keys.find(k => possibleKeys.some(pk => k.includes(pk)))
+}
+
+function findAllMatchingValues(row: Record<string, any>, possibleKeySubstrings: string[]): string[] {
+  const keys = Object.keys(row)
+  const values: string[] = []
+  for (const k of keys) {
+    if (possibleKeySubstrings.some(pk => k.includes(pk))) {
+      const val = row[k]
+      if (val !== undefined && val !== null && String(val).trim()) {
+        values.push(String(val).trim())
+      }
+    }
+  }
+  return values
 }
 
 const rosterRowSchema = z.object({
@@ -70,7 +85,8 @@ export async function uploadStudentRosterAction(formData: FormData) {
       const rollNoKey = findKey(row, ['roll no', 'roll number', 'r.no', 'class roll'])
       const sectionKey = findKey(row, ['section', 'sec'])
       const fatherNameKey = findKey(row, ['father name', "father's name", 'parent name'])
-      const fatherPhoneKey = findKey(row, ['phone', 'contact', 'mobile', 'father phone', 'parent phone'])
+      const phoneValues = findAllMatchingValues(row, ['phone', 'contact', 'mobile', 'whatsapp', 'cell'])
+      const mergedPhone = mergePhoneInputs(...phoneValues)
       const fatherCnicKey = findKey(row, ['cnic', 'id card', 'father cnic', 'parent cnic'])
 
       const parsedRow = rosterRowSchema.safeParse({
@@ -80,7 +96,7 @@ export async function uploadStudentRosterAction(formData: FormData) {
         RollNumber: rollNoKey ? String(row[rollNoKey]) : '',
         Section: sectionKey ? String(row[sectionKey]) : '',
         FatherName: fatherNameKey ? String(row[fatherNameKey]) : '',
-        FatherPhone: fatherPhoneKey ? String(row[fatherPhoneKey]) : '',
+        FatherPhone: mergedPhone || '',
         FatherCnic: fatherCnicKey ? String(row[fatherCnicKey]) : '',
       })
 
@@ -154,7 +170,7 @@ export async function uploadStudentRosterAction(formData: FormData) {
               registrationNumber: data.registrationNumber || existingStudent.registrationNumber,
               rollNumber: data.rollNumber || existingStudent.rollNumber,
               fatherName: data.fatherName || existingStudent.fatherName,
-              fatherPhone: data.fatherPhone || existingStudent.fatherPhone,
+              fatherPhone: mergePhoneInputs(existingStudent.fatherPhone, data.fatherPhone) || data.fatherPhone || existingStudent.fatherPhone,
               fatherCnic: data.fatherCnic || existingStudent.fatherCnic,
             }
           })
@@ -247,7 +263,7 @@ export async function getStudentsBySchool(schoolId: string) {
       }
       if (!existing.registrationNumber && s.registrationNumber) existing.registrationNumber = s.registrationNumber
       if (!existing.fatherName && s.fatherName) existing.fatherName = s.fatherName
-      if (!existing.fatherPhone && s.fatherPhone) existing.fatherPhone = s.fatherPhone
+      if (s.fatherPhone) existing.fatherPhone = mergePhoneInputs(existing.fatherPhone, s.fatherPhone)
       if (!existing.fatherCnic && s.fatherCnic) existing.fatherCnic = s.fatherCnic
       if (!existing.section && s.section) existing.section = s.section
     } else {
@@ -277,7 +293,7 @@ export async function editStudentAction(studentId: string, data: {
     const rollNumber = typeof data.rollNumber === 'string' ? data.rollNumber.trim() : ''
     const section = typeof data.section === 'string' ? data.section.trim() : ''
     const fatherName = typeof data.fatherName === 'string' ? data.fatherName.trim() : ''
-    const fatherPhone = typeof data.fatherPhone === 'string' ? data.fatherPhone.trim() : ''
+    const rawFatherPhone = typeof data.fatherPhone === 'string' ? data.fatherPhone.trim() : ''
     const fatherCnic = typeof data.fatherCnic === 'string' ? data.fatherCnic.trim() : ''
 
     if (!name || name.length > 100) {
@@ -287,8 +303,11 @@ export async function editStudentAction(studentId: string, data: {
     if (rollNumber.length > 50) return { success: false, error: 'Roll number must not exceed 50 characters.' }
     if (section.length > 20) return { success: false, error: 'Section must not exceed 20 characters.' }
     if (fatherName.length > 100) return { success: false, error: 'Father name must not exceed 100 characters.' }
-    if (fatherPhone.length > 30) return { success: false, error: 'Father phone must not exceed 30 characters.' }
+    if (rawFatherPhone.length > 200) return { success: false, error: 'Contact phone numbers must not exceed 200 characters.' }
     if (fatherCnic.length > 30) return { success: false, error: 'Father CNIC must not exceed 30 characters.' }
+
+    const formattedPhone = formatPhoneList(rawFatherPhone)
+    const fatherPhone = formattedPhone || rawFatherPhone
 
     const student = await prisma.student.findUnique({
       where: { id: studentId },
@@ -586,25 +605,13 @@ export async function uploadContactsAction(formData: FormData, className: string
 
         const nameKey = findKey(row, ['name', 'student name', 'name of student'])
         const rollNoKey = findKey(row, ['roll no', 'roll number', 'r.no', 's.no'])
-        const phoneKey = findKey(row, ['contact', 'phone', 'mobile', 'whatsapp', 'father phone', 'number'])
+        const phoneValues = findAllMatchingValues(row, ['contact', 'phone', 'mobile', 'whatsapp', 'cell'])
+        const mergedPhone = mergePhoneInputs(...phoneValues)
         
-        if (!nameKey || !rollNoKey || !phoneKey) {
+        if (!nameKey || !rollNoKey || !mergedPhone) {
           failed++
           continue
         }
-        
-        const rawPhone = row[phoneKey]
-        if (!rawPhone) {
-          failed++
-          continue
-        }
-        
-        // Format phone: remove non-digits, adjust prefix
-        let phone = String(rawPhone).replace(/\D/g, '')
-        if (phone.startsWith('03')) phone = '923' + phone.substring(2)
-        else if (phone.startsWith('3')) phone = '92' + phone
-        else if (phone.startsWith('0092')) phone = '92' + phone.substring(4)
-        else if (phone.startsWith('+92')) phone = '92' + phone.substring(3)
         
         const rollNumber = String(row[rollNoKey]).trim()
         const name = String(row[nameKey]).trim()
@@ -619,9 +626,10 @@ export async function uploadContactsAction(formData: FormData, className: string
         })
         
         if (existing) {
+          const finalPhone = mergePhoneInputs(existing.fatherPhone, mergedPhone) || mergedPhone
           await tx.student.update({
             where: { id: existing.id },
-            data: { fatherPhone: phone }
+            data: { fatherPhone: finalPhone }
           })
         } else {
           await tx.student.create({
@@ -629,7 +637,7 @@ export async function uploadContactsAction(formData: FormData, className: string
               classId: classRecord.id,
               rollNumber,
               name,
-              fatherPhone: phone
+              fatherPhone: mergedPhone
             }
           })
         }

@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import { translateToUrdu } from '@/lib/translate'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import { extractPhoneNumbers } from '@/lib/phone-utils'
 
 export async function getStudentsByClassId(classId: string) {
   const session = await auth()
@@ -107,14 +108,17 @@ export async function uploadManualMarksAction(data: {
         
         urduMessage += '\n\nMuhammad Mashhood Tariq';
         
-        await prisma.whatsAppQueue.create({
-          data: {
-            studentId: student.id,
-            phone: student.fatherPhone,
-            message: urduMessage,
-            status: 'PENDING'
-          }
-        })
+        const phoneNumbers = extractPhoneNumbers(student.fatherPhone);
+        for (const phone of phoneNumbers) {
+          await prisma.whatsAppQueue.create({
+            data: {
+              studentId: student.id,
+              phone,
+              message: urduMessage,
+              status: 'PENDING'
+            }
+          });
+        }
       }
     }
 

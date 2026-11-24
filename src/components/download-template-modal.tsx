@@ -256,12 +256,13 @@ export function DownloadTemplateModal({
           ]
         }
       } else if (actionType === 'contacts') {
-        colWidths = [{ wch: 14 }, { wch: 25 }, { wch: 20 }]
+        colWidths = [{ wch: 14 }, { wch: 25 }, { wch: 25 }, { wch: 25 }]
         if (students.length > 0) {
           sheetData = students.map((s) => ({
             'Roll Number': s.rollNumber || '',
             'Name': s.name,
             'Contact Number': s.fatherPhone || '',
+            'Secondary Contact (Optional)': '',
           }))
         } else {
           sheetData = [
@@ -269,6 +270,7 @@ export function DownloadTemplateModal({
               'Roll Number': '1',
               'Name': 'Sample Student Name',
               'Contact Number': '03001234567',
+              'Secondary Contact (Optional)': '03217654321',
             },
           ]
         }

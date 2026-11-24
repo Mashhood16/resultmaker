@@ -7,6 +7,7 @@ import { translateToUrdu } from '@/lib/translate'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 import { requireSchoolOrTeacherAccess } from './auth-utils'
+import { extractPhoneNumbers } from '@/lib/phone-utils'
 
 function findKey(row: Record<string, any>, possibleKeys: string[]) {
   const keys = Object.keys(row)
@@ -208,16 +209,18 @@ export async function uploadCopyCheckingAction(formData: FormData) {
 
           urduMessage += '\n\nMuhammad Mashhood Tariq'
 
-          await tx.whatsAppQueue.create({
-            data: {
-              studentId: student.id,
-              phone: student.fatherPhone,
-              message: urduMessage,
-              status: 'PENDING'
-            }
-          })
-          
-          messagesQueued++
+          const phoneNumbers = extractPhoneNumbers(student.fatherPhone)
+          for (const phone of phoneNumbers) {
+            await tx.whatsAppQueue.create({
+              data: {
+                studentId: student.id,
+                phone,
+                message: urduMessage,
+                status: 'PENDING'
+              }
+            })
+            messagesQueued++
+          }
         }
 
         // Also save to NotebookCheck permanently!
@@ -492,15 +495,18 @@ export async function saveInteractiveCopyChecksAction(data: {
           }
           urduMessage += '\n\nMuhammad Mashhood Tariq'
 
-          await tx.whatsAppQueue.create({
-            data: {
-              studentId: student.id,
-              phone: student.fatherPhone,
-              message: urduMessage,
-              status: 'PENDING'
-            }
-          })
-          messagesQueued++
+          const phoneNumbers = extractPhoneNumbers(student.fatherPhone)
+          for (const phone of phoneNumbers) {
+            await tx.whatsAppQueue.create({
+              data: {
+                studentId: student.id,
+                phone,
+                message: urduMessage,
+                status: 'PENDING'
+              }
+            })
+            messagesQueued++
+          }
         }
       }
     }, { maxWait: 10000, timeout: 60000 })

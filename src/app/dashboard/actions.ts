@@ -7,6 +7,7 @@ import { translateToUrdu } from '@/lib/translate'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 import { requireSchoolOrTeacherAccess } from './auth-utils'
+import { extractPhoneNumbers } from '@/lib/phone-utils'
 
 function findKey(row: Record<string, any>, possibleKeys: string[]) {
   const keys = Object.keys(row)
@@ -236,14 +237,17 @@ export async function uploadMarksAction(formData: FormData) {
           
           urduMessage += '\n\nMuhammad Mashhood Tariq';
           
-          await tx.whatsAppQueue.create({
-            data: {
-              studentId: student.id,
-              phone: student.fatherPhone,
-              message: urduMessage,
-              status: 'PENDING'
-            }
-          });
+          const phoneNumbers = extractPhoneNumbers(student.fatherPhone);
+          for (const phone of phoneNumbers) {
+            await tx.whatsAppQueue.create({
+              data: {
+                studentId: student.id,
+                phone,
+                message: urduMessage,
+                status: 'PENDING'
+              }
+            });
+          }
         }
       }
 
@@ -287,14 +291,17 @@ export async function uploadMarksAction(formData: FormData) {
             let urduMessage = `Assalam o Alaikum. Aap ka bacha ${rosterStudent.name} (Class ${classRecord.name}) ${formattedDate} ko hone wale ${subjectRecord.name} ke test mein ghair hazir (absent) tha. Barae meharbani is baat ka khayal rakhein ke bacha regular test de.\n\nالسلام علیکم! آپ کا بچہ مذکورہ امتحان میں غیر حاضر تھا۔ براہ مہربانی اس بات کا خیال رکھیں کہ بچہ باقاعدگی سے امتحان دے۔`;
             urduMessage += '\n\nMuhammad Mashhood Tariq';
             
-            await tx.whatsAppQueue.create({
-              data: {
-                studentId: rosterStudent.id,
-                phone: rosterStudent.fatherPhone,
-                message: urduMessage,
-                status: 'PENDING'
-              }
-            });
+            const phoneNumbers = extractPhoneNumbers(rosterStudent.fatherPhone);
+            for (const phone of phoneNumbers) {
+              await tx.whatsAppQueue.create({
+                data: {
+                  studentId: rosterStudent.id,
+                  phone,
+                  message: urduMessage,
+                  status: 'PENDING'
+                }
+              });
+            }
           }
           
           absentCount++

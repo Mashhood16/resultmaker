@@ -61,7 +61,7 @@ export function UploadContactsForm({ classes }: { classes: { id: string, name: s
             Upload Contacts
           </CardTitle>
           <CardDescription className="text-muted-foreground text-sm mt-2">
-            Upload an Excel sheet with Name, Roll Number, and Contact Number columns.
+            Upload an Excel sheet with Name, Roll Number, and Contact Number(s). Supports multiple numbers (comma/slash separated) or multiple phone columns.
           </CardDescription>
         </CardHeader>
         <CardContent className="px-8 pb-8">
